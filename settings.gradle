@@ -1,0 +1,2 @@
+include ':app', ':syftlib'
+rootProject.name='DemoApp'
