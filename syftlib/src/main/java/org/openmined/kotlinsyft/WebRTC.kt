@@ -6,6 +6,7 @@ import org.webrtc.*
 import org.webrtc.PeerConnection.*
 import java.nio.ByteBuffer
 
+
 typealias SDP_type = SessionDescription.Type
 
 private const val TAG = "WebRTCClient"
@@ -28,14 +29,14 @@ open class WebRTCClient(
         this.workerId = workerId
         this.scopeId = scopeId
         //TODO send as json {workerID,scopeId}
-        socket.send(WEBRTC_JOIN_ROOM,workerId)
+        socket.send(WEBRTC_JOIN_ROOM,"{$workerId,$scopeId}")
     }
 
-    fun createConnection(worker_id: String){
-        Log.d(TAG,"Creating Connection")
-        val pc = peerConnectionFactory.createPeerConnection( peerConfig,
-            PeerConnectionObserver(worker_id,SDP_type.ANSWER))
-        peers[worker_id] = Peer(pc,null)
+    private fun createConnection(worker_id: String){
+        Log.d(TAG,"Creating Connection as answer")
+        val pcObserver = PeerConnectionObserver(worker_id,SDP_type.ANSWER)
+        val pc = peerConnectionFactory.createPeerConnection( peerConfig,pcObserver)
+        peers[worker_id] = Peer(pc,null,pcObserver,SDPObserver(worker_id,SDP_type.ANSWER))
     }
 
     fun stop(){
@@ -53,13 +54,15 @@ open class WebRTCClient(
         try {
             peers[worker_id]!!.channel?.close()
             //uncomment this if we need to close the connection as well
-//            peers[workerId]!!.connection.close()
+            //peers[workerId]!!.connection.close()
         }catch (e:Exception){
             Log.e(TAG,"error removing peer $worker_id",e)
         }
         peers.remove(worker_id)
     }
 
+    // Given a message, this function allows you to "broadcast" a message to all peers
+    // Alternatively, you may send a targeted message to one specific peer (specified by the "to" param)
     fun sendMessage(message:String,to:String?){
         Log.d(TAG,"sending message $message")
 
@@ -84,42 +87,117 @@ open class WebRTCClient(
 
     fun recieveNewPeer(worker_id: String){
         Log.d(TAG,"Adding new peer")
-        val pc = peerConnectionFactory.createPeerConnection(peerConfig,
-            PeerConnectionObserver(worker_id,SDP_type.OFFER))
-        peers[worker_id] = Peer(pc,null)
+        val pcObserver = PeerConnectionObserver(worker_id,SDP_type.OFFER)
+        val pc = peerConnectionFactory.createPeerConnection(peerConfig,pcObserver)
+        peers[worker_id] = Peer(pc,null,pcObserver,SDPObserver(worker_id,SDP_type.OFFER))
         // add DataChannel constraints in init if needed. Currently default initialization
         peers[worker_id]?.apply {
             channel = pc?.createDataChannel("dataChannel",DataChannel.Init())
-            channel?.registerObserver(DataChannelObserver(channel))
+            dataChannelObserver = DataChannelObserver(channel)
+            channel?.registerObserver(dataChannelObserver)
+            connection?.createOffer(sdpObserver,null)
         }
-        TODO("create offer via sdp observer")
     }
 
-    private class SDPObserver:SdpObserver{
+    fun recieveInternalMessage(type: String,worker_id: String,sessionDescription: String){
+
+        when (type) {
+            "candidate" -> {
+                Log.d(TAG,"remote candidate received")
+                if (!peers.containsKey(worker_id))
+                    createConnection(worker_id)
+                peers[worker_id]?.connection?.addIceCandidate(IceCandidate(null,-1,sessionDescription))
+            }
+            "offer" -> {
+                Log.d(TAG,"remote offer received")
+                if (!peers.containsKey(worker_id))
+                    createConnection(worker_id)
+
+                peers[worker_id]?.apply {
+                    connection?.setRemoteDescription(sdpObserver,
+                        SessionDescription(SessionDescription.Type.OFFER,sessionDescription))
+                    connection?.createAnswer(sdpObserver,null)
+                }
+            }
+            "answer" -> {
+                Log.d(TAG,"remote answer received")
+                peers[worker_id]?.apply {
+                    connection?.setRemoteDescription(sdpObserver,
+                        SessionDescription(SessionDescription.Type.ANSWER,sessionDescription))
+                }
+            }
+        }
+
+    }
+
+    inner class SDPObserver(private val worker_id: String,
+                                    private val creatorType: SDP_type):SdpObserver{
+
         override fun onSetFailure(p0: String?) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            Log.d(TAG,"error setting description")
+        }
+
+        private fun sendSDPWithIce(connection: PeerConnection){
+            Log.d(TAG, "successfully finished setting ${creatorType.canonicalForm()} as Local description")
+            Log.d(TAG,"sending ${creatorType.canonicalForm()} and stored ICE candidates")
+            sendInternalMessage(creatorType.canonicalForm(),
+                connection.localDescription.description,
+                worker_id)
+            peers[worker_id]!!.candidateQueue.forEach{sendInternalMessage("candidate",it.sdp,worker_id)}
         }
 
         override fun onSetSuccess() {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            val connection = peers[worker_id]?.connection ?: return
+
+            if (creatorType == SDP_type.OFFER){
+                // For offering peer connection we first create offer and set
+                // local SDP, then after receiving answer set remote SDP.
+                if (connection.remoteDescription == null) {
+                    // We've just set our local SDP so time to send it and Ice Candidates
+                    sendSDPWithIce(connection)
+                } else {
+                    Log.d(TAG, "successfully set Remote description")
+                }
+            }
+            else{
+                // For answering peer connection we set remote SDP and then
+                // create answer and set local SDP.
+                if (connection.localDescription != null) {
+                    // We've just set our local SDP so time to send and local ICE candidates.
+                    sendSDPWithIce(connection)
+                } else {
+                    // We've just set remote SDP - do nothing for now -
+                    // answer will be created soon.
+                    Log.d(TAG, "successfully finished setting offer as Remote description")
+                }
+
+            }
         }
 
-        override fun onCreateSuccess(p0: SessionDescription?) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        override fun onCreateSuccess(sessionDescription: SessionDescription) {
+            // This is called when answer or offer is created
+            Log.d(TAG,"created")
+            if(peers[worker_id]?.connection !=null && peers[worker_id]?.connection?.localDescription != null) {
+                Log.e(TAG, "multiple SDP creation")
+                return
+            }
+            peers[worker_id]?.connection?.setLocalDescription(this,sessionDescription)
         }
 
-        override fun onCreateFailure(p0: String?) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        override fun onCreateFailure(error: String?) {
+            Log.e(TAG,"error creating : $error")
         }
 
     }
 
-    private inner class PeerConnectionObserver (private val worker_id: String,
-                                                private val sdpType: SDP_type): Observer{
+    inner class PeerConnectionObserver (private val worker_id: String,
+                                                private val creatorType: SDP_type): Observer{
 
-        override fun onIceCandidate(new_candidate: IceCandidate) {
-            Log.d(TAG,"Saving new ICE Candidate")
-            peers[worker_id]?.iceCandidates?.add(new_candidate)
+        override fun onIceCandidate(new_candidate: IceCandidate?) {
+            if(new_candidate != null) {
+                Log.d(TAG,"Saving new ICE Candidate")
+                peers[worker_id]?.candidateQueue?.add(new_candidate)
+            }
         }
 
         override fun onDataChannel(dc: DataChannel) {
@@ -137,20 +215,7 @@ open class WebRTCClient(
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
 
-        override fun onIceGatheringChange(gatheringState: IceGatheringState) {
-            // Check if discovery is complete and send sdp answer
-            if (gatheringState == IceGatheringState.COMPLETE){
-                Log.d(TAG,"sending ${sdpType.canonicalForm()} and stored ICE candidates")
-                sendInternalMessage(sdpType.canonicalForm(),
-                    peers[worker_id]?.connection?.localDescription?.description,
-                    worker_id)
-
-                peers[worker_id]?.iceCandidates?.forEach{sendInternalMessage("candidate",it.sdp,worker_id)}
-
-            }
-
-
-        }
+        override fun onIceGatheringChange(gatheringState: IceGatheringState) {}
 
         override fun onSignalingChange(signalingState: SignalingState) {
             Log.d(TAG,"Signalling State: $signalingState")
@@ -170,7 +235,7 @@ open class WebRTCClient(
 
     }
 
-    private class DataChannelObserver(val dataChannel: DataChannel?):DataChannel.Observer{
+    class DataChannelObserver(private val dataChannel: DataChannel?):DataChannel.Observer{
         override fun onMessage(buffer: DataChannel.Buffer) {
             if (buffer.binary){
                 Log.d(TAG,"Data channel received binary message at $dataChannel")
@@ -190,7 +255,11 @@ open class WebRTCClient(
 
     }
 
-    class Peer(var connection:PeerConnection?,var channel: DataChannel?){
-        val iceCandidates = ArrayList<IceCandidate>()
+    class Peer(var connection:PeerConnection?,
+               var channel: DataChannel?,
+               val peerConnectionObserver: PeerConnectionObserver,
+               val sdpObserver: SDPObserver){
+        val candidateQueue=ArrayList<IceCandidate>()
+        lateinit var dataChannelObserver:DataChannelObserver
     }
 }
