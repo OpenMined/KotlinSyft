@@ -23,6 +23,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+    }
 }
 
 dependencies {
@@ -30,8 +34,12 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.core:core-ktx:1.1.0'
     implementation 'org.webrtc:google-webrtc:1.0.30039'
-    testImplementation 'junit:junit:4.13'
 
+    implementation 'com.google.code.gson:gson:2.8.5'
+
+    debugImplementation "org.mockito:mockito-junit-jupiter:3.2.4"
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.5.2'
+    testImplementation "org.mockito:mockito-core:3.2.4"
 }

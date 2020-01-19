@@ -20,8 +20,8 @@ open class WebRTCClient(
                                         .createPeerConnectionFactory()
 
     var peers = HashMap<String,Peer>()
-    lateinit var workerId:String
-    lateinit var scopeId:String
+    private lateinit var workerId:String
+    private lateinit var scopeId:String
 
     fun start(workerId:String,scopeId:String){
         Log.d(TAG,"Joining room $scopeId")
@@ -85,7 +85,7 @@ open class WebRTCClient(
         //TODO implement this
     }
 
-    fun recieveNewPeer(worker_id: String){
+    fun receiveNewPeer(worker_id: String){
         Log.d(TAG,"Adding new peer")
         val pcObserver = PeerConnectionObserver(worker_id,SDP_type.OFFER)
         val pc = peerConnectionFactory.createPeerConnection(peerConfig,pcObserver)
@@ -99,7 +99,7 @@ open class WebRTCClient(
         }
     }
 
-    fun recieveInternalMessage(type: String,worker_id: String,sessionDescription: String){
+    fun receiveInternalMessage(type: String, worker_id: String, sessionDescription: String){
 
         when (type) {
             "candidate" -> {
