@@ -11,21 +11,19 @@ import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
 
 
-
-
 private const val TAG = "WebRTC test"
 
 @ExtendWith(MockitoExtension::class)
-class WebRTCClientTest{
+class WebRTCClientTest {
 
     @Mock
-    lateinit var socket : Socket
+    lateinit var socket: Socket
 
-    lateinit var rtcClient:WebRTCClient
+    lateinit var rtcClient: WebRTCClient
     @Test
     fun start() {
-        Log.v(TAG,"start() sends message to join the scope")
-        rtcClient.start("joinTestId","joinTestScope")
+        Log.v(TAG, "start() sends message to join the scope")
+        rtcClient.start("joinTestId", "joinTestScope")
 
     }
 
