@@ -1,13 +1,13 @@
 # Contributing Guidelines
 
-We would be happy ot have more volunterers for the android worker. This library constitutes and important component of on-device machine learning and you will be a part of this huge community
-You can always join us on slack if you find an issue in which  you are intertested.
+We would be happy to have more volunterers for the android worker. This library constitutes and important component of on-device machine learning and you will be a part of this huge community
+You can always join us on slack if you find an issue in which you are interested.
 
 Here are some important resources:
 
   * [Openmined.org](https://www.openmined.org/) describes the role and long term aim of the organisation,
   * [Pysyft](https://github.com/OpenMined/PySyft) repository is the hub of all encrypted algorithms and training protocols. The android worker acts as a client for it! 
-  * [Syft.js](https://github.com/OpenMined/syft.js) is web interface fro Pysyft
+  * [Syft.js](https://github.com/OpenMined/syft.js) is the web interface for Pysyft
   
 ## Testing 
 

@@ -27,6 +27,10 @@ android {
         sourceCompatibility = 1.8
         targetCompatibility = 1.8
     }
+    packagingOptions {
+        exclude 'META-INF/LICENSE.md'
+        exclude 'META-INF/LICENSE-notice.md'
+    }
 }
 
 dependencies {
