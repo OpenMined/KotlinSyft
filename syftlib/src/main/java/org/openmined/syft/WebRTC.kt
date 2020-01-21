@@ -1,26 +1,33 @@
-package org.openmined.kotlinsyft
+package org.openmined.syft
 
 import android.util.Log
-import org.openmined.kotlinsyft.Constants.WEBRTC_JOIN_ROOM
-import org.webrtc.*
-import org.webrtc.PeerConnection.*
+import org.webrtc.DataChannel
+import org.webrtc.IceCandidate
+import org.webrtc.MediaStream
+import org.webrtc.PeerConnection
+import org.webrtc.PeerConnectionFactory
+import org.webrtc.RtpReceiver
+import org.webrtc.SdpObserver
+import org.webrtc.SessionDescription
 import java.nio.ByteBuffer
 
 
-typealias SDP_type = SessionDescription.Type
+typealias SDP_Type = SessionDescription.Type
 
+const val WEBRTC_JOIN_ROOM = "webrtc: join-room"
 private const val TAG = "WebRTCClient"
 
-open class WebRTCClient(
+class WebRTCClient(
     peerOptions: PeerConnectionFactory.Options,
-    private val peerConfig: RTCConfiguration, private val socket: Socket
+    private val peerConfig: PeerConnection.RTCConfiguration,
+    private val socket: Socket
 ) {
 
     private val peerConnectionFactory = PeerConnectionFactory.builder()
         .setOptions(peerOptions)
         .createPeerConnectionFactory()
 
-    var peers = HashMap<String, Peer>()
+    private val peers = HashMap<String, Peer>()
     private lateinit var workerId: String
     private lateinit var scopeId: String
 
@@ -33,33 +40,33 @@ open class WebRTCClient(
         socket.send(WEBRTC_JOIN_ROOM, "{$workerId,$scopeId}")
     }
 
-    private fun createConnection(worker_id: String) {
+    private fun createConnection(newWorkerId: String) {
         Log.d(TAG, "Creating Connection as answer")
-        val pcObserver = PeerConnectionObserver(worker_id, SDP_type.ANSWER)
+        val pcObserver = PeerConnectionObserver(newWorkerId, SDP_Type.ANSWER)
         val pc = peerConnectionFactory.createPeerConnection(peerConfig, pcObserver)
-        peers[worker_id] = Peer(pc, null, pcObserver, SDPObserver(worker_id, SDP_type.ANSWER))
+        peers[newWorkerId] = Peer(pc, null, pcObserver, SDPObserver(newWorkerId, SDP_Type.ANSWER))
     }
 
     fun stop() {
         Log.d(TAG, "WebRTC disconnecting from peers")
-        peers.forEach { (worker_id, peer) ->
+        peers.forEach { (newWorkerId, peer) ->
             if (peer.channel != null)
-                removePeer(worker_id)
+                removePeer(newWorkerId)
         }
     }
 
-    private fun removePeer(worker_id: String) {
-        if (!peers.keys.contains(worker_id)) return
+    private fun removePeer(newWorkerId: String) {
+        if (!peers.keys.contains(newWorkerId)) return
 
-        Log.d(TAG, "`Closing connection to $worker_id")
+        Log.d(TAG, "`Closing connection to $newWorkerId")
         try {
-            peers[worker_id]!!.channel?.close()
+            peers[newWorkerId]!!.channel?.close()
             //uncomment this if we need to close the connection as well
             //peers[workerId]!!.connection.close()
         } catch (e: Exception) {
-            Log.e(TAG, "error removing peer $worker_id", e)
+            Log.e(TAG, "error removing peer $newWorkerId", e)
         }
-        peers.remove(worker_id)
+        peers.remove(newWorkerId)
     }
 
     // Given a message, this function allows you to "broadcast" a message to all peers
@@ -86,13 +93,13 @@ open class WebRTCClient(
         //TODO implement this
     }
 
-    fun receiveNewPeer(worker_id: String) {
+    fun receiveNewPeer(newWorkerId: String) {
         Log.d(TAG, "Adding new peer")
-        val pcObserver = PeerConnectionObserver(worker_id, SDP_type.OFFER)
+        val pcObserver = PeerConnectionObserver(newWorkerId, SDP_Type.OFFER)
         val pc = peerConnectionFactory.createPeerConnection(peerConfig, pcObserver)
-        peers[worker_id] = Peer(pc, null, pcObserver, SDPObserver(worker_id, SDP_type.OFFER))
+        peers[newWorkerId] = Peer(pc, null, pcObserver, SDPObserver(newWorkerId, SDP_Type.OFFER))
         // add DataChannel constraints in init if needed. Currently default initialization
-        peers[worker_id]?.apply {
+        peers[newWorkerId]?.apply {
             channel = pc?.createDataChannel("dataChannel", DataChannel.Init())
             dataChannelObserver = DataChannelObserver(channel)
             channel?.registerObserver(dataChannelObserver)
@@ -100,14 +107,14 @@ open class WebRTCClient(
         }
     }
 
-    fun receiveInternalMessage(type: String, worker_id: String, sessionDescription: String) {
+    fun receiveInternalMessage(type: String, newWorkerId: String, sessionDescription: String) {
 
         when (type) {
             "candidate" -> {
                 Log.d(TAG, "remote candidate received")
-                if (!peers.containsKey(worker_id))
-                    createConnection(worker_id)
-                peers[worker_id]?.connection?.addIceCandidate(
+                if (!peers.containsKey(newWorkerId))
+                    createConnection(newWorkerId)
+                peers[newWorkerId]?.connection?.addIceCandidate(
                     IceCandidate(
                         null,
                         -1,
@@ -117,10 +124,10 @@ open class WebRTCClient(
             }
             "offer" -> {
                 Log.d(TAG, "remote offer received")
-                if (!peers.containsKey(worker_id))
-                    createConnection(worker_id)
+                if (!peers.containsKey(newWorkerId))
+                    createConnection(newWorkerId)
 
-                peers[worker_id]?.apply {
+                peers[newWorkerId]?.apply {
                     connection?.setRemoteDescription(
                         sdpObserver,
                         SessionDescription(SessionDescription.Type.OFFER, sessionDescription)
@@ -130,7 +137,7 @@ open class WebRTCClient(
             }
             "answer" -> {
                 Log.d(TAG, "remote answer received")
-                peers[worker_id]?.apply {
+                peers[newWorkerId]?.apply {
                     connection?.setRemoteDescription(
                         sdpObserver,
                         SessionDescription(SessionDescription.Type.ANSWER, sessionDescription)
@@ -142,8 +149,8 @@ open class WebRTCClient(
     }
 
     inner class SDPObserver(
-        private val worker_id: String,
-        private val creatorType: SDP_type
+        private val newWorkerId: String,
+        private val creatorType: SDP_Type
     ) : SdpObserver {
 
         override fun onSetFailure(p0: String?) {
@@ -151,18 +158,18 @@ open class WebRTCClient(
         }
 
         override fun onSetSuccess() {
-            val connection = peers[worker_id]?.connection ?: return
+            val connection = peers[newWorkerId]?.connection ?: return
             val sendIce = {
-                peers[worker_id]!!.candidateQueue.forEach {
+                peers[newWorkerId]!!.candidateQueue.forEach {
                     sendInternalMessage(
                         "candidate",
                         it.sdp,
-                        worker_id
+                        newWorkerId
                     )
                 }
             }
 
-            if (creatorType == SDP_type.OFFER) {
+            if (creatorType == SDP_Type.OFFER) {
                 // For offering peer connection we first create offer and set
                 // local SDP, then after receiving answer set remote SDP.
                 if (connection.remoteDescription == null) {
@@ -175,7 +182,7 @@ open class WebRTCClient(
                     sendInternalMessage(
                         creatorType.canonicalForm(),
                         connection.localDescription.description,
-                        worker_id
+                        newWorkerId
                     )
                 } else {
                     Log.d(TAG, "successfully set Remote description")
@@ -194,7 +201,7 @@ open class WebRTCClient(
                     sendInternalMessage(
                         creatorType.canonicalForm(),
                         connection.localDescription.description,
-                        worker_id
+                        newWorkerId
                     )
                     sendIce()
                 } else {
@@ -209,11 +216,11 @@ open class WebRTCClient(
         override fun onCreateSuccess(sessionDescription: SessionDescription) {
             // This is called when answer or offer is created
             Log.d(TAG, "created")
-            if (peers[worker_id]?.connection != null && peers[worker_id]?.connection?.localDescription != null) {
+            if (peers[newWorkerId]?.connection != null && peers[newWorkerId]?.connection?.localDescription != null) {
                 Log.e(TAG, "multiple SDP creation")
                 return
             }
-            peers[worker_id]?.connection?.setLocalDescription(this, sessionDescription)
+            peers[newWorkerId]?.connection?.setLocalDescription(this, sessionDescription)
         }
 
         override fun onCreateFailure(error: String?) {
@@ -223,21 +230,21 @@ open class WebRTCClient(
     }
 
     inner class PeerConnectionObserver(
-        private val worker_id: String,
-        private val creatorType: SDP_type
-    ) : Observer {
+        private val newWorkerId: String,
+        private val creatorType: SDP_Type
+    ) : PeerConnection.Observer {
 
         override fun onIceCandidate(new_candidate: IceCandidate?) {
             if (new_candidate != null) {
                 Log.d(TAG, "Saving new ICE Candidate")
-                peers[worker_id]?.candidateQueue?.add(new_candidate)
+                peers[newWorkerId]?.candidateQueue?.add(new_candidate)
             }
         }
 
         override fun onDataChannel(dc: DataChannel) {
             Log.d(TAG, "Calling onDataChannel ${dc.label()}")
             dc.registerObserver(DataChannelObserver(dc))
-            peers[worker_id]?.channel = dc
+            peers[newWorkerId]?.channel = dc
 
         }
 
@@ -245,13 +252,13 @@ open class WebRTCClient(
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
 
-        override fun onIceConnectionChange(p0: IceConnectionState?) {
+        override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
 
-        override fun onIceGatheringChange(gatheringState: IceGatheringState) {}
+        override fun onIceGatheringChange(gatheringState: PeerConnection.IceGatheringState) {}
 
-        override fun onSignalingChange(signalingState: SignalingState) {
+        override fun onSignalingChange(signalingState: PeerConnection.SignalingState) {
             Log.d(TAG, "Signalling State: $signalingState")
         }
 
@@ -298,7 +305,7 @@ open class WebRTCClient(
         val peerConnectionObserver: PeerConnectionObserver,
         val sdpObserver: SDPObserver
     ) {
-        val candidateQueue = ArrayList<IceCandidate>()
+        val candidateQueue = mutableListOf<IceCandidate>()
         lateinit var dataChannelObserver: DataChannelObserver
     }
 }

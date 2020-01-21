@@ -1,4 +1,4 @@
-package org.openmined.kotlinsyft
+package org.openmined.syft
 
 import java.net.Socket
 
