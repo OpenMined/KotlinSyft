@@ -28,6 +28,10 @@ android {
         targetCompatibility = 1.8
     }
 
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+
     lintOptions {
         lintConfig file("lint.xml")
     }

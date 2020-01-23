@@ -18,14 +18,10 @@ const val WEBRTC_JOIN_ROOM = "webrtc: join-room"
 private const val TAG = "WebRTCClient"
 
 class WebRTCClient(
-    peerOptions: PeerConnectionFactory.Options,
+    private val peerConnectionFactory: PeerConnectionFactory,
     private val peerConfig: PeerConnection.RTCConfiguration,
     private val socket: Socket
 ) {
-
-    private val peerConnectionFactory = PeerConnectionFactory.builder()
-        .setOptions(peerOptions)
-        .createPeerConnectionFactory()
 
     private val peers = HashMap<String, Peer>()
     private lateinit var workerId: String
@@ -40,19 +36,19 @@ class WebRTCClient(
         socket.send(WEBRTC_JOIN_ROOM, "{$workerId,$scopeId}")
     }
 
-    private fun createConnection(newWorkerId: String) {
-        Log.d(TAG, "Creating Connection as answer")
-        val pcObserver = PeerConnectionObserver(newWorkerId, SDP_Type.ANSWER)
-        val pc = peerConnectionFactory.createPeerConnection(peerConfig, pcObserver)
-        peers[newWorkerId] = Peer(pc, null, pcObserver, SDPObserver(newWorkerId, SDP_Type.ANSWER))
-    }
-
     fun stop() {
         Log.d(TAG, "WebRTC disconnecting from peers")
         peers.forEach { (newWorkerId, peer) ->
             if (peer.channel != null)
                 removePeer(newWorkerId)
         }
+    }
+
+    private fun createConnection(newWorkerId: String) {
+        Log.d(TAG, "Creating Connection as answer")
+        val pcObserver = PeerConnectionObserver(newWorkerId, SDP_Type.ANSWER)
+        val pc = peerConnectionFactory.createPeerConnection(peerConfig, pcObserver)
+        peers[newWorkerId] = Peer(pc, null, pcObserver, SDPObserver(newWorkerId, SDP_Type.ANSWER))
     }
 
     private fun removePeer(newWorkerId: String) {
