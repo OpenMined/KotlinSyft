@@ -1,0 +1,16 @@
+apply plugin: 'com.novoda.bintray-release'
+
+publish {
+
+    def groupProjectID = 'org.openmined'
+    def artifactProjectID = 'syftlib'
+    def publishVersionID = '0.0.1'
+
+    userOrg = 'openmined'
+    repoName = 'KotlinSyft'
+    groupId = groupProjectID
+    artifactId = artifactProjectID
+    publishVersion = publishVersionID
+    desc = 'Android worker library'
+    website = 'https://github.com/OpenMined/KotlinSyft'
+}
