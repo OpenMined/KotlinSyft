@@ -3,7 +3,8 @@
 ![License](https://img.shields.io/github/license/openmined/KotlinSyft)
 ![Language](https://img.shields.io/github/languages/top/openmined/KotlinSyft)
 ![Size](https://img.shields.io/github/repo-size/openmined/KotlinSyft)
-
+![CI](https://travis-ci.org/OpenMined/KotlinSyft.svg?branch=dev)
+![Version](https://api.bintray.com/packages/openmined/KotlinSyft/syftlib/images/download.svg?version=0.0.1) ](https://bintray.com/openmined/KotlinSyft/syftlib/0.0.1/link)
 
 ## Introduction
 This is the android worker Library for [PySyft](https://github.com/OpenMined/PySyft)
