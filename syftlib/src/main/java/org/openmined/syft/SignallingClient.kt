@@ -7,6 +7,7 @@ import io.reactivex.disposables.Disposable
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.json
+import org.openmined.syft.interfaces.SignallingInterface
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.net.InetSocketAddress

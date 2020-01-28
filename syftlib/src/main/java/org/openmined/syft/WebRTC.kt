@@ -74,7 +74,7 @@ class WebRTCClient(
      * @param message : this function allows you to "broadcast" this `message` to all peers
      * @param to : you may send a targeted message to target `to`, default null
      */
-    fun sendMessage(message: String, to: String?) {
+    fun sendMessage(message: String, to: String? = null) {
         Log.d(TAG, "sending message $message")
 
         if (to != null && !to.contentEquals(workerId) && peers[to]?.channel != null)
@@ -298,7 +298,6 @@ class WebRTCClient(
          * These methods are not used since we only exploit data channel
          */
         override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {}
-
         override fun onRemoveStream(p0: MediaStream?) {}
         override fun onAddStream(p0: MediaStream?) {}
 
