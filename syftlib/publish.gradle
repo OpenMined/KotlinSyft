@@ -3,7 +3,7 @@ apply plugin: 'com.novoda.bintray-release'
 
 publish {
     def groupProjectID = 'org.openmined.kotlinsyft'
-    def artifactProjectID = 'syftlib'
+    def artifactProjectID = 'syft'
     def publishVersionID = LIB_VERSION
 
     userOrg = 'openmined'
