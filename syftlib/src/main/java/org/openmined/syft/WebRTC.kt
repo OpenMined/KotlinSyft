@@ -1,6 +1,7 @@
 package org.openmined.syft
 
 import android.util.Log
+import kotlinx.serialization.json.json
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
 import org.webrtc.MediaStream
@@ -15,12 +16,13 @@ import java.nio.ByteBuffer
 typealias SDP_Type = SessionDescription.Type
 
 const val WEBRTC_JOIN_ROOM = "webrtc: join-room"
+const val WEBRTC_INTERNAL_MESSAGE = "webrtc: internal-message"
 private const val TAG = "WebRTCClient"
 
-class WebRTCClient(
+internal class WebRTCClient(
     private val peerConnectionFactory: PeerConnectionFactory,
     private val peerConfig: PeerConnection.RTCConfiguration,
-    private val socket: Socket
+    private val signallingClient: SignallingClient
 ) {
 
     private val peers = HashMap<String, Peer>()
@@ -32,8 +34,11 @@ class WebRTCClient(
 
         this.workerId = workerId
         this.scopeId = scopeId
-        //TODO send as json {workerID,scopeId}
-        socket.send(WEBRTC_JOIN_ROOM, "{$workerId,$scopeId}")
+        val message = json {
+            "workerId" to workerId
+            "scopeId" to scopeId
+        }
+        signallingClient.send(WEBRTC_JOIN_ROOM, message)
     }
 
     fun stop() {
@@ -65,9 +70,11 @@ class WebRTCClient(
         peers.remove(newWorkerId)
     }
 
-    // Given a message, this function allows you to "broadcast" a message to all peers
-    // Alternatively, you may send a targeted message to one specific peer (specified by the "to" param)
-    fun sendMessage(message: String, to: String?) {
+    /**
+     * @param message : this function allows you to "broadcast" this `message` to all peers
+     * @param to : you may send a targeted message to target `to`, default null
+     */
+    fun sendMessage(message: String, to: String? = null) {
         Log.d(TAG, "sending message $message")
 
         if (to != null && !to.contentEquals(workerId) && peers[to]?.channel != null)
@@ -77,6 +84,9 @@ class WebRTCClient(
                 .forEach { (_, peer) -> send(peer.channel!!, message) }
     }
 
+    /**
+     * Send the data packets over the dataChannel without going through PyGrid
+     */
     private fun send(channel: DataChannel, msg: String) {
         try {
             channel.send(DataChannel.Buffer(ByteBuffer.wrap(msg.toByteArray()), false))
@@ -85,8 +95,23 @@ class WebRTCClient(
         }
     }
 
-    private fun sendInternalMessage(type: String, message: String?, to: String) {
-        //TODO implement this
+    /**
+     * Send the message via PyGrid to set up connection
+     * @param type
+     * @param message
+     */
+    private fun sendInternalMessage(type: String, message: String, target: String) {
+        if (target != workerId) {
+            Log.d(TAG, "Sending Internal WebRTC message via PyGrid")
+            val jsonMessage = json {
+                "workerId" to workerId
+                "scopeId" to scopeId
+                "to" to target
+                "type" to type
+                "data" to message
+            }
+            this.signallingClient.send(WEBRTC_INTERNAL_MESSAGE, jsonMessage)
+        }
     }
 
     fun receiveNewPeer(newWorkerId: String) {
@@ -209,8 +234,11 @@ class WebRTCClient(
             }
         }
 
+        /**
+         * This is called when answer or offer is created
+         *  @param sessionDescription : the generated SDP
+         */
         override fun onCreateSuccess(sessionDescription: SessionDescription) {
-            // This is called when answer or offer is created
             Log.d(TAG, "created")
             if (peers[newWorkerId]?.connection != null && peers[newWorkerId]?.connection?.localDescription != null) {
                 Log.e(TAG, "multiple SDP creation")
@@ -266,6 +294,9 @@ class WebRTCClient(
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
 
+        /**
+         * These methods are not used since we only exploit data channel
+         */
         override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {}
         override fun onRemoveStream(p0: MediaStream?) {}
         override fun onAddStream(p0: MediaStream?) {}
@@ -295,7 +326,7 @@ class WebRTCClient(
 
     }
 
-    class Peer(
+    data class Peer(
         var connection: PeerConnection?,
         var channel: DataChannel?,
         val peerConnectionObserver: PeerConnectionObserver,
