@@ -1,6 +1,6 @@
-package org.openmined.syft
+package org.openmined.syft.network
 
-import org.junit.jupiter.api.BeforeAll
+import kotlinx.serialization.json.json
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.InjectMocks
@@ -15,11 +15,11 @@ private const val TAG = "WebRTC test"
 class WebRTCClientTest {
 
     @Mock
-    lateinit var peerConnectionFactory: PeerConnectionFactory
+    private lateinit var peerConnectionFactory: PeerConnectionFactory
     @Mock
-    lateinit var peerConfig: PeerConnection.RTCConfiguration
+    private lateinit var peerConfig: PeerConnection.RTCConfiguration
     @Mock
-    lateinit var socket: Socket
+    private lateinit var signallingClient: SignallingClient
 
     @InjectMocks
     private lateinit var cut: WebRTCClient
@@ -33,10 +33,13 @@ class WebRTCClientTest {
     fun `Given a workerId and a scopeId when the client starts it sends it through the socket`() {
         val workerId = "workerId"
         val scopeId = "scopeId"
-        val expected = "{$workerId,$scopeId}"
+        val expected = json {
+            "workerId" to workerId
+            "scopeId" to scopeId
+        }
 
         cut.start(workerId, scopeId)
 
-        verify(socket).send(WEBRTC_JOIN_ROOM, expected)
+        verify(signallingClient).send(WEBRTC_JOIN_ROOM, expected)
     }
 }

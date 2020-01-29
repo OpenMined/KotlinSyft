@@ -4,11 +4,10 @@ import io.reactivex.disposables.CompositeDisposable
 import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import org.openmined.syft.interfaces.ProcessSchedulers
-import org.openmined.syft.interfaces.SignallingInterface
+import org.openmined.syft.network.SignallingClient
+import org.openmined.syft.threading.ProcessSchedulers
 
 class Syft(
-    private val signallingInterface: SignallingInterface,
     private val workerId: String,
     private val keepAliveTimeout: Int = 20000,
     private val url: String,
@@ -22,7 +21,12 @@ class Syft(
     @ImplicitReflectionSerializer
     fun start() {
         // Create signalling client and execute it in background thread
-        signallingClient = SignallingClient(signallingInterface, workerId, keepAliveTimeout, url, port)
+        signallingClient = SignallingClient(
+            workerId,
+            keepAliveTimeout,
+            url,
+            port
+        )
 
         val disposable = signallingClient.start()
             .map {
@@ -37,7 +41,6 @@ class Syft(
             .subscribe()
 
         compositeDisposable.add(disposable)
-
     }
 
     @ImplicitReflectionSerializer

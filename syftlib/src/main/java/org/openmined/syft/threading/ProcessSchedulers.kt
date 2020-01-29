@@ -1,4 +1,4 @@
-package org.openmined.syft.interfaces
+package org.openmined.syft.threading
 
 import io.reactivex.Scheduler
 
