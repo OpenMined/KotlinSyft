@@ -1,4 +1,4 @@
-package org.openmined.syft
+package org.openmined.syft.network
 
 import android.util.Log
 import kotlinx.serialization.json.json
@@ -53,7 +53,15 @@ internal class WebRTCClient(
         Log.d(TAG, "Creating Connection as answer")
         val pcObserver = PeerConnectionObserver(newWorkerId, SDP_Type.ANSWER)
         val pc = peerConnectionFactory.createPeerConnection(peerConfig, pcObserver)
-        peers[newWorkerId] = Peer(pc, null, pcObserver, SDPObserver(newWorkerId, SDP_Type.ANSWER))
+        peers[newWorkerId] = Peer(
+            pc,
+            null,
+            pcObserver,
+            SDPObserver(
+                newWorkerId,
+                SDP_Type.ANSWER
+            )
+        )
     }
 
     private fun removePeer(newWorkerId: String) {
@@ -118,11 +126,22 @@ internal class WebRTCClient(
         Log.d(TAG, "Adding new peer")
         val pcObserver = PeerConnectionObserver(newWorkerId, SDP_Type.OFFER)
         val pc = peerConnectionFactory.createPeerConnection(peerConfig, pcObserver)
-        peers[newWorkerId] = Peer(pc, null, pcObserver, SDPObserver(newWorkerId, SDP_Type.OFFER))
+        peers[newWorkerId] = Peer(
+            pc,
+            null,
+            pcObserver,
+            SDPObserver(
+                newWorkerId,
+                SDP_Type.OFFER
+            )
+        )
         // add DataChannel constraints in init if needed. Currently default initialization
         peers[newWorkerId]?.apply {
             channel = pc?.createDataChannel("dataChannel", DataChannel.Init())
-            dataChannelObserver = DataChannelObserver(channel)
+            dataChannelObserver =
+                DataChannelObserver(
+                    channel
+                )
             channel?.registerObserver(dataChannelObserver)
             connection?.createOffer(sdpObserver, null)
         }
@@ -267,7 +286,11 @@ internal class WebRTCClient(
 
         override fun onDataChannel(dc: DataChannel) {
             Log.d(TAG, "Calling onDataChannel ${dc.label()}")
-            dc.registerObserver(DataChannelObserver(dc))
+            dc.registerObserver(
+                DataChannelObserver(
+                    dc
+                )
+            )
             peers[newWorkerId]?.channel = dc
 
         }

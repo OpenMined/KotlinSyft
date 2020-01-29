@@ -1,17 +1,15 @@
-package org.openmined.syft
+package org.openmined.syft.network
 
 import io.reactivex.Flowable
 import io.reactivex.processors.PublishProcessor
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.json
 import okhttp3.*
-import org.openmined.syft.interfaces.SignallingInterface
 import java.util.concurrent.TimeUnit
 
 private const val TAG = "WebRTC Signalling Client"
 
 internal class SignallingClient(
-    private val signallingInterface: SignallingInterface,
     private val workerId: String,
     private val keepAliveTimeout: Int = 20000,
     private val url: String,
@@ -42,14 +40,10 @@ internal class SignallingClient(
             super.onOpen(webSocket, response)
             this@SignallingClient.webSocket = webSocket
             isConnected = true
-            // TODO Could actually be replaced by just publishing
-            signallingInterface.onOpen()
             statusPublishProcessor.offer("We are open for business!")
         }
 
         override fun onMessage(webSocket: WebSocket, text: String) {
-            // TODO Could actually be replaced by just publishing
-            signallingInterface.onMessage(text)
             statusPublishProcessor.offer("Received new message $text")
         }
 
