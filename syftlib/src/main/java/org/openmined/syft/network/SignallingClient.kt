@@ -2,28 +2,28 @@ package org.openmined.syft.network
 
 import io.reactivex.Flowable
 import io.reactivex.processors.PublishProcessor
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.json
 import okhttp3.*
 import java.util.concurrent.TimeUnit
 
-private const val TAG = "WebRTC Signalling Client"
+private const val SOCKET_CLOSE_CLIENT = 1000
+private const val SOCKET_CLOSE_ERROR = 1001
 
 internal class SignallingClient(
     private val workerId: String,
-    private val keepAliveTimeout: Int = 20000,
     private val url: String,
-    private val port: Int
-) {
+    private val keepAliveTimeout: Int = 20000
+    ) {
     private lateinit var request: Request
     private lateinit var client: OkHttpClient
-    private var isConnected = false
     private lateinit var webSocket: WebSocket
     private val syftSocketListener = SyftSocketListener()
 
-    private val statusPublishProcessor: PublishProcessor<String> = PublishProcessor.create<String>()
+    private val statusPublishProcessor: PublishProcessor<NetworkMessage> = PublishProcessor.create<NetworkMessage>()
 
-    fun start(): Flowable<String> {
+    fun start(): Flowable<NetworkMessage> {
         client = OkHttpClient.Builder()
             .pingInterval(keepAliveTimeout.toLong(), TimeUnit.MILLISECONDS)
             .build()
@@ -34,52 +34,48 @@ internal class SignallingClient(
         return statusPublishProcessor.onBackpressureBuffer()
     }
 
-    inner class SyftSocketListener : WebSocketListener() {
+    /**
+     * Send the data over the Socket connection to PyGrid
+     */
+    fun send(type: String, data: JsonObject) {
+        val message = json {
+            "type" to type
+            "data" to data.content.toMutableMap().replace("workerId", JsonPrimitive(workerId))
+        }.toString()
 
-        override fun onOpen(webSocket: WebSocket, response: Response) {
-            super.onOpen(webSocket, response)
-            this@SignallingClient.webSocket = webSocket
-            isConnected = true
-            statusPublishProcessor.offer("We are open for business!")
-        }
+        webSocket.send(message)
 
-        override fun onMessage(webSocket: WebSocket, text: String) {
-            statusPublishProcessor.offer("Received new message $text")
-        }
+        statusPublishProcessor.offer(NetworkMessage.MessageSent)
+    }
 
-        override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-            super.onFailure(webSocket, t, response)
-            isConnected = false
-            webSocket.close(1001, "Some error")
-            // TODO we probably need here some kind of progressive
-            connect()
-        }
+    fun close() {
+        webSocket.close(SOCKET_CLOSE_CLIENT, "Socket closed by client")
+        statusPublishProcessor.offer(NetworkMessage.SocketClosed)
     }
 
     private fun connect() {
         webSocket = client.newWebSocket(request, syftSocketListener)
     }
 
-    /**
-     * Send the data over the Socket connection to PyGrid
-     */
-    fun send(type: String, data: kotlinx.serialization.json.JsonObject) {
-        if (isConnected) {
-            val message = json {
-                "type" to type
-                "data" to data.content.toMutableMap().replace("workerId", JsonPrimitive(workerId))
-            }.toString()
+    inner class SyftSocketListener : WebSocketListener() {
 
-            webSocket.send(message)
-
-            statusPublishProcessor.offer("Message sent")
+        override fun onOpen(webSocket: WebSocket, response: Response) {
+            super.onOpen(webSocket, response)
+            this@SignallingClient.webSocket = webSocket
+            statusPublishProcessor.offer(NetworkMessage.SocketOpen)
         }
-    }
 
-    fun close() {
-        if (isConnected) {
-            webSocket.close(1000, "Socket close by client")
+        override fun onMessage(webSocket: WebSocket, message: String) {
+            statusPublishProcessor.offer(NetworkMessage.MessageReceived(message))
         }
-        statusPublishProcessor.offer("Closing for today")
+
+        override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+            super.onFailure(webSocket, t, response)
+            webSocket.close(SOCKET_CLOSE_ERROR, t.message)
+            statusPublishProcessor.offer(NetworkMessage.SocketError(t))
+            // TODO we probably need here some backoff strategy
+            connect()
+        }
     }
 }
+

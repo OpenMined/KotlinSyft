@@ -138,10 +138,7 @@ internal class WebRTCClient(
         // add DataChannel constraints in init if needed. Currently default initialization
         peers[newWorkerId]?.apply {
             channel = pc?.createDataChannel("dataChannel", DataChannel.Init())
-            dataChannelObserver =
-                DataChannelObserver(
-                    channel
-                )
+            dataChannelObserver = DataChannelObserver(channel)
             channel?.registerObserver(dataChannelObserver)
             connection?.createOffer(sdpObserver, null)
         }
@@ -154,13 +151,7 @@ internal class WebRTCClient(
                 Log.d(TAG, "remote candidate received")
                 if (!peers.containsKey(newWorkerId))
                     createConnection(newWorkerId)
-                peers[newWorkerId]?.connection?.addIceCandidate(
-                    IceCandidate(
-                        null,
-                        -1,
-                        sessionDescription
-                    )
-                )
+                peers[newWorkerId]?.connection?.addIceCandidate(IceCandidate(null,-1,sessionDescription))
             }
             "offer" -> {
                 Log.d(TAG, "remote offer received")
@@ -321,6 +312,7 @@ internal class WebRTCClient(
          * These methods are not used since we only exploit data channel
          */
         override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {}
+
         override fun onRemoveStream(p0: MediaStream?) {}
         override fun onAddStream(p0: MediaStream?) {}
 
