@@ -277,11 +277,7 @@ internal class WebRTCClient(
 
         override fun onDataChannel(dc: DataChannel) {
             Log.d(TAG, "Calling onDataChannel ${dc.label()}")
-            dc.registerObserver(
-                DataChannelObserver(
-                    dc
-                )
-            )
+            dc.registerObserver(DataChannelObserver(dc))
             peers[newWorkerId]?.channel = dc
 
         }

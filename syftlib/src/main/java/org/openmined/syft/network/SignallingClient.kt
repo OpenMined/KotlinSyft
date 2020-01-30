@@ -15,13 +15,14 @@ internal class SignallingClient(
     private val workerId: String,
     private val url: String,
     private val keepAliveTimeout: Int = 20000
-    ) {
+) {
     private lateinit var request: Request
     private lateinit var client: OkHttpClient
     private lateinit var webSocket: WebSocket
     private val syftSocketListener = SyftSocketListener()
 
-    private val statusPublishProcessor: PublishProcessor<NetworkMessage> = PublishProcessor.create<NetworkMessage>()
+    private val statusPublishProcessor: PublishProcessor<NetworkMessage> =
+        PublishProcessor.create<NetworkMessage>()
 
     fun start(): Flowable<NetworkMessage> {
         client = OkHttpClient.Builder()
@@ -43,14 +44,15 @@ internal class SignallingClient(
             "data" to data.content.toMutableMap().replace("workerId", JsonPrimitive(workerId))
         }.toString()
 
-        webSocket.send(message)
-
-        statusPublishProcessor.offer(NetworkMessage.MessageSent)
+        if (webSocket.send(message)) {
+            statusPublishProcessor.offer(NetworkMessage.MessageSent)
+        }
     }
 
     fun close() {
-        webSocket.close(SOCKET_CLOSE_CLIENT, "Socket closed by client")
-        statusPublishProcessor.offer(NetworkMessage.SocketClosed)
+        if (webSocket.close(SOCKET_CLOSE_CLIENT, "Socket closed by client")) {
+            statusPublishProcessor.offer(NetworkMessage.SocketClosed)
+        }
     }
 
     private fun connect() {
@@ -71,7 +73,6 @@ internal class SignallingClient(
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             super.onFailure(webSocket, t, response)
-            webSocket.close(SOCKET_CLOSE_ERROR, t.message)
             statusPublishProcessor.offer(NetworkMessage.SocketError(t))
             // TODO we probably need here some backoff strategy
             connect()
