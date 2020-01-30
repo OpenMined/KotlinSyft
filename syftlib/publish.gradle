@@ -1,16 +1,29 @@
-apply plugin: 'com.novoda.bintray-release'
+apply plugin: "nebula.maven-publish"
+apply plugin: "nebula.javadoc-jar"
+apply plugin: "nebula.source-jar"
 
-publish {
+apply plugin: "nebula.nebula-bintray-publishing"
 
-    def groupProjectID = 'org.openmined'
-    def artifactProjectID = 'syftlib'
-    def publishVersionID = '0.0.1'
+Properties properties = new Properties()
+def propertiesFile = project.rootProject.file('local.properties')
+if (propertiesFile.exists()) {
+    properties.load(propertiesFile.newDataInputStream())
+}
 
-    userOrg = 'openmined'
-    repoName = 'KotlinSyft'
-    groupId = groupProjectID
-    artifactId = artifactProjectID
-    publishVersion = publishVersionID
-    desc = 'Android worker library'
-    website = 'https://github.com/OpenMined/KotlinSyft'
+def bintrayUser = properties.getProperty('bintray.user')
+def bintrayKey = properties.getProperty('bintray.key')
+
+bintray {
+    user = bintrayUser
+    key = bintrayKey
+    pkg {
+        userOrg = "openmined"
+        repo = "KotlinSyft"
+        name = "syft"
+        websiteUrl = "https://github.com/OpenMined/KotlinSyft"
+        issueTrackerUrl = "https://github.com/OpenMined/KotlinSyft/issues"
+        vcsUrl = "https://github.com/OpenMined/KotlinSyft.git"
+        licenses = ["Apache-2.0"]
+        labels = ["openmined", "kotlin", "machine learning", "privacy", "pytorch"]
+    }
 }

@@ -33,5 +33,12 @@ android:
     - android-sdk-preview-license-.+
     - android-sdk-license-.+
     - google-gdk-license-.+
-  script:
-    - ./gradlew build
+
+script:
+  - ./gradlew build check
+
+deploy:
+    provider: script
+    script: ./gradlew final
+    on:
+      branch: master
