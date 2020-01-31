@@ -5,11 +5,14 @@ import io.reactivex.processors.PublishProcessor
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.json
-import okhttp3.*
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
 import java.util.concurrent.TimeUnit
 
 private const val SOCKET_CLOSE_CLIENT = 1000
-private const val SOCKET_CLOSE_ERROR = 1001
 
 internal class SignallingClient(
     private val workerId: String,
@@ -22,15 +25,15 @@ internal class SignallingClient(
     private val syftSocketListener = SyftSocketListener()
 
     private val statusPublishProcessor: PublishProcessor<NetworkMessage> =
-        PublishProcessor.create<NetworkMessage>()
+            PublishProcessor.create<NetworkMessage>()
 
     fun start(): Flowable<NetworkMessage> {
         client = OkHttpClient.Builder()
-            .pingInterval(keepAliveTimeout.toLong(), TimeUnit.MILLISECONDS)
-            .build()
+                .pingInterval(keepAliveTimeout.toLong(), TimeUnit.MILLISECONDS)
+                .build()
         request = Request.Builder()
-            .url(url)
-            .build()
+                .url(url)
+                .build()
         connect()
         return statusPublishProcessor.onBackpressureBuffer()
     }
@@ -67,8 +70,8 @@ internal class SignallingClient(
             statusPublishProcessor.offer(NetworkMessage.SocketOpen)
         }
 
-        override fun onMessage(webSocket: WebSocket, message: String) {
-            statusPublishProcessor.offer(NetworkMessage.MessageReceived(message))
+        override fun onMessage(webSocket: WebSocket, text: String) {
+            statusPublishProcessor.offer(NetworkMessage.MessageReceived(text))
         }
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {

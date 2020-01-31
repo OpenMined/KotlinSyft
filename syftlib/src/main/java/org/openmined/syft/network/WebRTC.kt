@@ -89,7 +89,7 @@ internal class WebRTCClient(
             send(peers[to]!!.channel!!, message)
         else
             peers.filterValues { it.channel != null }
-                .forEach { (_, peer) -> send(peer.channel!!, message) }
+                    .forEach { (_, peer) -> send(peer.channel!!, message) }
     }
 
     /**
@@ -151,7 +151,13 @@ internal class WebRTCClient(
                 Log.d(TAG, "remote candidate received")
                 if (!peers.containsKey(newWorkerId))
                     createConnection(newWorkerId)
-                peers[newWorkerId]?.connection?.addIceCandidate(IceCandidate(null,-1,sessionDescription))
+                peers[newWorkerId]?.connection?.addIceCandidate(
+                    IceCandidate(
+                        null,
+                        -1,
+                        sessionDescription
+                    )
+                )
             }
             "offer" -> {
                 Log.d(TAG, "remote offer received")
