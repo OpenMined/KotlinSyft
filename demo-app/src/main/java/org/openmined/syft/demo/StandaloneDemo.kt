@@ -20,5 +20,5 @@ fun main() {
         }
     )
 
-    syft.start()
+    syft?.start() ?: println("Something went wrong can couldn't start Syft")
 }
