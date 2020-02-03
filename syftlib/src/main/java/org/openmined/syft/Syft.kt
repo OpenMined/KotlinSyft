@@ -4,32 +4,24 @@ import io.reactivex.disposables.CompositeDisposable
 import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import org.openmined.syft.domain.Protocol
 import org.openmined.syft.network.NetworkMessage
 import org.openmined.syft.network.SignallingClient
 import org.openmined.syft.threading.ProcessSchedulers
 
-class Syft(
-    private val workerId: String,
-    private val keepAliveTimeout: Int = 20000,
-    private val url: String,
+@ExperimentalUnsignedTypes
+class Syft constructor(
+    private val signallingClient: SignallingClient,
     private val schedulers: ProcessSchedulers
 ) {
 
-    private lateinit var signallingClient: SignallingClient
     private val compositeDisposable = CompositeDisposable()
 
     @ImplicitReflectionSerializer
     fun start() {
-        // Create signalling client and execute it in background thread
-        signallingClient = SignallingClient(
-            workerId,
-            url,
-            keepAliveTimeout
-        )
 
         val disposable = signallingClient.start()
                 .map {
-                    // TODO Please excuse this terrible piece of code
                     when (it) {
                         is NetworkMessage.SocketOpen -> {
                             println("Socket open")
@@ -49,14 +41,12 @@ class Syft(
     }
 
     @ImplicitReflectionSerializer
-    fun send(message: String) {
-        signallingClient.send(
-            "Personal", JsonObject(
-                mapOf(
-                    "data" to JsonPrimitive(message),
-                    "workerId" to JsonPrimitive("1234")
-                )
+    fun send(message: String) = signallingClient.send(
+        "Personal", JsonObject(
+            mapOf(
+                "data" to JsonPrimitive(message),
+                "workerId" to JsonPrimitive("1234")
             )
         )
-    }
+    )
 }

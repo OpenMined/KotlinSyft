@@ -10,14 +10,17 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import org.openmined.syft.domain.Protocol
 import java.util.concurrent.TimeUnit
 
 private const val SOCKET_CLOSE_CLIENT = 1000
 
-internal class SignallingClient(
+@ExperimentalUnsignedTypes
+class SignallingClient(
     private val workerId: String,
-    private val url: String,
-    private val keepAliveTimeout: Int = 20000
+    private val protocol: Protocol,
+    private val address: String,
+    private val keepAliveTimeout: UInt = 20000u
 ) {
     private lateinit var request: Request
     private lateinit var client: OkHttpClient
@@ -32,7 +35,7 @@ internal class SignallingClient(
                 .pingInterval(keepAliveTimeout.toLong(), TimeUnit.MILLISECONDS)
                 .build()
         request = Request.Builder()
-                .url(url)
+                .url("$protocol://$address")
                 .build()
         connect()
         return statusPublishProcessor.onBackpressureBuffer()
