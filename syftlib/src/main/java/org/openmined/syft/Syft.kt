@@ -4,53 +4,21 @@ import io.reactivex.disposables.CompositeDisposable
 import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import org.openmined.syft.domain.Protocol
 import org.openmined.syft.network.NetworkMessage
 import org.openmined.syft.network.SignallingClient
 import org.openmined.syft.threading.ProcessSchedulers
 
-class Syft private constructor(
-    private val workerId: String,
-    private val keepAliveTimeout: Int = 20000,
-    private val url: String,
+@ExperimentalUnsignedTypes
+class Syft constructor(
+    private val signallingClient: SignallingClient,
     private val schedulers: ProcessSchedulers
 ) {
-    private lateinit var signallingClient: SignallingClient
+
     private val compositeDisposable = CompositeDisposable()
-
-    companion object {
-        operator fun invoke(
-            workerId: String,
-            keepAliveTimeout: Int = 20000,
-            url: String,
-            schedulers: ProcessSchedulers
-        ): Syft? =
-                Syft(workerId, keepAliveTimeout, url, schedulers).takeIf { isValid(it) }
-
-        private fun isValid(syft: Syft): Boolean {
-            return checkProtocol(syft.url) &&
-                   checkKeepAliveTimeout(syft.keepAliveTimeout)
-        }
-
-        private fun checkProtocol(url: String) =
-                if (!url.startsWith("wss", true)) {
-                    println("Protocol must be wss")
-                    false
-                } else true
-
-        private fun checkKeepAliveTimeout(timeout: Int) =
-                if (timeout < 0) {
-                    println("keep alive timeout must be equals or greater than 0")
-                    false
-                } else true
-    }
 
     @ImplicitReflectionSerializer
     fun start() {
-        signallingClient = SignallingClient(
-            workerId,
-            url,
-            keepAliveTimeout
-        )
 
         val disposable = signallingClient.start()
                 .map {

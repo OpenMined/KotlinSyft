@@ -1,45 +1,33 @@
 package org.openmined.syft
 
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.whenever
+import io.reactivex.Flowable
+import io.reactivex.schedulers.Schedulers
+import kotlinx.serialization.ImplicitReflectionSerializer
 import org.junit.jupiter.api.Test
+import org.openmined.syft.network.NetworkMessage
+import org.openmined.syft.network.SignallingClient
 import org.openmined.syft.threading.ProcessSchedulers
-
 
 internal class SyftTest {
 
     @Test
-    fun `Given params are all correct then constructor will return a valid Syft object`() {
-        val workerId = "workerId"
-        val keepAliveTimeout = 20000
-        val url = "wss://someAddress"
-        val schedulers = mock<ProcessSchedulers>()
+    @ExperimentalUnsignedTypes
+    @ImplicitReflectionSerializer
+    fun `Given a syft object when start is invoked the the signalling client is started`() {
+        val signallingClient = mock<SignallingClient>()
+        whenever(signallingClient.start()).thenReturn(Flowable.just(NetworkMessage.SocketOpen))
+        val schedulers = mock<ProcessSchedulers> {
+            on { computeThreadScheduler } doReturn Schedulers.trampoline()
+            on { calleeThreadScheduler } doReturn Schedulers.trampoline()
+        }
 
-        val cut = Syft(workerId, keepAliveTimeout, url, schedulers)
+        val cut = Syft(signallingClient, schedulers)
 
-        assert(cut != null)
-    }
-
-    @Test
-    fun `Given socket protocol is not wss then constructor will return a null object`() {
-        val workerId = "workerId"
-        val keepAliveTimeout = 20000
-        val url = "ws://someAddress"
-        val schedulers = mock<ProcessSchedulers>()
-
-        val cut = Syft(workerId, keepAliveTimeout, url, schedulers)
-
-        assert(cut == null)
-    }
-
-    @Test
-    fun `Given keep alive protocol is negative then constructor will return a null object`() {
-        val workerId = "workerId"
-        val keepAliveTimeout = -10
-        val url = "wss://someAddress"
-        val schedulers = mock<ProcessSchedulers>()
-
-        val cut = Syft(workerId, keepAliveTimeout, url, schedulers)
-
-        assert(cut == null)
+        cut.start()
+        verify(signallingClient).start()
     }
 }
