@@ -11,7 +11,7 @@ fun main() {
     val syft = Syft(
         "myWorker",
         2000,
-        "ws://echo.websocket.org",
+        "wss://echo.websocket.org",
         object : ProcessSchedulers {
             override val computeThreadScheduler: Scheduler
                 get() = Schedulers.computation()
@@ -20,5 +20,5 @@ fun main() {
         }
     )
 
-    syft?.start() ?: println("Something went wrong can couldn't start Syft")
+    syft?.start() ?: println("Something went wrong. Couldn't start Syft")
 }
