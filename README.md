@@ -13,6 +13,24 @@ Of course, [PySyft](https://github.com/openmined/pysyft) has the ability to run 
 
 **KotlinSyft employs P2P connectivity for realization of distributed pysyft protocols.**
 
+### Development Roadmap
+
+For understanding the overall objective of the library please refer to [openmined roadmap](https://github.com/OpenMined/Roadmap/blob/master/web_and_mobile_team/projects/federated_learning.md)
+
+- [x] Create the basic structure of KotlinSyft
+- [x] Implement WebRTC flow in Android
+- [ ] Implement Protobuf in Android
+- [x] Set up deployment to Maven
+- [ ] Implement split and stitch algorithm for data channels in Android
+- [x] Add support for background task scheduling in Android
+- [ ] Implement sleep/wake detection in Android
+- [ ] Add support for charge detection and wifi detection in Android
+- [ ] Add bandwidth and Internet connectivity test in Android
+- [ ] Scaffold basic proposed worker API in Android
+- [ ] Execute plans in Android
+- [ ] Execute protocols in Android
+- [ ] Allow for training state to be persisted to temporary storage in the event of a failure in Android
+
 ### Local Development
 
 1. Fork and clone
