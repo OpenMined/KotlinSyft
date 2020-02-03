@@ -24,24 +24,24 @@ class Syft private constructor(
             url: String,
             schedulers: ProcessSchedulers
         ): Syft? =
-            Syft(workerId, keepAliveTimeout, url, schedulers).takeIf { isValid(it) }
+                Syft(workerId, keepAliveTimeout, url, schedulers).takeIf { isValid(it) }
 
         private fun isValid(syft: Syft): Boolean {
             return checkProtocol(syft.url) &&
-                    checkKeepAliveTimeout(syft.keepAliveTimeout)
+                   checkKeepAliveTimeout(syft.keepAliveTimeout)
         }
 
         private fun checkProtocol(url: String) =
-            if (!url.startsWith("wss", true)) {
-                println("Protocol must be wss")
-                false
-            } else true
+                if (!url.startsWith("wss", true)) {
+                    println("Protocol must be wss")
+                    false
+                } else true
 
         private fun checkKeepAliveTimeout(timeout: Int) =
-            if (timeout < 0) {
-                println("keep alive timeout must be equals or greater than 0")
-                false
-            } else true
+                if (timeout < 0) {
+                    println("keep alive timeout must be equals or greater than 0")
+                    false
+                } else true
     }
 
     @ImplicitReflectionSerializer
@@ -53,21 +53,21 @@ class Syft private constructor(
         )
 
         val disposable = signallingClient.start()
-            .map {
-                when (it) {
-                    is NetworkMessage.SocketOpen -> {
-                        println("Socket open")
-                        send("And now that we are opened, I send a message")
+                .map {
+                    when (it) {
+                        is NetworkMessage.SocketOpen -> {
+                            println("Socket open")
+                            send("And now that we are opened, I send a message")
+                        }
+                        is NetworkMessage.SocketClosed -> println("Socket was closed successfully")
+                        is NetworkMessage.SocketError -> println(it.throwable.message)
+                        is NetworkMessage.MessageReceived -> println(it)
+                        is NetworkMessage.MessageSent -> println("Message sent successfully")
                     }
-                    is NetworkMessage.SocketClosed -> println("Socket was closed successfully")
-                    is NetworkMessage.SocketError -> println(it.throwable.message)
-                    is NetworkMessage.MessageReceived -> println(it)
-                    is NetworkMessage.MessageSent -> println("Message sent successfully")
                 }
-            }
-            .subscribeOn(schedulers.computeThreadScheduler)
-            .observeOn(schedulers.calleeThreadScheduler)
-            .subscribe()
+                .subscribeOn(schedulers.computeThreadScheduler)
+                .observeOn(schedulers.calleeThreadScheduler)
+                .subscribe()
 
         compositeDisposable.add(disposable)
     }
