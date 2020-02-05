@@ -1,7 +1,7 @@
 package org.openmined.syft.network
 
 import android.util.Log
-import kotlinx.serialization.json.json
+import org.openmined.syft.network.REQUEST.WEBRTC_INTERNAL_MESSAGE
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
 import org.webrtc.MediaStream
@@ -11,12 +11,13 @@ import org.webrtc.RtpReceiver
 import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
 import java.nio.ByteBuffer
+import java.util.*
+import kotlin.collections.HashMap
 
 
 typealias SDP_Type = SessionDescription.Type
 
-const val WEBRTC_JOIN_ROOM = "webrtc: join-room"
-const val WEBRTC_INTERNAL_MESSAGE = "webrtc: internal-message"
+
 private const val TAG = "WebRTCClient"
 
 internal class WebRTCClient(
@@ -34,11 +35,10 @@ internal class WebRTCClient(
 
         this.workerId = workerId
         this.scopeId = scopeId
-        val message = json {
-            "workerId" to workerId
-            "scopeId" to scopeId
-        }
-        signallingClient.send(WEBRTC_JOIN_ROOM, message)
+        signallingClient.send(
+            REQUEST.WEBRTC_JOIN_ROOM,
+            CommunicationDataFactory.joinRoom(workerId, scopeId)
+        )
     }
 
     fun stop() {
@@ -108,17 +108,13 @@ internal class WebRTCClient(
      * @param type
      * @param message
      */
-    private fun sendInternalMessage(type: String, message: String, target: String) {
+    private fun sendInternalMessage(type: WebRTCMessageTypes, message: String, target: String) {
         if (target != workerId) {
             Log.d(TAG, "Sending Internal WebRTC message via PyGrid")
-            val jsonMessage = json {
-                "workerId" to workerId
-                "scopeId" to scopeId
-                "to" to target
-                "type" to type
-                "data" to message
-            }
-            this.signallingClient.send(WEBRTC_INTERNAL_MESSAGE, jsonMessage)
+            this.signallingClient.send(
+                WEBRTC_INTERNAL_MESSAGE,
+                CommunicationDataFactory.internalMessage(workerId, scopeId, target, type, message)
+            )
         }
     }
 
@@ -146,8 +142,8 @@ internal class WebRTCClient(
 
     fun receiveInternalMessage(type: String, newWorkerId: String, sessionDescription: String) {
 
-        when (type) {
-            "candidate" -> {
+        when (WebRTCMessageTypes.valueOf(type.toUpperCase(Locale.US))) {
+            WebRTCMessageTypes.CANDIDATE -> {
                 Log.d(TAG, "remote candidate received")
                 if (!peers.containsKey(newWorkerId))
                     createConnection(newWorkerId)
@@ -159,7 +155,7 @@ internal class WebRTCClient(
                     )
                 )
             }
-            "offer" -> {
+            WebRTCMessageTypes.OFFER -> {
                 Log.d(TAG, "remote offer received")
                 if (!peers.containsKey(newWorkerId))
                     createConnection(newWorkerId)
@@ -167,17 +163,17 @@ internal class WebRTCClient(
                 peers[newWorkerId]?.apply {
                     connection?.setRemoteDescription(
                         sdpObserver,
-                        SessionDescription(SessionDescription.Type.OFFER, sessionDescription)
+                        SessionDescription(SDP_Type.OFFER, sessionDescription)
                     )
                     connection?.createAnswer(sdpObserver, null)
                 }
             }
-            "answer" -> {
+            WebRTCMessageTypes.ANSWER -> {
                 Log.d(TAG, "remote answer received")
                 peers[newWorkerId]?.apply {
                     connection?.setRemoteDescription(
                         sdpObserver,
-                        SessionDescription(SessionDescription.Type.ANSWER, sessionDescription)
+                        SessionDescription(SDP_Type.ANSWER, sessionDescription)
                     )
                 }
             }
@@ -199,7 +195,7 @@ internal class WebRTCClient(
             val sendIce = {
                 peers[newWorkerId]!!.candidateQueue.forEach {
                     sendInternalMessage(
-                        "candidate",
+                        WebRTCMessageTypes.CANDIDATE,
                         it.sdp,
                         newWorkerId
                     )
@@ -217,7 +213,7 @@ internal class WebRTCClient(
                     )
                     Log.d(TAG, "sending ${creatorType.canonicalForm()} and stored ICE candidates")
                     sendInternalMessage(
-                        creatorType.canonicalForm(),
+                        WebRTCMessageTypes.OFFER,
                         connection.localDescription.description,
                         newWorkerId
                     )
@@ -236,7 +232,7 @@ internal class WebRTCClient(
                     )
                     Log.d(TAG, "sending ${creatorType.canonicalForm()} and stored ICE candidates")
                     sendInternalMessage(
-                        creatorType.canonicalForm(),
+                        WebRTCMessageTypes.ANSWER,
                         connection.localDescription.description,
                         newWorkerId
                     )

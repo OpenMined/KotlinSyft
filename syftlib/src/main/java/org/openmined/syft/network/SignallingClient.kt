@@ -11,9 +11,11 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.openmined.syft.domain.Protocol
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 
 private const val SOCKET_CLOSE_CLIENT = 1000
+private const val TYPE = "type"
+private const val DATA = "data"
 
 @ExperimentalUnsignedTypes
 class SignallingClient(
@@ -44,10 +46,10 @@ class SignallingClient(
     /**
      * Send the data over the Socket connection to PyGrid
      */
-    fun send(type: String, data: JsonObject) {
+    fun send(type: MessageType, data: JsonObject) {
         val message = json {
-            "type" to type
-            "data" to data.content.toMutableMap().replace("workerId", JsonPrimitive(workerId))
+            TYPE to type.value
+            DATA to data.content.toMutableMap().replace("workerId", JsonPrimitive(workerId))
         }.toString()
 
         if (webSocket.send(message)) {
