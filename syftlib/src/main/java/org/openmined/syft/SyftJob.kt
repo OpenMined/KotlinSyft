@@ -1,20 +1,13 @@
 package org.openmined.syft
 
 
-import io.reactivex.Flowable
-import io.reactivex.Single
-import io.reactivex.processors.PublishProcessor
 import kotlinx.serialization.Serializable
-import org.openmined.syft.network.NetworkMessage
-import org.openmined.syft.threading.ProcessSchedulers
 
 @Serializable
-class Job(val modelName: String, val version: String) {
+class SyftJob(val modelName: String, val version: String? = null) {
 
     /**
-     * create a worker job (throw warning if more than 1 job are created)
-     * notify PyGrid that worker is available for cycle
-     * send info like average up/down speed, ping, torchscript is needed
+     * create a worker job
      */
     fun start(){
 

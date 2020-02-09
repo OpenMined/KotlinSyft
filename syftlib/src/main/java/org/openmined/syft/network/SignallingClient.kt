@@ -19,7 +19,6 @@ private const val DATA = "data"
 
 @ExperimentalUnsignedTypes
 class SignallingClient(
-    private val workerId: String,
     private val protocol: Protocol,
     private val address: String,
     private val keepAliveTimeout: UInt = 20000u
@@ -49,7 +48,7 @@ class SignallingClient(
     fun send(type: MessageType, data: JsonObject) {
         val message = json {
             TYPE to type.value
-            DATA to data.content.toMutableMap().replace("workerId", JsonPrimitive(workerId))
+            DATA to data
         }.toString()
 
         if (webSocket.send(message)) {
