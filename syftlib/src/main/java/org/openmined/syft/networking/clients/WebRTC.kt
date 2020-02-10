@@ -1,7 +1,8 @@
-package org.openmined.syft.network
+package org.openmined.syft.networking.clients
 
 import android.util.Log
-import org.openmined.syft.network.REQUEST.WEBRTC_INTERNAL_MESSAGE
+import org.openmined.syft.networking.requests.CommunicationDataFactory
+import org.openmined.syft.networking.requests.WebRTCMessageTypes
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
 import org.webrtc.MediaStream
@@ -36,7 +37,7 @@ internal class WebRTCClient(
         this.workerId = workerId
         this.scopeId = scopeId
         signallingClient.send(
-            REQUEST.WEBRTC_JOIN_ROOM,
+            WebRTCMessageTypes.WEBRTC_JOIN_ROOM,
             CommunicationDataFactory.joinRoom(workerId, scopeId)
         )
     }
@@ -53,15 +54,16 @@ internal class WebRTCClient(
         Log.d(TAG, "Creating Connection as answer")
         val pcObserver = PeerConnectionObserver(newWorkerId, SDP_Type.ANSWER)
         val pc = peerConnectionFactory.createPeerConnection(peerConfig, pcObserver)
-        peers[newWorkerId] = Peer(
-            pc,
-            null,
-            pcObserver,
-            SDPObserver(
-                newWorkerId,
-                SDP_Type.ANSWER
-            )
-        )
+        peers[newWorkerId] =
+                Peer(
+                    pc,
+                    null,
+                    pcObserver,
+                    SDPObserver(
+                        newWorkerId,
+                        SDP_Type.ANSWER
+                    )
+                )
     }
 
     private fun removePeer(newWorkerId: String) {
@@ -112,7 +114,7 @@ internal class WebRTCClient(
         if (target != workerId) {
             Log.d(TAG, "Sending Internal WebRTC message via PyGrid")
             this.signallingClient.send(
-                WEBRTC_INTERNAL_MESSAGE,
+                WebRTCMessageTypes.WEBRTC_INTERNAL_MESSAGE,
                 CommunicationDataFactory.internalMessage(workerId, scopeId, target, type, message)
             )
         }
@@ -122,19 +124,23 @@ internal class WebRTCClient(
         Log.d(TAG, "Adding new peer")
         val pcObserver = PeerConnectionObserver(newWorkerId, SDP_Type.OFFER)
         val pc = peerConnectionFactory.createPeerConnection(peerConfig, pcObserver)
-        peers[newWorkerId] = Peer(
-            pc,
-            null,
-            pcObserver,
-            SDPObserver(
-                newWorkerId,
-                SDP_Type.OFFER
-            )
-        )
+        peers[newWorkerId] =
+                Peer(
+                    pc,
+                    null,
+                    pcObserver,
+                    SDPObserver(
+                        newWorkerId,
+                        SDP_Type.OFFER
+                    )
+                )
         // add DataChannel constraints in init if needed. Currently default initialization
         peers[newWorkerId]?.apply {
             channel = pc?.createDataChannel("dataChannel", DataChannel.Init())
-            dataChannelObserver = DataChannelObserver(channel)
+            dataChannelObserver =
+                    DataChannelObserver(
+                        channel
+                    )
             channel?.registerObserver(dataChannelObserver)
             connection?.createOffer(sdpObserver, null)
         }
@@ -176,6 +182,9 @@ internal class WebRTCClient(
                         SessionDescription(SDP_Type.ANSWER, sessionDescription)
                     )
                 }
+            }
+            else -> {
+                Log.d(TAG,"unknown message type received")
             }
         }
 
@@ -279,7 +288,11 @@ internal class WebRTCClient(
 
         override fun onDataChannel(dc: DataChannel) {
             Log.d(TAG, "Calling onDataChannel ${dc.label()}")
-            dc.registerObserver(DataChannelObserver(dc))
+            dc.registerObserver(
+                DataChannelObserver(
+                    dc
+                )
+            )
             peers[newWorkerId]?.channel = dc
 
         }

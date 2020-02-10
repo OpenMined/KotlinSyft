@@ -1,4 +1,4 @@
-package org.openmined.syft.network
+package org.openmined.syft.networking.clients
 
 sealed class NetworkMessage() {
     object SocketClosed : NetworkMessage()

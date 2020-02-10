@@ -1,10 +1,8 @@
-package org.openmined.syft.network
+package org.openmined.syft.networking.requests
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.json
 import org.openmined.syft.SyftJob
 
@@ -24,17 +22,15 @@ class CommunicationDataFactory {
             download: String,
             upload: String
         ): JsonObject {
-            val map = mutableMapOf<String,JsonElement>(
-                "workerId" to JsonPrimitive(workerId),
-                "model" to JsonPrimitive(syftJob.modelName),
-                "ping" to JsonPrimitive(ping),
-                "download" to JsonPrimitive(download),
-                "upload" to JsonPrimitive(upload)
-            )
-
-            if (syftJob.version != null)
-                map["version"] = JsonPrimitive(syftJob.version)
-            return JsonObject(map)
+            return json {
+                "workerId" to workerId
+                "model" to syftJob.modelName
+                "ping" to ping
+                "download" to download
+                "upload" to upload
+                if (syftJob.version != null)
+                    "version" to syftJob.version
+            }
         }
 
         fun report(workerId: String, requestKey: String, diff: String): JsonObject {

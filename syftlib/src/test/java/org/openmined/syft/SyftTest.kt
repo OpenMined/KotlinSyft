@@ -8,8 +8,8 @@ import io.reactivex.Flowable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.serialization.ImplicitReflectionSerializer
 import org.junit.jupiter.api.Test
-import org.openmined.syft.network.NetworkMessage
-import org.openmined.syft.network.SignallingClient
+import org.openmined.syft.networking.clients.NetworkMessage
+import org.openmined.syft.networking.clients.SignallingClient
 import org.openmined.syft.threading.ProcessSchedulers
 
 internal class SyftTest {

@@ -1,16 +1,16 @@
-package org.openmined.syft.network
+package org.openmined.syft.networking.clients
 
 import io.reactivex.Flowable
 import io.reactivex.processors.PublishProcessor
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.json
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
-import org.openmined.syft.domain.Protocol
+import org.openmined.syft.networking.requests.MessageType
+import org.openmined.syft.networking.requests.Protocol
 import java.util.concurrent.*
 
 private const val SOCKET_CLOSE_CLIENT = 1000
@@ -45,10 +45,11 @@ class SignallingClient(
     /**
      * Send the data over the Socket connection to PyGrid
      */
-    fun send(type: MessageType, data: JsonObject) {
+    fun send(type: MessageType, data: JsonObject? = null) {
         val message = json {
             TYPE to type.value
-            DATA to data
+            if (data!=null)
+                DATA to data
         }.toString()
 
         if (webSocket.send(message)) {
@@ -75,12 +76,20 @@ class SignallingClient(
         }
 
         override fun onMessage(webSocket: WebSocket, text: String) {
-            statusPublishProcessor.offer(NetworkMessage.MessageReceived(text))
+            statusPublishProcessor.offer(
+                NetworkMessage.MessageReceived(
+                    text
+                )
+            )
         }
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             super.onFailure(webSocket, t, response)
-            statusPublishProcessor.offer(NetworkMessage.SocketError(t))
+            statusPublishProcessor.offer(
+                NetworkMessage.SocketError(
+                    t
+                )
+            )
             // TODO we probably need here some backoff strategy
             connect()
         }

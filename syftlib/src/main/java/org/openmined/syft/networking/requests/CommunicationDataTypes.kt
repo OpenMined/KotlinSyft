@@ -1,12 +1,14 @@
-package org.openmined.syft.network
+package org.openmined.syft.networking.requests
 
 import kotlinx.serialization.json.JsonObject
+
 
 interface MessageType {
     val value: String
 }
 
-interface CallbackRequestType : MessageType {
+interface CallbackRequestType :
+    MessageType {
     override val value: String
     fun handleResponse(response: JsonObject)
 }

@@ -4,8 +4,8 @@ import io.reactivex.Scheduler
 import io.reactivex.schedulers.Schedulers
 import kotlinx.serialization.ImplicitReflectionSerializer
 import org.openmined.syft.Syft
-import org.openmined.syft.domain.Protocol
-import org.openmined.syft.network.SignallingClient
+import org.openmined.syft.networking.requests.Protocol
+import org.openmined.syft.networking.clients.SignallingClient
 import org.openmined.syft.threading.ProcessSchedulers
 
 @ExperimentalUnsignedTypes

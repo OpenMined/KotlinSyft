@@ -1,0 +1,3 @@
+package org.openmined.syft.networking.serialization
+
+interface RequestResponseBody

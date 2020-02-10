@@ -1,4 +1,4 @@
-package org.openmined.syft.network
+package org.openmined.syft.networking
 
 import kotlinx.serialization.json.json
 import org.junit.jupiter.api.BeforeEach
@@ -7,6 +7,8 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
+import org.openmined.syft.networking.clients.SignallingClient
+import org.openmined.syft.networking.clients.WebRTCClient
 import org.webrtc.PeerConnection
 import org.webrtc.PeerConnectionFactory
 
