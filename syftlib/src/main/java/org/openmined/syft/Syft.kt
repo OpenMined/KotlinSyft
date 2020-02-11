@@ -43,7 +43,7 @@ class Syft private constructor(
                             TAG,
                             "Socket was closed successfully"
                         )
-                        is NetworkMessage.SocketError -> Log.e(TAG,"socket error",it.throwable)
+                        is NetworkMessage.SocketError -> Log.e(TAG, "socket error", it.throwable)
                         is NetworkMessage.MessageReceived -> handleResponse(
                             CommunicationDataFactory.deserializeSocket(
                                 it.message

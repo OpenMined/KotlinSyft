@@ -32,6 +32,7 @@ class WebRTCClientTest {
     fun setUp() {
         MockitoAnnotations.initMocks(this)
     }
+
     @Test
     @ExperimentalUnsignedTypes
     fun `Given a workerId and a scopeId when the client starts it sends it through the socket`() {

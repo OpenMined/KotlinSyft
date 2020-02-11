@@ -12,7 +12,7 @@ import org.webrtc.RtpReceiver
 import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
 import java.nio.ByteBuffer
-import java.util.*
+import java.util.Locale
 import kotlin.collections.HashMap
 
 
@@ -24,6 +24,7 @@ private const val TAG = "WebRTCClient"
 internal class WebRTCClient(
     private val peerConnectionFactory: PeerConnectionFactory,
     private val peerConfig: PeerConnection.RTCConfiguration,
+    @ExperimentalUnsignedTypes
     private val signallingClient: SignallingClient
 ) {
 
@@ -54,8 +55,7 @@ internal class WebRTCClient(
         Log.d(TAG, "Creating Connection as answer")
         val pcObserver = PeerConnectionObserver(newWorkerId, SDP_Type.ANSWER)
         val pc = peerConnectionFactory.createPeerConnection(peerConfig, pcObserver)
-        peers[newWorkerId] =
-                Peer(
+        peers[newWorkerId] = Peer(
                     pc,
                     null,
                     pcObserver,
@@ -124,8 +124,7 @@ internal class WebRTCClient(
         Log.d(TAG, "Adding new peer")
         val pcObserver = PeerConnectionObserver(newWorkerId, SDP_Type.OFFER)
         val pc = peerConnectionFactory.createPeerConnection(peerConfig, pcObserver)
-        peers[newWorkerId] =
-                Peer(
+        peers[newWorkerId] = Peer(
                     pc,
                     null,
                     pcObserver,
@@ -137,10 +136,7 @@ internal class WebRTCClient(
         // add DataChannel constraints in init if needed. Currently default initialization
         peers[newWorkerId]?.apply {
             channel = pc?.createDataChannel("dataChannel", DataChannel.Init())
-            dataChannelObserver =
-                    DataChannelObserver(
-                        channel
-                    )
+            dataChannelObserver = DataChannelObserver(channel)
             channel?.registerObserver(dataChannelObserver)
             connection?.createOffer(sdpObserver, null)
         }
@@ -184,7 +180,7 @@ internal class WebRTCClient(
                 }
             }
             else -> {
-                Log.d(TAG,"unknown message type received")
+                Log.d(TAG, "unknown message type received")
             }
         }
 
@@ -288,11 +284,7 @@ internal class WebRTCClient(
 
         override fun onDataChannel(dc: DataChannel) {
             Log.d(TAG, "Calling onDataChannel ${dc.label()}")
-            dc.registerObserver(
-                DataChannelObserver(
-                    dc
-                )
-            )
+            dc.registerObserver(DataChannelObserver(dc))
             peers[newWorkerId]?.channel = dc
 
         }

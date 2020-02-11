@@ -11,7 +11,8 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.openmined.syft.networking.requests.MessageType
 import org.openmined.syft.networking.requests.Protocol
-import java.util.concurrent.*
+import java.util.concurrent.TimeUnit
+
 
 private const val SOCKET_CLOSE_CLIENT = 1000
 private const val TYPE = "type"
@@ -48,7 +49,7 @@ class SignallingClient(
     fun send(type: MessageType, data: JsonObject? = null) {
         val message = json {
             TYPE to type.value
-            if (data!=null)
+            if (data != null)
                 DATA to data
         }.toString()
 

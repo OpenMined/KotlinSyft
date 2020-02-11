@@ -9,7 +9,7 @@ class SyftJob(val modelName: String, val version: String? = null) {
     /**
      * create a worker job
      */
-    fun start(){
+    fun start() {
 
     }
 
