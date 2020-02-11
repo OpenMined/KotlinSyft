@@ -4,7 +4,6 @@ import io.reactivex.disposables.CompositeDisposable
 import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import org.openmined.syft.domain.Protocol
 import org.openmined.syft.network.NetworkMessage
 import org.openmined.syft.network.SignallingClient
 import org.openmined.syft.threading.ProcessSchedulers
