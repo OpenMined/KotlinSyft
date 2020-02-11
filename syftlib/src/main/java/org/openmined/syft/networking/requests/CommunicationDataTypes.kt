@@ -1,6 +1,8 @@
 package org.openmined.syft.networking.requests
 
-import kotlinx.serialization.json.JsonObject
+import org.openmined.syft.networking.serialization.AUTH_TYPE
+import org.openmined.syft.networking.serialization.CYCLE_TYPE
+import org.openmined.syft.networking.serialization.REPORT_TYPE
 
 
 interface MessageType {
@@ -10,7 +12,14 @@ interface MessageType {
 interface CallbackRequestType :
     MessageType {
     override val value: String
-    fun handleResponse(response: JsonObject)
+}
+
+enum class REQUESTS(
+    override val value: String
+) : CallbackRequestType {
+    AUTHENTICATION(AUTH_TYPE),
+    CYCLE(CYCLE_TYPE),
+    REPORT(REPORT_TYPE)
 }
 
 enum class WebRTCMessageTypes(
@@ -24,42 +33,11 @@ enum class WebRTCMessageTypes(
 
 }
 
-enum class REQUEST(
-    override val value: String
-) : CallbackRequestType {
-    AUTHENTICATION("federated/authenticate") {
-        override fun handleResponse(response: JsonObject) {
-            response["workerId"]
-        }
-    },
-    CYCLE("federated/cycle-request") {
-        override fun handleResponse(response: JsonObject) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-    },
-    TRAININGPLAN("federated/get-training-plan") {
-        override fun handleResponse(response: JsonObject) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-    },
-    PROTOCOL("federated/get-protocol") {
-        override fun handleResponse(response: JsonObject) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-    },
-    MODEL("federated/get-model") {
-        override fun handleResponse(response: JsonObject) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-    }
-}
 
-enum class POST(
-    override val value: String
-) : CallbackRequestType {
-    REPORT("federated/report") {
-        override fun handleResponse(response: JsonObject) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-    }
+enum class DOWNLOAD(
+    val value: String
+) {
+    TRAININGPLAN("federated/get-training-plan"),
+    PROTOCOL("federated/get-protocol"),
+    MODEL("federated/get-model")
 }

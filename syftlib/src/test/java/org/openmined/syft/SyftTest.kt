@@ -16,7 +16,6 @@ internal class SyftTest {
 
     @Test
     @ExperimentalUnsignedTypes
-    @ImplicitReflectionSerializer
     fun `Given a syft object when start is invoked the the signalling client is started`() {
         val signallingClient = mock<SignallingClient>()
         whenever(signallingClient.start()).thenReturn(Flowable.just(NetworkMessage.SocketOpen))
@@ -25,9 +24,7 @@ internal class SyftTest {
             on { calleeThreadScheduler } doReturn Schedulers.trampoline()
         }
 
-        val cut = Syft(signallingClient, schedulers)
-
-        cut.start()
+        Syft.getInstance(signallingClient, schedulers)
         verify(signallingClient).start()
     }
 }

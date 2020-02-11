@@ -9,21 +9,16 @@ import org.openmined.syft.networking.clients.SignallingClient
 import org.openmined.syft.threading.ProcessSchedulers
 
 @ExperimentalUnsignedTypes
-@ImplicitReflectionSerializer
 fun main() {
-    val syft = Syft(
-        SignallingClient(
-            "myWorker",
-            Protocol.WSS,
-            "echo.websocket.org",
-            2000u
-        ),
-        object : ProcessSchedulers {
+    val syft = Syft.getInstance(SignallingClient(
+        Protocol.WSS,
+        "echo.websocket.org",
+        2000u
+    ), object : ProcessSchedulers {
             override val computeThreadScheduler: Scheduler
                 get() = Schedulers.computation()
             override val calleeThreadScheduler: Scheduler
                 get() = Schedulers.single()
         }
     )
-    syft.start()
 }

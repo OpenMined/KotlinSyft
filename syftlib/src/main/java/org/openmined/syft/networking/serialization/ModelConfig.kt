@@ -6,4 +6,4 @@ import kotlinx.serialization.Serializable
 data class ModelConfig(
     //todo populate when defined
     val modelName: String
-) : RequestResponseBody
+)
