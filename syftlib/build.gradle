@@ -46,13 +46,16 @@ android {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.core:core-ktx:1.1.0'
+    implementation 'androidx.core:core-ktx:1.2.0'
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.14.0"
 
     implementation 'org.webrtc:google-webrtc:1.0.30039'
     implementation 'io.reactivex.rxjava2:rxjava:2.2.12'
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
     implementation 'com.squareup.okhttp3:okhttp:4.3.1'
+
+    implementation 'org.openmined.kotlinsyft:syft-proto-jvm:0.0.7'
+    implementation 'com.google.protobuf:protobuf-java:3.11.0'
 
     debugImplementation "org.mockito:mockito-junit-jupiter:3.2.4"
 
