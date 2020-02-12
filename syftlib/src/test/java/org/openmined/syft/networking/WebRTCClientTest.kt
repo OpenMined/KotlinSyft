@@ -15,6 +15,7 @@ import org.webrtc.PeerConnectionFactory
 
 private const val TAG = "WebRTC test"
 
+@ExperimentalUnsignedTypes
 class WebRTCClientTest {
 
     @Mock
@@ -22,7 +23,6 @@ class WebRTCClientTest {
     @Mock
     private lateinit var peerConfig: PeerConnection.RTCConfiguration
     @Mock
-    @ExperimentalUnsignedTypes
     private lateinit var signallingClient: SignallingClient
 
     @InjectMocks

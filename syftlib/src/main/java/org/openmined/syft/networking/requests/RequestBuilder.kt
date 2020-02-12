@@ -5,7 +5,7 @@ import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.json
 import org.openmined.syft.SyftJob
-import org.openmined.syft.networking.datamodels.NetworkModels
+import org.openmined.syft.networking.datamodels.SocketResponse
 
 class CommunicationDataFactory {
     companion object DataFactory {
@@ -65,8 +65,8 @@ class CommunicationDataFactory {
             }
         }
 
-        fun deserializeSocket(socketMessage: String): NetworkModels {
-            return Json.parse(NetworkModels.serializer(), socketMessage)
+        fun deserializeSocket(socketMessage: String): SocketResponse {
+            return Json.parse(SocketResponse.serializer(), socketMessage)
         }
     }
 }

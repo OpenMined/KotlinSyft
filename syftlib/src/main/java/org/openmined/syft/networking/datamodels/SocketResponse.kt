@@ -15,29 +15,32 @@ import kotlinx.serialization.json.json
 import org.openmined.syft.networking.requests.REQUESTS
 import org.openmined.syft.networking.requests.ResponseMessageTypes
 
+private const val TAG = "SocketSerializer"
+
 @Serializable(with = SocketSerializer::class)
-data class SocketResponse<T : NetworkModels>(
+data class SocketResponse(
     val typesResponse: ResponseMessageTypes,
-    val data: T
+    val data: NetworkModels
 )
 
 @Suppress("UNCHECKED_CAST")
 @Serializer(forClass = SocketResponse::class)
-class SocketSerializer<T : NetworkModels> : KSerializer<SocketResponse<T>> {
+class SocketSerializer : KSerializer<SocketResponse> {
     override val descriptor: SerialDescriptor
         get() = SerialClassDescImpl("SocketSerializer")
 
-    override fun deserialize(decoder: Decoder): SocketResponse<T> {
+    override fun deserialize(decoder: Decoder): SocketResponse {
         val input = decoder as? JsonInput
                     ?: throw SerializationException("This class can be loaded only by Json")
         val response = input.decodeJson() as? JsonObject
                        ?: throw SerializationException("Expected JsonObject")
-        val type = enumValueOf<REQUESTS>(response.getPrimitive("type").content)
-        val data = type.parseJson(response["data"].toString()) as T
+        val type = enumValues<REQUESTS>().find { it.value == response.getPrimitive("type").content }
+                   ?: throw SerializationException("$TAG : Unidentified type in serialization")
+        val data = type.parseJson(response["data"].toString())
         return SocketResponse(type, data)
     }
 
-    override fun serialize(encoder: Encoder, obj: SocketResponse<T>) {
+    override fun serialize(encoder: Encoder, obj: SocketResponse) {
         val output = encoder as? JsonOutput
                      ?: throw SerializationException("This class can be saved only by Json")
 

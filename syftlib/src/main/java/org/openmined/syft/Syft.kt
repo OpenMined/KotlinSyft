@@ -4,9 +4,11 @@ import android.util.Log
 import io.reactivex.disposables.CompositeDisposable
 import org.openmined.syft.networking.clients.NetworkMessage
 import org.openmined.syft.networking.clients.SignallingClient
+import org.openmined.syft.networking.datamodels.AuthenticationSuccess
+import org.openmined.syft.networking.datamodels.CycleResponseData
+import org.openmined.syft.networking.datamodels.SocketResponse
 import org.openmined.syft.networking.requests.CommunicationDataFactory
 import org.openmined.syft.networking.requests.REQUESTS
-import org.openmined.syft.networking.datamodels.NetworkModels
 import org.openmined.syft.threading.ProcessSchedulers
 
 private const val TAG = "Syft"
@@ -60,21 +62,21 @@ class Syft private constructor(
     fun newJob(modelName: String, version: String): SyftJob {
         val job = SyftJob(modelName, version)
         signallingClient.send(
-            REQUESTS.CYCLE,
+            REQUESTS.CYCLE_REQUEST,
             CommunicationDataFactory.requestCycle(workerId, job, "", "", "")
         )
         workerJobs.add(job)
         return job
     }
 
-    private fun handleResponse(response: NetworkModels) {
-        when (response) {
-            is NetworkModels.AuthenticationSuccess ->
-                this.workerId = response.workerId
-            is NetworkModels.CycleResponseData -> {
-                when (response) {
-                    is NetworkModels.CycleResponseData.CycleAccept -> "accept here"
-                    is NetworkModels.CycleResponseData.CycleReject -> "set timeout for job"
+    private fun handleResponse(response: SocketResponse) {
+        when (response.data) {
+            is AuthenticationSuccess ->
+                this.workerId = response.data.workerId
+            is CycleResponseData -> {
+                when (response.data) {
+                    is CycleResponseData.CycleAccept -> "accept here"
+                    is CycleResponseData.CycleReject -> "set timeout for job"
                 }
             }
 

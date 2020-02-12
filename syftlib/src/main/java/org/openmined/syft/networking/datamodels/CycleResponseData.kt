@@ -2,9 +2,10 @@ package org.openmined.syft.networking.datamodels
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
 
+const val CYCLE_TYPE = "federated/cycle-request"
+const val CYCLE_ACCEPT = "accepted"
+const val CYCLE_REJECT = "rejected"
 
 @Serializable
 sealed class CycleResponseData : NetworkModels() {
@@ -12,7 +13,6 @@ sealed class CycleResponseData : NetworkModels() {
     @SerialName(CYCLE_ACCEPT)
     @Serializable
     data class CycleAccept(
-        val status: String,
         @SerialName("request_key")
         val requestKey: String,
         @SerialName("training_plan")
@@ -28,12 +28,6 @@ sealed class CycleResponseData : NetworkModels() {
     @SerialName(CYCLE_REJECT)
     @Serializable
     data class CycleReject(
-        val status: String,
         val timeout: Int
     ) : CycleResponseData()
-
-    companion object {
-        val jsonParser = Json(JsonConfiguration.Stable.copy(classDiscriminator = "status"))
-    }
-
 }

@@ -10,7 +10,6 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.openmined.syft.networking.requests.MessageTypes
-import org.openmined.syft.networking.requests.ResponseMessageTypes
 import org.openmined.syft.networking.requests.Protocol
 import java.util.concurrent.TimeUnit
 
@@ -78,11 +77,7 @@ class SignallingClient(
         }
 
         override fun onMessage(webSocket: WebSocket, text: String) {
-            statusPublishProcessor.offer(
-                NetworkMessage.MessageReceived(
-                    text
-                )
-            )
+            statusPublishProcessor.offer(NetworkMessage.MessageReceived(text))
         }
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {

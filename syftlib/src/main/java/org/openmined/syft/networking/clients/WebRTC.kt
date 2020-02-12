@@ -12,7 +12,6 @@ import org.webrtc.RtpReceiver
 import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
 import java.nio.ByteBuffer
-import kotlin.collections.HashMap
 
 
 typealias SDP_Type = SessionDescription.Type
@@ -20,10 +19,10 @@ typealias SDP_Type = SessionDescription.Type
 
 private const val TAG = "WebRTCClient"
 
+@ExperimentalUnsignedTypes
 internal class WebRTCClient(
     private val peerConnectionFactory: PeerConnectionFactory,
     private val peerConfig: PeerConnection.RTCConfiguration,
-    @ExperimentalUnsignedTypes
     private val signallingClient: SignallingClient
 ) {
 
@@ -55,14 +54,14 @@ internal class WebRTCClient(
         val pcObserver = PeerConnectionObserver(newWorkerId, SDP_Type.ANSWER)
         val pc = peerConnectionFactory.createPeerConnection(peerConfig, pcObserver)
         peers[newWorkerId] = Peer(
-                    pc,
-                    null,
-                    pcObserver,
-                    SDPObserver(
-                        newWorkerId,
-                        SDP_Type.ANSWER
-                    )
-                )
+            pc,
+            null,
+            pcObserver,
+            SDPObserver(
+                newWorkerId,
+                SDP_Type.ANSWER
+            )
+        )
     }
 
     private fun removePeer(newWorkerId: String) {
@@ -124,14 +123,14 @@ internal class WebRTCClient(
         val pcObserver = PeerConnectionObserver(newWorkerId, SDP_Type.OFFER)
         val pc = peerConnectionFactory.createPeerConnection(peerConfig, pcObserver)
         peers[newWorkerId] = Peer(
-                    pc,
-                    null,
-                    pcObserver,
-                    SDPObserver(
-                        newWorkerId,
-                        SDP_Type.OFFER
-                    )
-                )
+            pc,
+            null,
+            pcObserver,
+            SDPObserver(
+                newWorkerId,
+                SDP_Type.OFFER
+            )
+        )
         // add DataChannel constraints in init if needed. Currently default initialization
         peers[newWorkerId]?.apply {
             channel = pc?.createDataChannel("dataChannel", DataChannel.Init())
@@ -141,7 +140,11 @@ internal class WebRTCClient(
         }
     }
 
-    fun receiveInternalMessage(types: WebRTCMessageTypes, newWorkerId: String, sessionDescription: String) {
+    fun receiveInternalMessage(
+        types: WebRTCMessageTypes,
+        newWorkerId: String,
+        sessionDescription: String
+    ) {
 
         when (types) {
             WebRTCMessageTypes.CANDIDATE -> {
