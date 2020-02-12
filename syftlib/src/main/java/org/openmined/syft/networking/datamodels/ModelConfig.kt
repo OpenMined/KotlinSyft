@@ -1,4 +1,4 @@
-package org.openmined.syft.networking.serialization
+package org.openmined.syft.networking.datamodels
 
 import kotlinx.serialization.Serializable
 

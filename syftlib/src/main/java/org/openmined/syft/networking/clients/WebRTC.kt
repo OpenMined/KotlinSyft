@@ -12,7 +12,6 @@ import org.webrtc.RtpReceiver
 import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
 import java.nio.ByteBuffer
-import java.util.Locale
 import kotlin.collections.HashMap
 
 
@@ -142,9 +141,9 @@ internal class WebRTCClient(
         }
     }
 
-    fun receiveInternalMessage(type: String, newWorkerId: String, sessionDescription: String) {
+    fun receiveInternalMessage(types: WebRTCMessageTypes, newWorkerId: String, sessionDescription: String) {
 
-        when (WebRTCMessageTypes.valueOf(type.toUpperCase(Locale.US))) {
+        when (types) {
             WebRTCMessageTypes.CANDIDATE -> {
                 Log.d(TAG, "remote candidate received")
                 if (!peers.containsKey(newWorkerId))

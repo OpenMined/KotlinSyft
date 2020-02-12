@@ -9,7 +9,8 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
-import org.openmined.syft.networking.requests.MessageType
+import org.openmined.syft.networking.requests.MessageTypes
+import org.openmined.syft.networking.requests.ResponseMessageTypes
 import org.openmined.syft.networking.requests.Protocol
 import java.util.concurrent.TimeUnit
 
@@ -46,9 +47,9 @@ class SignallingClient(
     /**
      * Send the data over the Socket connection to PyGrid
      */
-    fun send(type: MessageType, data: JsonObject? = null) {
+    fun send(typesResponse: MessageTypes, data: JsonObject? = null) {
         val message = json {
-            TYPE to type.value
+            TYPE to typesResponse.value
             if (data != null)
                 DATA to data
         }.toString()
@@ -86,11 +87,7 @@ class SignallingClient(
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             super.onFailure(webSocket, t, response)
-            statusPublishProcessor.offer(
-                NetworkMessage.SocketError(
-                    t
-                )
-            )
+            statusPublishProcessor.offer(NetworkMessage.SocketError(t))
             // TODO we probably need here some backoff strategy
             connect()
         }

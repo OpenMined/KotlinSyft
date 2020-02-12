@@ -6,7 +6,7 @@ import org.openmined.syft.networking.clients.NetworkMessage
 import org.openmined.syft.networking.clients.SignallingClient
 import org.openmined.syft.networking.requests.CommunicationDataFactory
 import org.openmined.syft.networking.requests.REQUESTS
-import org.openmined.syft.networking.serialization.SerializableClasses
+import org.openmined.syft.networking.datamodels.NetworkModels
 import org.openmined.syft.threading.ProcessSchedulers
 
 private const val TAG = "Syft"
@@ -67,14 +67,14 @@ class Syft private constructor(
         return job
     }
 
-    private fun handleResponse(response: SerializableClasses) {
+    private fun handleResponse(response: NetworkModels) {
         when (response) {
-            is SerializableClasses.AuthenticationSuccess ->
+            is NetworkModels.AuthenticationSuccess ->
                 this.workerId = response.workerId
-            is SerializableClasses.CycleResponseData -> {
+            is NetworkModels.CycleResponseData -> {
                 when (response) {
-                    is SerializableClasses.CycleResponseData.CycleAccept -> "accept here"
-                    is SerializableClasses.CycleResponseData.CycleReject -> "set timeout for job"
+                    is NetworkModels.CycleResponseData.CycleAccept -> "accept here"
+                    is NetworkModels.CycleResponseData.CycleReject -> "set timeout for job"
                 }
             }
 
