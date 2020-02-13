@@ -2,7 +2,6 @@
   <code_scheme name="Project" version="173">
     <JavaCodeStyleSettings>
       <option name="USE_FQ_CLASS_NAMES" value="true" />
-      <option name="USE_SINGLE_CLASS_IMPORTS" value="false" />
       <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="1000" />
       <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="1000" />
     </JavaCodeStyleSettings>

@@ -38,7 +38,7 @@ script:
   - ./gradlew build check
 
 deploy:
-    provider: script
-    script: ./gradlew final
-    on:
-      branch: master
+  provider: script
+  script: ./gradlew final
+  on:
+    branch: master

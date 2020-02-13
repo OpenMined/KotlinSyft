@@ -1,4 +1,4 @@
-package org.openmined.syft.network
+package org.openmined.syft.networking
 
 import kotlinx.serialization.json.json
 import org.junit.jupiter.api.BeforeEach
@@ -7,11 +7,15 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
+import org.openmined.syft.networking.clients.SignallingClient
+import org.openmined.syft.networking.clients.WebRTCClient
+import org.openmined.syft.networking.requests.WebRTCMessageTypes
 import org.webrtc.PeerConnection
 import org.webrtc.PeerConnectionFactory
 
 private const val TAG = "WebRTC test"
 
+@ExperimentalUnsignedTypes
 class WebRTCClientTest {
 
     @Mock
@@ -30,6 +34,7 @@ class WebRTCClientTest {
     }
 
     @Test
+    @ExperimentalUnsignedTypes
     fun `Given a workerId and a scopeId when the client starts it sends it through the socket`() {
         val workerId = "workerId"
         val scopeId = "scopeId"
@@ -37,9 +42,8 @@ class WebRTCClientTest {
             "workerId" to workerId
             "scopeId" to scopeId
         }
-
         cut.start(workerId, scopeId)
 
-        verify(signallingClient).send(WEBRTC_JOIN_ROOM, expected)
+        verify(signallingClient).send(WebRTCMessageTypes.WEBRTC_JOIN_ROOM, expected)
     }
 }

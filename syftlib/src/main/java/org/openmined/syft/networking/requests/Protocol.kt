@@ -1,4 +1,4 @@
-package org.openmined.syft.domain
+package org.openmined.syft.networking.requests
 
 sealed class Protocol {
     object WSS : Protocol() {
