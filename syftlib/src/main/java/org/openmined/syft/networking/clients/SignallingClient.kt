@@ -24,6 +24,7 @@ class SignallingClient(
     private val address: String,
     private val keepAliveTimeout: UInt = 20000u
 ) {
+    var sockerStatus = false
     private lateinit var request: Request
     private lateinit var client: OkHttpClient
     private lateinit var webSocket: WebSocket
@@ -73,6 +74,7 @@ class SignallingClient(
         override fun onOpen(webSocket: WebSocket, response: Response) {
             super.onOpen(webSocket, response)
             this@SignallingClient.webSocket = webSocket
+            sockerStatus = true
             statusPublishProcessor.offer(NetworkMessage.SocketOpen)
         }
 
@@ -82,6 +84,7 @@ class SignallingClient(
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             super.onFailure(webSocket, t, response)
+            sockerStatus = false
             statusPublishProcessor.offer(NetworkMessage.SocketError(t))
             // TODO we probably need here some backoff strategy
             connect()

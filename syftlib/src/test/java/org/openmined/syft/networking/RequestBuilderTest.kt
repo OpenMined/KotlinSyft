@@ -5,7 +5,7 @@ import kotlinx.serialization.json.json
 import org.junit.jupiter.api.Test
 import org.openmined.syft.networking.datamodels.AuthenticationSuccess
 import org.openmined.syft.networking.datamodels.CycleResponseData
-import org.openmined.syft.networking.datamodels.ModelConfig
+import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.ReportStatus
 import org.openmined.syft.networking.datamodels.WebRTCInternalMessage
 import org.openmined.syft.networking.datamodels.WebRTCNewPeer
@@ -75,7 +75,7 @@ class RequestBuilderTest {
         val trueObject = CycleResponseData.CycleAccept(
             "LONG HASH VALUE",
             "TRAINING ID",
-            ModelConfig("model test"),
+            ClientConfig("model test"),
             "PROTOCOL ID",
             "model ID"
         )
