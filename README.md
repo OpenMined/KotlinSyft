@@ -3,7 +3,7 @@
 ![License](https://img.shields.io/github/license/openmined/KotlinSyft)
 ![Language](https://img.shields.io/github/languages/top/openmined/KotlinSyft)
 ![Size](https://img.shields.io/github/repo-size/openmined/KotlinSyft)
-![CI](https://travis-ci.org/OpenMined/KotlinSyft.svg?branch=dev)
+![Android CI](https://github.com/OpenMined/KotlinSyft/workflows/Android%20CI/badge.svg)
 [![Version](https://api.bintray.com/packages/openmined/KotlinSyft/syft/images/download.svg?version=0.0.1)](https://bintray.com/openmined/KotlinSyft/syft/0.0.1/link)
 
 ## Introduction
