@@ -4,8 +4,8 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.json
 import org.junit.jupiter.api.Test
 import org.openmined.syft.networking.datamodels.AuthenticationSuccess
-import org.openmined.syft.networking.datamodels.CycleResponseData
 import org.openmined.syft.networking.datamodels.ClientConfig
+import org.openmined.syft.networking.datamodels.CycleResponseData
 import org.openmined.syft.networking.datamodels.ReportStatus
 import org.openmined.syft.networking.datamodels.WebRTCInternalMessage
 import org.openmined.syft.networking.datamodels.WebRTCNewPeer
@@ -23,6 +23,8 @@ class RequestBuilderTest {
             appendType("federated/cycle-request",
                 json {
                     "status" to "rejected"
+                    "model" to "my-federated-model"
+                    "version" to "0.1.0"
                     "timeout" to 2700
                 }).toString()
 
@@ -30,9 +32,11 @@ class RequestBuilderTest {
             appendType("federated/cycle-request",
                 json {
                     "status" to "accepted"
+                    "model" to "my-federated-model"
+                    "version" to "0.1.0"
                     "request_key" to "LONG HASH VALUE"
                     "training_plan" to "TRAINING ID"
-                    "model_config" to json { "modelName" to "model test" }
+                    "client_config" to json { "modelName" to "model test" }
                     "protocol" to "PROTOCOL ID"
                     "model" to "model ID"
                 }).toString()
@@ -49,6 +53,7 @@ class RequestBuilderTest {
 
     private val newPeer =
             appendType("peer", json { "worker_id" to "new ID" }).toString()
+
     @Test
     fun `given authentication json is parsed into AuthenticationSuccess class`() {
 
@@ -64,7 +69,10 @@ class RequestBuilderTest {
     @Test
     fun `given cycle response as reject parse into CycleReject`() {
         val deserializeObject = CommunicationDataFactory.deserializeSocket(cycleResponseReject)
-        val trueObject = CycleResponseData.CycleReject(2700)
+        val trueObject = CycleResponseData.CycleReject(
+            "my-federated-model",
+            "0.1.0", 2700
+        )
         assert(deserializeObject.data == trueObject)
         assert(deserializeObject.typesResponse == REQUESTS.CYCLE_REQUEST)
     }
@@ -73,6 +81,8 @@ class RequestBuilderTest {
     fun `given cycle response as accept parse into CycleAccept`() {
         val deserializeObject = CommunicationDataFactory.deserializeSocket(cycleResponseAccept)
         val trueObject = CycleResponseData.CycleAccept(
+            "my-federated-model",
+            "0.1.0",
             "LONG HASH VALUE",
             "TRAINING ID",
             ClientConfig("model test"),

@@ -7,8 +7,9 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
-import org.openmined.syft.networking.clients.SignallingClient
+import org.openmined.syft.networking.clients.SocketSignallingClient
 import org.openmined.syft.networking.clients.WebRTCClient
+import org.openmined.syft.networking.requests.CommunicationDataFactory
 import org.openmined.syft.networking.requests.WebRTCMessageTypes
 import org.webrtc.PeerConnection
 import org.webrtc.PeerConnectionFactory
@@ -23,7 +24,7 @@ class WebRTCClientTest {
     @Mock
     private lateinit var peerConfig: PeerConnection.RTCConfiguration
     @Mock
-    private lateinit var signallingClient: SignallingClient
+    private lateinit var socketSignallingClient: SocketSignallingClient
 
     @InjectMocks
     private lateinit var cut: WebRTCClient
@@ -38,12 +39,8 @@ class WebRTCClientTest {
     fun `Given a workerId and a scopeId when the client starts it sends it through the socket`() {
         val workerId = "workerId"
         val scopeId = "scopeId"
-        val expected = json {
-            "workerId" to workerId
-            "scopeId" to scopeId
-        }
         cut.start(workerId, scopeId)
 
-        verify(signallingClient).send(WebRTCMessageTypes.WEBRTC_JOIN_ROOM, expected)
+        verify(socketSignallingClient).send(CommunicationDataFactory.joinRoom(workerId,scopeId))
     }
 }

@@ -13,7 +13,7 @@ sealed class CycleResponseData : NetworkModels() {
     @SerialName(CYCLE_ACCEPT)
     @Serializable
     data class CycleAccept(
-        @SerialName("model_name")
+        @SerialName("model")
         val modelName :String,
         @SerialName("version")
         val version: String,
@@ -21,18 +21,18 @@ sealed class CycleResponseData : NetworkModels() {
         val requestKey: String,
         @SerialName("training_plan")
         val trainingPlanID: String,
-        @SerialName("model_config")
+        @SerialName("client_config")
         val clientConfig: ClientConfig,
-        @SerialName("protocol")
+        @SerialName("protocols")
         val protocolID: String,
-        @SerialName("model")
+        @SerialName("model_id")
         val modelId: String
     ) : CycleResponseData()
 
     @SerialName(CYCLE_REJECT)
     @Serializable
     data class CycleReject(
-        @SerialName("model_name")
+        @SerialName("model")
         val modelName :String,
         @SerialName("version")
         val version: String,
