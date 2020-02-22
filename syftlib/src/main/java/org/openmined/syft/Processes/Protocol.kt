@@ -1,4 +1,4 @@
-package org.openmined.syft.training
+package org.openmined.syft.Processes
 
 class Protocol {
     fun execute(){

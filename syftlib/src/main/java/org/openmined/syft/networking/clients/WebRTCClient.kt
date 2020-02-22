@@ -23,7 +23,7 @@ private const val TAG = "WebRTCClient"
 internal class WebRTCClient(
     private val peerConnectionFactory: PeerConnectionFactory,
     private val peerConfig: PeerConnection.RTCConfiguration,
-    private val signallingClient: SignallingClient
+    private val socketSignallingClient: SocketSignallingClient
 ) {
 
     private val peers = HashMap<String, Peer>()
@@ -35,8 +35,7 @@ internal class WebRTCClient(
 
         this.workerId = workerId
         this.scopeId = scopeId
-        signallingClient.send(
-            WebRTCMessageTypes.WEBRTC_JOIN_ROOM,
+        socketSignallingClient.send(
             CommunicationDataFactory.joinRoom(workerId, scopeId)
         )
     }
@@ -111,8 +110,7 @@ internal class WebRTCClient(
     private fun sendInternalMessage(type: WebRTCMessageTypes, message: String, target: String) {
         if (target != workerId) {
             Log.d(TAG, "Sending Internal WebRTC message via PyGrid")
-            this.signallingClient.send(
-                WebRTCMessageTypes.WEBRTC_INTERNAL_MESSAGE,
+            this.socketSignallingClient.send(
                 CommunicationDataFactory.internalMessage(workerId, scopeId, target, type, message)
             )
         }
