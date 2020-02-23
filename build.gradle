@@ -10,8 +10,7 @@ buildscript {
         classpath ProjectDependencies.androidGradlePlugin
         classpath ProjectDependencies.kotlinGradlePlugin
         classpath ProjectDependencies.kotlinSerialization
-
-        classpath ProjectDependencies.neflixPublishingPlugin
+        classpath ProjectDependencies.netflixPublishingPlugin
         classpath ProjectDependencies.netflixReleasePlugin
         classpath ProjectDependencies.netflixBintrayPlugin
         // NOTE: Do not place your application dependencies here; they belong

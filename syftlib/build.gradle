@@ -46,22 +46,22 @@ android {
 
 dependencies {
     implementation SyftlibDependencies.kotlinJDK
-    implementation SyftlibDependencies.appCompat
-    implementation SyftlibDependencies.corektx
-    implementation SyftlibDependencies.kotlinSerialization
+    implementation CommonDependencies.appCompat
+    implementation CommonDependencies.corektx
+    implementation CommonDependencies.kotlinSerialization
 
     implementation SyftlibDependencies.webrtc
-    implementation SyftlibDependencies.rxJava
-    implementation SyftlibDependencies.rxAndroid
+    implementation CommonDependencies.rxJava
+    implementation CommonDependencies.rxAndroid
     implementation SyftlibDependencies.okhttp
 
-    implementation SyftlibDependencies.syft
+    implementation SyftlibDependencies.syftProto
     implementation SyftlibDependencies.protobuf
 
     debugImplementation SyftlibDependencies.mokitoJupiter
 
-    androidTestImplementation SyftlibDependencies.testExtJunit
-    androidTestImplementation SyftlibDependencies.espresso
+    androidTestImplementation CommonDependencies.testExtJunit
+    androidTestImplementation CommonDependencies.espresso
     testImplementation SyftlibDependencies.junitJupiter
     testImplementation SyftlibDependencies.mokitoCore
     testImplementation SyftlibDependencies.mokitoKotlin

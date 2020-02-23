@@ -2,7 +2,7 @@ import org.codehaus.groovy.ast.Variable
 
 object Versions {
     // App versioning
-    const val Demo_appId = "org.openmined.syft.demo"
+    const val DemoAppId = "org.openmined.syft.demo"
     const val appVersionCode = 1
     const val appVersionName = "1.0"
 
@@ -20,14 +20,14 @@ object Versions {
     const val kotlinSerialization = "0.14.0"
 
     // Tools
-    const val rxJava = "2.2.7"
+    const val rxJava = "2.2.12"
     const val rxAndroid = "2.1.1"
     const val webrtc = "1.0.30039"
     const val okhttp = "4.3.1"
     const val protobuf = "3.11.0"
     const val kotlinSyft = "0.0.7"
 
-    //neflix
+    //release management
     const val netflixPublishing = "14.0.0"
     const val netflixRelease = "13.0.0"
     const val netflixBintray = "3.5.4"
@@ -47,37 +47,33 @@ object ProjectDependencies {
     const val androidGradlePlugin = "com.android.tools.build:gradle:${Versions.gradle}"
     const val kotlinGradlePlugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
     const val kotlinSerialization = "org.jetbrains.kotlin:kotlin-serialization:${Versions.kotlin}"
-    const val neflixPublishingPlugin = "com.netflix.nebula:nebula-publishing-plugin:${Versions.netflixPublishing}"
+    const val netflixPublishingPlugin = "com.netflix.nebula:nebula-publishing-plugin:${Versions.netflixPublishing}"
     const val netflixReleasePlugin = "com.netflix.nebula:nebula-release-plugin:${Versions.netflixRelease}"
     const val netflixBintrayPlugin = "com.netflix.nebula:nebula-bintray-plugin:${Versions.netflixBintray}"
 }
 
-object DemoAppDependencies {
-    const val kotlin = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
+object CommonDependencies {
     const val appCompat = "androidx.appcompat:appcompat:${Versions.appCompat}"
     const val corektx = "androidx.core:core-ktx:${Versions.coreKtx}"
     const val kotlinSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-runtime:${Versions.kotlinSerialization}"
     const val rxJava = "io.reactivex.rxjava2:rxjava:${Versions.rxJava}"
     const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"
-    const val testExtJunit = "androidx.test.ext:junit:${Versions.junit}"
     const val espresso = "androidx.test.espresso:espresso-core:${Versions.espresso}"
+    const val testExtJunit = "androidx.test.ext:junit:${Versions.junit}"
+}
+
+object DemoAppDependencies {
+    const val kotlinJDK = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
 }
 
 object SyftlibDependencies {
-    const val appCompat = "androidx.appcompat:appcompat:${Versions.appCompat}"
-    const val corektx = "androidx.core:core-ktx:${Versions.coreKtx}"
-    const val kotlinSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-runtime:${Versions.kotlinSerialization}"
-    const val rxJava = "io.reactivex.rxjava2:rxjava:${Versions.rxJava}"
-    const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"
-    const val testExtJunit = "androidx.test.ext:junit:${Versions.junit}"
     const val mokitoCore = "org.mockito:mockito-core:${Versions.mockitoCore}"
     const val kotlinJDK = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}"
     const val webrtc = "org.webrtc:google-webrtc:${Versions.webrtc}"
     const val okhttp = "com.squareup.okhttp3:okhttp:${Versions.okhttp}"
     const val mokitoJupiter = "org.mockito:mockito-junit-jupiter:${Versions.mokitoJupiter}"
     const val mokitoKotlin = "com.nhaarman.mockitokotlin2:mockito-kotlin:${Versions.mokitoKotlin}"
-    const val espresso = "androidx.test.espresso:espresso-core:${Versions.espresso}"
-    const val syft = "org.openmined.kotlinsyft:syft-proto-jvm:${Versions.kotlinSyft}"
+    const val syftProto = "org.openmined.kotlinsyft:syft-proto-jvm:${Versions.kotlinSyft}"
     const val protobuf = "com.google.protobuf:protobuf-java:${Versions.protobuf}"
     const val junitJupiter = "org.junit.jupiter:junit-jupiter:${Versions.junitJypiter}"
 }

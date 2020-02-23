@@ -8,7 +8,7 @@ android {
     compileSdkVersion Versions.compileSdk
     buildToolsVersion Versions.buildTools
     defaultConfig {
-        applicationId Versions.Demo_appId
+        applicationId Versions.DemoAppId
         minSdkVersion Versions.minSdk
         targetSdkVersion Versions.targetSdk
         versionCode Versions.appVersionCode
@@ -33,18 +33,17 @@ android {
 }
 
 dependencies {
-    implementation DemoAppDependencies.kotlin
-    implementation DemoAppDependencies.appCompat
-    implementation DemoAppDependencies.corektx
-    implementation DemoAppDependencies.kotlinSerialization
-
-    implementation DemoAppDependencies.rxJava
-    implementation DemoAppDependencies.rxAndroid
+    implementation DemoAppDependencies.kotlinJDK
+    implementation CommonDependencies.appCompat
+    implementation CommonDependencies.corektx
+    implementation CommonDependencies.kotlinSerialization
+    implementation CommonDependencies.rxJava
+    implementation CommonDependencies.rxAndroid
 
 
     // TODO During the first stages of the project, include the library here. Later on we should use the library from the repository
     implementation project(path: ':syftlib')
 
-    androidTestImplementation DemoAppDependencies.testExtJunit
-    androidTestImplementation DemoAppDependencies.espresso
+    androidTestImplementation CommonDependencies.testExtJunit
+    androidTestImplementation CommonDependencies.espresso
 }
