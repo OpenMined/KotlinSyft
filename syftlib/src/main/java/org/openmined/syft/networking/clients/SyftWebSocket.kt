@@ -18,7 +18,7 @@ const val DATA = "data"
 private const val SOCKET_CLOSE_CLIENT = 1000
 
 @ExperimentalUnsignedTypes
-class SocketSignallingClient(
+class SyftWebSocket(
     protocol: Protocol,
     address: String,
     keepAliveTimeout: UInt = 20000u
@@ -66,7 +66,7 @@ class SocketSignallingClient(
 
         override fun onOpen(webSocket: WebSocket, response: Response) {
             super.onOpen(webSocket, response)
-            this@SocketSignallingClient.webSocket = webSocket
+            this@SyftWebSocket.webSocket = webSocket
             sockerStatus.set(true)
             statusPublishProcessor.offer(NetworkMessage.SocketOpen)
         }

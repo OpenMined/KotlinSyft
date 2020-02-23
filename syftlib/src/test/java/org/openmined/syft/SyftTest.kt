@@ -8,7 +8,7 @@ import io.reactivex.Flowable
 import io.reactivex.schedulers.Schedulers
 import org.junit.jupiter.api.Test
 import org.openmined.syft.networking.clients.NetworkMessage
-import org.openmined.syft.networking.clients.SocketSignallingClient
+import org.openmined.syft.networking.clients.SyftWebSocket
 import org.openmined.syft.threading.ProcessSchedulers
 
 internal class SyftTest {
@@ -16,7 +16,7 @@ internal class SyftTest {
     @Test
     @ExperimentalUnsignedTypes
     fun `Given a syft object when start is invoked the the signalling client is started`() {
-        val signallingClient = mock<SocketSignallingClient>()
+        val signallingClient = mock<SyftWebSocket>()
         whenever(signallingClient.start()).thenReturn(Flowable.just(NetworkMessage.SocketOpen))
         val schedulers = mock<ProcessSchedulers> {
             on { computeThreadScheduler } doReturn Schedulers.trampoline()

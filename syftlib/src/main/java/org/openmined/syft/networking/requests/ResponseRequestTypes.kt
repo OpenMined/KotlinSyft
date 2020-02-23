@@ -10,7 +10,7 @@ import org.openmined.syft.networking.datamodels.CycleResponseData
 import org.openmined.syft.networking.datamodels.NEW_PEER_TYPE
 import org.openmined.syft.networking.datamodels.NetworkModels
 import org.openmined.syft.networking.datamodels.REPORT_TYPE
-import org.openmined.syft.networking.datamodels.ReportStatus
+import org.openmined.syft.networking.datamodels.ReportResponse
 import org.openmined.syft.networking.datamodels.WEBRTC_INTERNAL_TYPE
 import org.openmined.syft.networking.datamodels.WebRTCInternalMessage
 import org.openmined.syft.networking.datamodels.WebRTCNewPeer
@@ -40,10 +40,10 @@ enum class REQUESTS(override val value: String) : ResponseMessageTypes {
     REPORT(REPORT_TYPE) {
         override val jsonParser = Json(JsonConfiguration.Stable)
         override fun parseJson(jsonString: String): NetworkModels =
-                jsonParser.parse(ReportStatus.serializer(), jsonString)
+                jsonParser.parse(ReportResponse.serializer(), jsonString)
 
         override fun serialize(obj: NetworkModels) =
-                jsonParser.toJson(ReportStatus.serializer(), obj as ReportStatus)
+                jsonParser.toJson(ReportResponse.serializer(), obj as ReportResponse)
     },
     WEBRTC_INTERNAL(WEBRTC_INTERNAL_TYPE) {
         override val jsonParser: Json

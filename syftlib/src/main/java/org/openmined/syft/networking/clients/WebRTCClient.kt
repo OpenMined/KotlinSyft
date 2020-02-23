@@ -1,7 +1,6 @@
 package org.openmined.syft.networking.clients
 
 import android.util.Log
-import org.openmined.syft.networking.requests.CommunicationDataFactory
 import org.openmined.syft.networking.requests.WebRTCMessageTypes
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
@@ -23,7 +22,7 @@ private const val TAG = "WebRTCClient"
 internal class WebRTCClient(
     private val peerConnectionFactory: PeerConnectionFactory,
     private val peerConfig: PeerConnection.RTCConfiguration,
-    private val socketSignallingClient: SocketSignallingClient
+    private val syftWebSocket: SyftWebSocket
 ) {
 
     private val peers = HashMap<String, Peer>()
@@ -35,8 +34,8 @@ internal class WebRTCClient(
 
         this.workerId = workerId
         this.scopeId = scopeId
-        socketSignallingClient.send(
-            CommunicationDataFactory.joinRoom(workerId, scopeId)
+        syftWebSocket.send(
+            SocketClient.joinRoom(workerId, scopeId)
         )
     }
 
@@ -110,8 +109,8 @@ internal class WebRTCClient(
     private fun sendInternalMessage(type: WebRTCMessageTypes, message: String, target: String) {
         if (target != workerId) {
             Log.d(TAG, "Sending Internal WebRTC message via PyGrid")
-            this.socketSignallingClient.send(
-                CommunicationDataFactory.internalMessage(workerId, scopeId, target, type, message)
+            this.syftWebSocket.send(
+                SocketClient.internalMessage(workerId, scopeId, target, type, message)
             )
         }
     }

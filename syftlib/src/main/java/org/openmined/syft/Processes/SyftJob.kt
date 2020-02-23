@@ -3,7 +3,7 @@ package org.openmined.syft.Processes
 import io.reactivex.Flowable
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.networking.datamodels.CycleResponseData
-import org.openmined.syft.networking.requests.CommunicationDataFactory
+import org.openmined.syft.networking.clients.SocketClient
 import org.openmined.syft.Syft
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
@@ -48,8 +48,8 @@ class SyftJob(private val worker: Syft, val modelName: String, val version: Stri
      * report the results back to PyGrid
      */
     private fun report(diff: String) {
-        worker.socketSignallingClient.send(
-            CommunicationDataFactory.report(worker.workerId.get(), requestKey, diff)
+        worker.socketClient.send(
+            SocketClient.report(worker.workerId.get(), requestKey, diff)
         )
     }
 

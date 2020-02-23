@@ -6,10 +6,10 @@ import org.junit.jupiter.api.Test
 import org.openmined.syft.networking.datamodels.AuthenticationSuccess
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.CycleResponseData
-import org.openmined.syft.networking.datamodels.ReportStatus
+import org.openmined.syft.networking.datamodels.ReportResponse
 import org.openmined.syft.networking.datamodels.WebRTCInternalMessage
 import org.openmined.syft.networking.datamodels.WebRTCNewPeer
-import org.openmined.syft.networking.requests.CommunicationDataFactory
+import org.openmined.syft.networking.clients.SocketClient
 import org.openmined.syft.networking.requests.REQUESTS
 
 class RequestBuilderTest {
@@ -58,7 +58,7 @@ class RequestBuilderTest {
     fun `given authentication json is parsed into AuthenticationSuccess class`() {
 
         val deserializeObject =
-                CommunicationDataFactory.deserializeSocket(authenticationSuccess)
+                SocketClient.deserializeSocket(authenticationSuccess)
         assert(
             deserializeObject.data == AuthenticationSuccess(
                 "Test worker ID"
@@ -68,7 +68,7 @@ class RequestBuilderTest {
 
     @Test
     fun `given cycle response as reject parse into CycleReject`() {
-        val deserializeObject = CommunicationDataFactory.deserializeSocket(cycleResponseReject)
+        val deserializeObject = SocketClient.deserializeSocket(cycleResponseReject)
         val trueObject = CycleResponseData.CycleReject(
             "my-federated-model",
             "0.1.0", 2700
@@ -79,7 +79,7 @@ class RequestBuilderTest {
 
     @Test
     fun `given cycle response as accept parse into CycleAccept`() {
-        val deserializeObject = CommunicationDataFactory.deserializeSocket(cycleResponseAccept)
+        val deserializeObject = SocketClient.deserializeSocket(cycleResponseAccept)
         val trueObject = CycleResponseData.CycleAccept(
             "my-federated-model",
             "0.1.0",
@@ -95,15 +95,15 @@ class RequestBuilderTest {
 
     @Test
     fun `check report status`() {
-        val deserializeObject = CommunicationDataFactory.deserializeSocket(reportStatus)
-        val trueObject = ReportStatus("success")
+        val deserializeObject = SocketClient.deserializeSocket(reportStatus)
+        val trueObject = ReportResponse("success")
         assert(deserializeObject.data == trueObject)
         assert(deserializeObject.typesResponse == REQUESTS.REPORT)
     }
 
     @Test
     fun `check webRTC internal message deserialization`() {
-        val deserializeObject = CommunicationDataFactory.deserializeSocket(webRTCInternal)
+        val deserializeObject = SocketClient.deserializeSocket(webRTCInternal)
         val trueObject = WebRTCInternalMessage("candidate", "testing new worker", "SDP")
         assert(deserializeObject.data == trueObject)
         assert(deserializeObject.typesResponse == REQUESTS.WEBRTC_INTERNAL)
@@ -111,7 +111,7 @@ class RequestBuilderTest {
 
     @Test
     fun `check webRTC new peer message deserialization`() {
-        val deserializeObject = CommunicationDataFactory.deserializeSocket(newPeer)
+        val deserializeObject = SocketClient.deserializeSocket(newPeer)
         val trueObject = WebRTCNewPeer("new ID")
         assert(deserializeObject.data == trueObject)
         assert(deserializeObject.typesResponse == REQUESTS.WEBRTC_PEER)

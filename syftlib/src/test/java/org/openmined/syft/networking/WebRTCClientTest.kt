@@ -1,16 +1,14 @@
 package org.openmined.syft.networking
 
-import kotlinx.serialization.json.json
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
-import org.openmined.syft.networking.clients.SocketSignallingClient
+import org.openmined.syft.networking.clients.SyftWebSocket
 import org.openmined.syft.networking.clients.WebRTCClient
-import org.openmined.syft.networking.requests.CommunicationDataFactory
-import org.openmined.syft.networking.requests.WebRTCMessageTypes
+import org.openmined.syft.networking.clients.SocketClient
 import org.webrtc.PeerConnection
 import org.webrtc.PeerConnectionFactory
 
@@ -24,7 +22,7 @@ class WebRTCClientTest {
     @Mock
     private lateinit var peerConfig: PeerConnection.RTCConfiguration
     @Mock
-    private lateinit var socketSignallingClient: SocketSignallingClient
+    private lateinit var syftWebSocket: SyftWebSocket
 
     @InjectMocks
     private lateinit var cut: WebRTCClient
@@ -41,6 +39,6 @@ class WebRTCClientTest {
         val scopeId = "scopeId"
         cut.start(workerId, scopeId)
 
-        verify(socketSignallingClient).send(CommunicationDataFactory.joinRoom(workerId,scopeId))
+        verify(syftWebSocket).send(SocketClient.joinRoom(workerId,scopeId))
     }
 }

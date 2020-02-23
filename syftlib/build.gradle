@@ -49,7 +49,6 @@ dependencies {
     implementation CommonDependencies.appCompat
     implementation CommonDependencies.coreKtx
     implementation CommonDependencies.kotlinSerialization
-
     implementation SyftlibDependencies.webrtc
     implementation CommonDependencies.rxJava
     implementation CommonDependencies.rxAndroid

@@ -4,25 +4,23 @@ import android.util.Log
 import io.reactivex.Completable
 import io.reactivex.disposables.CompositeDisposable
 import org.openmined.syft.Processes.SyftJob
-import org.openmined.syft.networking.clients.NetworkMessage
-import org.openmined.syft.networking.clients.SocketSignallingClient
+import org.openmined.syft.networking.clients.SocketClient
 import org.openmined.syft.networking.datamodels.AuthenticationSuccess
+import org.openmined.syft.networking.datamodels.CycleRequest
 import org.openmined.syft.networking.datamodels.CycleResponseData
-import org.openmined.syft.networking.datamodels.ReportStatus
+import org.openmined.syft.networking.datamodels.ReportResponse
 import org.openmined.syft.networking.datamodels.SocketResponse
-import org.openmined.syft.networking.requests.CommunicationDataFactory
 import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 private const val TAG = "Syft"
 
 @ExperimentalUnsignedTypes
 class Syft private constructor(
-    val socketSignallingClient: SocketSignallingClient,
+    val socketClient: SocketClient,
     private val schedulers: ProcessSchedulers
 ) {
     companion object {
@@ -30,26 +28,23 @@ class Syft private constructor(
         private var INSTANCE: Syft? = null
 
         fun getInstance(
-            socketSignallingClient: SocketSignallingClient,
+            socketClient: SocketClient,
             schedulers: ProcessSchedulers
         ): Syft =
                 INSTANCE ?: synchronized(this) {
                     INSTANCE ?: Syft(
-                        socketSignallingClient,
+                        socketClient,
                         schedulers
                     ).also { INSTANCE = it }
                 }
     }
 
-    private val compositeDisposable: CompositeDisposable = CompositeDisposable()
     private val workerJobs = ConcurrentHashMap<SyftJob.JobID, SyftJob>()
     private val pendingJobs = ConcurrentLinkedQueue<SyftJob>()
-
+    private val compositeDisposable = CompositeDisposable()
     //todo decide if this can be changed by pygrid or will remain same irrespective of the requests we make
     @Volatile
     lateinit var workerId: AtomicReference<String>
-    @Volatile
-    private var socketClientSubscribed = AtomicBoolean(false)
 
     fun newJob(model: String, version: String? = null): SyftJob {
         val job = SyftJob(this, model, version)
@@ -58,54 +53,21 @@ class Syft private constructor(
     }
 
     fun requestCycle(job: SyftJob) {
-        initiateSocketIfEmpty()
         if (this::workerId.isInitialized)
-            socketSignallingClient.send(
-                CommunicationDataFactory.requestCycle(
+            socketClient.getCycle(
+                CycleRequest(
                     workerId.get(),
-                    job,
+                    job.modelName,
+                    job.version,
                     getPing(),
                     getDownloadSpeed(),
                     getUploadSpeed()
                 )
             )
         else {
-            socketSignallingClient.send(CommunicationDataFactory.authenticate())
+            socketClient.authenticate()
             pendingJobs.add(job)
         }
-    }
-
-    private fun initiateSocketIfEmpty() {
-        if (socketClientSubscribed.get())
-            return
-
-        compositeDisposable.add(socketSignallingClient.start()
-                .map {
-                    when (it) {
-                        is NetworkMessage.SocketOpen -> {
-                            socketSignallingClient.send(CommunicationDataFactory.authenticate())
-                        }
-                        is NetworkMessage.SocketClosed -> Log.d(
-                            TAG,
-                            "Socket was closed successfully"
-                        )
-                        is NetworkMessage.SocketError -> Log.e(
-                            TAG,
-                            "socket error",
-                            it.throwable
-                        )
-                        is NetworkMessage.MessageReceived -> handleResponse(
-                            CommunicationDataFactory.deserializeSocket(
-                                it.message
-                            )
-                        )
-                        is NetworkMessage.MessageSent -> println("Message sent successfully")
-                    }
-                }
-                .subscribeOn(schedulers.computeThreadScheduler)
-                .observeOn(schedulers.calleeThreadScheduler)
-                .subscribe())
-        socketClientSubscribed.set(true)
     }
 
     private fun getPing() = ""
@@ -121,7 +83,7 @@ class Syft private constructor(
 
             }
             is CycleResponseData -> handleCycleResponse(response.data)
-            is ReportStatus -> Log.i(TAG, response.data.status)
+            is ReportResponse -> Log.i(TAG, response.data.status)
         }
     }
 
