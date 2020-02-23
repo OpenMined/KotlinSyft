@@ -2,7 +2,7 @@ import org.codehaus.groovy.ast.Variable
 
 object Versions {
     // App versioning
-    const val DemoAppId = "org.openmined.syft.demo"
+    const val demoAppId = "org.openmined.syft.demo"
     const val appVersionCode = 1
     const val appVersionName = "1.0"
 
@@ -27,7 +27,7 @@ object Versions {
     const val protobuf = "3.11.0"
     const val kotlinSyft = "0.0.7"
 
-    //release management
+    // release management
     const val netflixPublishing = "14.0.0"
     const val netflixRelease = "13.0.0"
     const val netflixBintray = "3.5.4"
