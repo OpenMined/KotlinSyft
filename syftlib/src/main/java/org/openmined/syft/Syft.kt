@@ -4,24 +4,24 @@ import android.util.Log
 import io.reactivex.Completable
 import io.reactivex.disposables.CompositeDisposable
 import org.openmined.syft.Processes.SyftJob
+import org.openmined.syft.networking.clients.HttpClient
 import org.openmined.syft.networking.clients.SocketClient
-import org.openmined.syft.networking.datamodels.AuthenticationSuccess
-import org.openmined.syft.networking.datamodels.CycleRequest
-import org.openmined.syft.networking.datamodels.CycleResponseData
-import org.openmined.syft.networking.datamodels.ReportResponse
 import org.openmined.syft.networking.datamodels.SocketResponse
+import org.openmined.syft.networking.datamodels.syft.AuthenticationSuccess
+import org.openmined.syft.networking.datamodels.syft.CycleRequest
+import org.openmined.syft.networking.datamodels.syft.CycleResponseData
+import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
 
 private const val TAG = "Syft"
 
 @ExperimentalUnsignedTypes
 class Syft private constructor(
     val socketClient: SocketClient,
-    private val schedulers: ProcessSchedulers
+    val httpClient: HttpClient,
+    val schedulers: ProcessSchedulers
 ) {
     companion object {
         @Volatile
@@ -29,26 +29,37 @@ class Syft private constructor(
 
         fun getInstance(
             socketClient: SocketClient,
+            httpClient: HttpClient,
             schedulers: ProcessSchedulers
         ): Syft =
                 INSTANCE ?: synchronized(this) {
                     INSTANCE ?: Syft(
                         socketClient,
+                        httpClient,
                         schedulers
                     ).also { INSTANCE = it }
                 }
     }
 
     private val workerJobs = ConcurrentHashMap<SyftJob.JobID, SyftJob>()
-    private val pendingJobs = ConcurrentLinkedQueue<SyftJob>()
     private val compositeDisposable = CompositeDisposable()
     //todo decide if this can be changed by pygrid or will remain same irrespective of the requests we make
     @Volatile
-    lateinit var workerId: AtomicReference<String>
+    lateinit var workerId: String
 
     fun newJob(model: String, version: String? = null): SyftJob {
         val job = SyftJob(this, model, version)
-        workerJobs[SyftJob.JobID(model, version)] = job
+        val jobId = SyftJob.JobID(model, version)
+        workerJobs[jobId] = job
+        compositeDisposable.add(job.getStatusProcessor()
+                .compose(schedulers.applyFlowableSchedulers())
+                .subscribe(
+                    {},
+                    { workerJobs.remove(jobId) },
+                    { workerJobs.remove(jobId) }
+                )
+        )
+
         return job
     }
 
@@ -56,18 +67,30 @@ class Syft private constructor(
         if (this::workerId.isInitialized)
             socketClient.getCycle(
                 CycleRequest(
-                    workerId.get(),
+                    workerId,
                     job.modelName,
                     job.version,
                     getPing(),
                     getDownloadSpeed(),
                     getUploadSpeed()
                 )
-            )
+            ).compose(schedulers.applySingleSchedulers())
         else {
-            socketClient.authenticate()
-            pendingJobs.add(job)
+            compositeDisposable.add(socketClient.authenticate()
+                    .compose(schedulers.applySingleSchedulers())
+                    .subscribe { t: AuthenticationSuccess ->
+                        if (!this::workerId.isInitialized)
+                            setSyftWorkerId(workerId)
+                        requestCycle(job)
+                    }
+            )
         }
+    }
+
+    @Synchronized
+    private fun setSyftWorkerId(workerId: String) {
+        if (!this::workerId.isInitialized)
+            this.workerId = workerId
     }
 
     private fun getPing() = ""
@@ -77,9 +100,7 @@ class Syft private constructor(
     private fun handleResponse(response: SocketResponse) {
         when (response.data) {
             is AuthenticationSuccess -> {
-                this.workerId.set(response.data.workerId)
-                //empty pending jobs first
-                emptyPendingJobs()
+                this.workerId = response.data.workerId
 
             }
             is CycleResponseData -> handleCycleResponse(response.data)
@@ -107,17 +128,12 @@ class Syft private constructor(
                 compositeDisposable.add(
                     Completable
                             .timer(responseData.timeout.toLong(), TimeUnit.MILLISECONDS)
-                            .subscribeOn(schedulers.computeThreadScheduler)
-                            .observeOn(schedulers.calleeThreadScheduler)
+                            .compose(schedulers.applyCompletableSchedulers())
                             .subscribe { job.start() }
                 )
             }
         }
     }
 
-    private fun emptyPendingJobs() {
-        while (pendingJobs.isNotEmpty())
-            requestCycle(pendingJobs.remove())
-    }
 
 }

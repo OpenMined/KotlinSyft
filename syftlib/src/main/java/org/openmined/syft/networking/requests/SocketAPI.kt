@@ -1,17 +1,14 @@
 package org.openmined.syft.networking.requests
 
 import io.reactivex.Single
-import okhttp3.ResponseBody
+import org.openmined.syft.networking.datamodels.webRTC.InternalMessageRequest
+import org.openmined.syft.networking.datamodels.webRTC.InternalMessageResponse
+import org.openmined.syft.networking.datamodels.webRTC.JoinRoomRequest
+import org.openmined.syft.networking.datamodels.webRTC.JoinRoomResponse
 
 interface SocketAPI : CommunicationAPI {
 
-    fun joinRoom(workerId: String, scopeId: String): Single<ResponseBody>
+    fun joinRoom(joinRoomRequest: JoinRoomRequest): Single<JoinRoomResponse>
 
-    fun internalMessage(
-        workerId: String,
-        scopeId: String,
-        target: String,
-        type: WebRTCMessageTypes,
-        message: String
-    ): Single<ResponseBody>
+    fun internalMessage(internalMessageRequest: InternalMessageRequest): Single<InternalMessageResponse>
 }

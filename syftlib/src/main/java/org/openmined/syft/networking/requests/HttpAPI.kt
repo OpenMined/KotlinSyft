@@ -2,21 +2,23 @@ package org.openmined.syft.networking.requests
 
 import io.reactivex.Single
 import okhttp3.ResponseBody
-import org.openmined.syft.networking.datamodels.AUTH_TYPE
-import org.openmined.syft.networking.datamodels.AuthenticationSuccess
-import org.openmined.syft.networking.datamodels.CYCLE_TYPE
-import org.openmined.syft.networking.datamodels.CycleRequest
-import org.openmined.syft.networking.datamodels.CycleResponseData
-import org.openmined.syft.networking.datamodels.REPORT_TYPE
-import org.openmined.syft.networking.datamodels.ReportRequest
-import org.openmined.syft.networking.datamodels.ReportResponse
+import org.openmined.syft.networking.datamodels.syft.AUTH_TYPE
+import org.openmined.syft.networking.datamodels.syft.AuthenticationSuccess
+import org.openmined.syft.networking.datamodels.syft.CYCLE_TYPE
+import org.openmined.syft.networking.datamodels.syft.CycleRequest
+import org.openmined.syft.networking.datamodels.syft.CycleResponseData
+import org.openmined.syft.networking.datamodels.syft.REPORT_TYPE
+import org.openmined.syft.networking.datamodels.syft.ReportRequest
+import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
+import retrofit2.http.Streaming
 
 interface HttpAPI : CommunicationAPI{
 
+    @Streaming
     @GET("/federated/get-plan")
     fun downloadPlan(
         @Query("worker_id") workerId: String,
@@ -25,6 +27,7 @@ interface HttpAPI : CommunicationAPI{
         @Query("receive_operations_as") op_type: String
     ): Single<ResponseBody>
 
+    @Streaming
     @GET("/federated/get-protocol")
     fun downloadProtocol(
         @Query("worker_id") workerId: String,
@@ -32,6 +35,7 @@ interface HttpAPI : CommunicationAPI{
         @Query("protocol_id") protocolId: String
     ): Single<ResponseBody>
 
+    @Streaming
     @GET("/federated/get-model")
     fun downloadModel(
         @Query("worker_id") workerId: String,

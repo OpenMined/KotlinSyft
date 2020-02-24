@@ -8,7 +8,7 @@ import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 
 class HttpClient(baseurl: String) : SignallingClient {
-    private val apiClient = Retrofit.Builder()
+    val apiClient = Retrofit.Builder()
             .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
             .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))
             .baseUrl(baseurl)

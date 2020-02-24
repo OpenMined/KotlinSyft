@@ -2,9 +2,9 @@ package org.openmined.syft.Processes
 
 import io.reactivex.Flowable
 import io.reactivex.processors.PublishProcessor
-import org.openmined.syft.networking.datamodels.CycleResponseData
-import org.openmined.syft.networking.clients.SocketClient
 import org.openmined.syft.Syft
+import org.openmined.syft.networking.datamodels.syft.CycleResponseData
+import org.openmined.syft.networking.datamodels.syft.ReportRequest
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
@@ -32,6 +32,8 @@ class SyftJob(private val worker: Syft, val modelName: String, val version: Stri
         return jobStatusProcessor.onBackpressureBuffer()
     }
 
+    fun getStatusProcessor(): Flowable<JobStatusMessage> = jobStatusProcessor.onBackpressureBuffer()
+
     @Synchronized
     fun setRequestKey(responseData: CycleResponseData.CycleAccept) {
         requestKey = responseData.requestKey
@@ -40,7 +42,14 @@ class SyftJob(private val worker: Syft, val modelName: String, val version: Stri
     }
 
     fun downloadData() {
-        //todo send jobReady on jobStatusProcessor after it completes
+        plans.forEach { (planId, _) ->
+            worker.httpClient.apiClient.downloadPlan(
+                worker.workerId,
+                requestKey,
+                planId,
+                "torchscript"
+            ).compose(worker.schedulers.applySingleSchedulers()).subscribe()
+        }
     }
 
 
@@ -48,12 +57,18 @@ class SyftJob(private val worker: Syft, val modelName: String, val version: Stri
      * report the results back to PyGrid
      */
     private fun report(diff: String) {
-        worker.socketClient.send(
-            SocketClient.report(worker.workerId.get(), requestKey, diff)
-        )
+        worker.socketClient.report(ReportRequest(worker.workerId, requestKey, diff))
+                .compose(worker.schedulers.applySingleSchedulers())
+                .subscribe()
     }
 
-    data class JobID(val modelName: String, val version: String? = null)
+    data class JobID(val modelName: String, val version: String? = null) {
+        fun matchWithResponse(modelName: String, version: String) =
+                if (this.version.isNullOrEmpty())
+                    this.modelName == modelName
+                else
+                    (this.modelName == modelName) && (this.version == version)
+    }
 
     enum class DownloadStatus {
         NOT_STARTED, INCOMPLETE, COMPLETE

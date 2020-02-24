@@ -3,12 +3,12 @@ package org.openmined.syft.networking
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.json
 import org.junit.jupiter.api.Test
-import org.openmined.syft.networking.datamodels.AuthenticationSuccess
+import org.openmined.syft.networking.datamodels.syft.AuthenticationSuccess
 import org.openmined.syft.networking.datamodels.ClientConfig
-import org.openmined.syft.networking.datamodels.CycleResponseData
-import org.openmined.syft.networking.datamodels.ReportResponse
-import org.openmined.syft.networking.datamodels.WebRTCInternalMessage
-import org.openmined.syft.networking.datamodels.WebRTCNewPeer
+import org.openmined.syft.networking.datamodels.syft.CycleResponseData
+import org.openmined.syft.networking.datamodels.syft.ReportResponse
+import org.openmined.syft.networking.datamodels.webRTC.InternalMessageResponse
+import org.openmined.syft.networking.datamodels.webRTC.NewPeer
 import org.openmined.syft.networking.clients.SocketClient
 import org.openmined.syft.networking.requests.REQUESTS
 
@@ -96,7 +96,8 @@ class RequestBuilderTest {
     @Test
     fun `check report status`() {
         val deserializeObject = SocketClient.deserializeSocket(reportStatus)
-        val trueObject = ReportResponse("success")
+        val trueObject =
+                ReportResponse("success")
         assert(deserializeObject.data == trueObject)
         assert(deserializeObject.typesResponse == REQUESTS.REPORT)
     }
@@ -104,7 +105,12 @@ class RequestBuilderTest {
     @Test
     fun `check webRTC internal message deserialization`() {
         val deserializeObject = SocketClient.deserializeSocket(webRTCInternal)
-        val trueObject = WebRTCInternalMessage("candidate", "testing new worker", "SDP")
+        val trueObject =
+                InternalMessageResponse(
+                    "candidate",
+                    "testing new worker",
+                    "SDP"
+                )
         assert(deserializeObject.data == trueObject)
         assert(deserializeObject.typesResponse == REQUESTS.WEBRTC_INTERNAL)
     }
@@ -112,7 +118,8 @@ class RequestBuilderTest {
     @Test
     fun `check webRTC new peer message deserialization`() {
         val deserializeObject = SocketClient.deserializeSocket(newPeer)
-        val trueObject = WebRTCNewPeer("new ID")
+        val trueObject =
+                NewPeer("new ID")
         assert(deserializeObject.data == trueObject)
         assert(deserializeObject.typesResponse == REQUESTS.WEBRTC_PEER)
     }

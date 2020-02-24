@@ -21,7 +21,7 @@ private const val SOCKET_CLOSE_CLIENT = 1000
 class SyftWebSocket(
     protocol: Protocol,
     address: String,
-    keepAliveTimeout: UInt = 20000u
+    keepAliveTimeout: UInt
 ) {
     @Volatile
     var sockerStatus = AtomicBoolean(false)
@@ -46,17 +46,10 @@ class SyftWebSocket(
     /**
      * Send the data over the Socket connection to PyGrid
      */
-    fun send(message: JsonObject) {
-        if (webSocket.send(message.toString())) {
-            statusPublishProcessor.offer(NetworkMessage.MessageSent)
-        }
-    }
+    fun send(message: JsonObject) = webSocket.send(message.toString())
 
-    fun close() {
-        if (webSocket.close(SOCKET_CLOSE_CLIENT, "Socket closed by client")) {
-            statusPublishProcessor.offer(NetworkMessage.SocketClosed)
-        }
-    }
+    fun close() = webSocket.close(SOCKET_CLOSE_CLIENT, "Socket closed by client")
+
 
     private fun connect() {
         webSocket = client.newWebSocket(request, syftSocketListener)

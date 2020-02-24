@@ -1,6 +1,9 @@
 package org.openmined.syft.threading
 
+import io.reactivex.Completable
+import io.reactivex.Flowable
 import io.reactivex.Scheduler
+import io.reactivex.Single
 
 interface ProcessSchedulers {
 
@@ -15,4 +18,22 @@ interface ProcessSchedulers {
      * @sample calleeThreadScheduler AndroidSchedulers.MainThread()
      */
     val calleeThreadScheduler: Scheduler
+
+    fun <T> applySingleSchedulers() = { singleObservable: Single<T> ->
+        singleObservable
+                .subscribeOn(computeThreadScheduler)
+                .observeOn(calleeThreadScheduler)
+    }
+
+    fun applyCompletableSchedulers() = { completable: Completable ->
+        completable
+                .subscribeOn(computeThreadScheduler)
+                .observeOn(calleeThreadScheduler)
+    }
+
+    fun <T> applyFlowableSchedulers() = { flowable: Flowable<T> ->
+        flowable
+                .subscribeOn(computeThreadScheduler)
+                .observeOn(calleeThreadScheduler)
+    }
 }

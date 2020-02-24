@@ -3,17 +3,17 @@ package org.openmined.syft.networking.requests
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.json.JsonElement
-import org.openmined.syft.networking.datamodels.AUTH_TYPE
-import org.openmined.syft.networking.datamodels.AuthenticationSuccess
-import org.openmined.syft.networking.datamodels.CYCLE_TYPE
-import org.openmined.syft.networking.datamodels.CycleResponseData
-import org.openmined.syft.networking.datamodels.NEW_PEER_TYPE
+import org.openmined.syft.networking.datamodels.syft.AUTH_TYPE
+import org.openmined.syft.networking.datamodels.syft.AuthenticationSuccess
+import org.openmined.syft.networking.datamodels.syft.CYCLE_TYPE
+import org.openmined.syft.networking.datamodels.syft.CycleResponseData
+import org.openmined.syft.networking.datamodels.webRTC.NEW_PEER_TYPE
 import org.openmined.syft.networking.datamodels.NetworkModels
-import org.openmined.syft.networking.datamodels.REPORT_TYPE
-import org.openmined.syft.networking.datamodels.ReportResponse
-import org.openmined.syft.networking.datamodels.WEBRTC_INTERNAL_TYPE
-import org.openmined.syft.networking.datamodels.WebRTCInternalMessage
-import org.openmined.syft.networking.datamodels.WebRTCNewPeer
+import org.openmined.syft.networking.datamodels.syft.REPORT_TYPE
+import org.openmined.syft.networking.datamodels.syft.ReportResponse
+import org.openmined.syft.networking.datamodels.webRTC.WEBRTC_INTERNAL_TYPE
+import org.openmined.syft.networking.datamodels.webRTC.InternalMessageResponse
+import org.openmined.syft.networking.datamodels.webRTC.NewPeer
 
 enum class REQUESTS(override val value: String) : ResponseMessageTypes {
 
@@ -50,20 +50,20 @@ enum class REQUESTS(override val value: String) : ResponseMessageTypes {
             get() = Json(JsonConfiguration.Stable)
 
         override fun parseJson(jsonString: String): NetworkModels =
-                jsonParser.parse(WebRTCInternalMessage.serializer(), jsonString)
+                jsonParser.parse(InternalMessageResponse.serializer(), jsonString)
 
         override fun serialize(obj: NetworkModels): JsonElement =
-                jsonParser.toJson(WebRTCInternalMessage.serializer(), obj as WebRTCInternalMessage)
+                jsonParser.toJson(InternalMessageResponse.serializer(), obj as InternalMessageResponse)
     },
     WEBRTC_PEER(NEW_PEER_TYPE) {
         override val jsonParser: Json
             get() = Json(JsonConfiguration.Stable)
 
         override fun parseJson(jsonString: String): NetworkModels =
-                jsonParser.parse(WebRTCNewPeer.serializer(), jsonString)
+                jsonParser.parse(NewPeer.serializer(), jsonString)
 
         override fun serialize(obj: NetworkModels): JsonElement =
-                jsonParser.toJson(WebRTCInternalMessage.serializer(), obj as WebRTCInternalMessage)
+                jsonParser.toJson(InternalMessageResponse.serializer(), obj as InternalMessageResponse)
 
     }
 
