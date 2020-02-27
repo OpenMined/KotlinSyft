@@ -1,24 +1,36 @@
-package org.openmined.syft.Processes
+package org.openmined.syft.processes
 
+import android.util.Log
 import io.reactivex.Flowable
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.Syft
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.datamodels.syft.ReportRequest
+import org.openmined.syft.networking.datamodels.syft.ReportResponse
+import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
-@ExperimentalUnsignedTypes
-class SyftJob(private val worker: Syft, val modelName: String, val version: String? = null) {
+private const val TAG = "SyftJob"
 
-    var cycleStatus = CycleStatus.APPLY
-    var trainingParamsStatus = AtomicReference<DownloadStatus>()
+@ExperimentalUnsignedTypes
+class SyftJob(
+    private val worker: Syft,
+    private val schedulers: ProcessSchedulers,
+    val modelName: String,
+    val version: String? = null
+) {
+
+    var cycleStatus = AtomicReference<CycleStatus>(CycleStatus.APPLY)
+    var trainingParamsStatus = AtomicReference<DownloadStatus>(DownloadStatus.NOT_STARTED)
 
     private lateinit var requestKey: String
     private val plans = ConcurrentHashMap<String, Plan>()
     private val protocols = ConcurrentHashMap<String, Protocol>()
     private val jobStatusProcessor: PublishProcessor<JobStatusMessage> =
             PublishProcessor.create<JobStatusMessage>()
+    private val compositeDisposable = CompositeDisposable()
 
     /**
      * create a worker job
@@ -27,9 +39,24 @@ class SyftJob(private val worker: Syft, val modelName: String, val version: Stri
         //todo all this in syft.kt
         //todo check for connection if doesn't exist establish one
         //todo before calling this function syft should have checked the bandwidth etc requirements
-        trainingParamsStatus.set(DownloadStatus.NOT_STARTED)
+        if (cycleStatus.get() == CycleStatus.APPLY) {
+            Log.d(TAG, "job awaiting timer completion to resend the Cycle Request")
+            return getStatusProcessor()
+        }
         worker.requestCycle(this)
         return jobStatusProcessor.onBackpressureBuffer()
+    }
+
+    /**
+     * report the results back to PyGrid
+     */
+    fun report(diff: String) {
+        compositeDisposable.add(
+            worker.getSignallingClient().report(ReportRequest(worker.workerId, requestKey, diff))
+                    .compose(schedulers.applySingleSchedulers())
+                    .subscribe { reportResponse: ReportResponse ->
+                        Log.i(TAG, reportResponse.status)
+                    })
     }
 
     fun getStatusProcessor(): Flowable<JobStatusMessage> = jobStatusProcessor.onBackpressureBuffer()
@@ -37,30 +64,23 @@ class SyftJob(private val worker: Syft, val modelName: String, val version: Stri
     @Synchronized
     fun setRequestKey(responseData: CycleResponseData.CycleAccept) {
         requestKey = responseData.requestKey
-        cycleStatus = CycleStatus.ACCEPTED
+        cycleStatus.set(CycleStatus.ACCEPTED)
         jobStatusProcessor.offer(JobStatusMessage.JobCycleAccepted)
     }
 
     fun downloadData() {
+        trainingParamsStatus.set(DownloadStatus.RUNNING)
         plans.forEach { (planId, _) ->
-            worker.httpClient.apiClient.downloadPlan(
+            worker.getDownloader().downloadPlan(
                 worker.workerId,
                 requestKey,
                 planId,
                 "torchscript"
-            ).compose(worker.schedulers.applySingleSchedulers()).subscribe()
+            ).compose(schedulers.applySingleSchedulers()).subscribe()
         }
+        trainingParamsStatus.set(DownloadStatus.COMPLETE)
     }
 
-
-    /**
-     * report the results back to PyGrid
-     */
-    private fun report(diff: String) {
-        worker.socketClient.report(ReportRequest(worker.workerId, requestKey, diff))
-                .compose(worker.schedulers.applySingleSchedulers())
-                .subscribe()
-    }
 
     data class JobID(val modelName: String, val version: String? = null) {
         fun matchWithResponse(modelName: String, version: String) =
@@ -71,11 +91,11 @@ class SyftJob(private val worker: Syft, val modelName: String, val version: Stri
     }
 
     enum class DownloadStatus {
-        NOT_STARTED, INCOMPLETE, COMPLETE
+        NOT_STARTED, RUNNING, COMPLETE
     }
 
     enum class CycleStatus {
-        APPLY, REJECTED, ACCEPTED
+        APPLY, REJECT, ACCEPTED
     }
 
 }

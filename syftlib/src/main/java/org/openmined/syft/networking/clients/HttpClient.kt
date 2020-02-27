@@ -7,11 +7,11 @@ import org.openmined.syft.networking.requests.HttpAPI
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 
-class HttpClient(baseurl: String) : SignallingClient {
-    val apiClient = Retrofit.Builder()
+class HttpClient(baseUrl: String) : SignallingClient {
+    val apiClient: HttpAPI = Retrofit.Builder()
             .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
             .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))
-            .baseUrl(baseurl)
+            .baseUrl(baseUrl)
             .build().create(HttpAPI::class.java)
 
 }

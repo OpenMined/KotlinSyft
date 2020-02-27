@@ -7,7 +7,7 @@ import io.reactivex.processors.PublishProcessor
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.json.json
-import org.openmined.syft.Processes.SyftJob
+import org.openmined.syft.processes.SyftJob
 import org.openmined.syft.networking.datamodels.NetworkModels
 import org.openmined.syft.networking.datamodels.SocketResponse
 import org.openmined.syft.networking.datamodels.webRTC.InternalMessageRequest
@@ -87,8 +87,7 @@ class SocketClient(
                             cycleRequest.modelName,
                             cycleRequest.version
                         ).matchWithResponse(it.modelName, it.version)
-                        else ->
-                            false
+                        else -> false
                     }
                 }.debounce(timeout.toLong(), TimeUnit.MILLISECONDS)
                 .map { it as CycleResponseData }

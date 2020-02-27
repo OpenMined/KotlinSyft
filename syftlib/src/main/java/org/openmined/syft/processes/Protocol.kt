@@ -1,4 +1,4 @@
-package org.openmined.syft.Processes
+package org.openmined.syft.processes
 
 class Protocol {
     fun execute(){
