@@ -60,6 +60,10 @@ dependencies {
     implementation SyftlibDependencies.syftProto
     implementation SyftlibDependencies.protobuf
 
+    implementation 'org.openmined.kotlinsyft:syft-proto-jvm:0.0.7'
+    implementation 'com.google.protobuf:protobuf-java:3.11.0'
+
+    debugImplementation "org.mockito:mockito-junit-jupiter:3.2.4"
     debugImplementation SyftlibDependencies.mockitoJupiter
 
     androidTestImplementation CommonDependencies.testExtJunit
