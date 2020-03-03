@@ -59,6 +59,7 @@ dependencies {
 
     implementation SyftlibDependencies.syftProto
     implementation SyftlibDependencies.protobuf
+    implementation group: 'com.google.protobuf', name: 'protobuf-java-util', version: '3.11.4'
 
     implementation 'org.openmined.kotlinsyft:syft-proto-jvm:0.0.7'
     implementation 'com.google.protobuf:protobuf-java:3.11.0'
