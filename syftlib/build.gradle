@@ -53,6 +53,9 @@ dependencies {
     implementation CommonDependencies.rxJava
     implementation CommonDependencies.rxAndroid
     implementation SyftlibDependencies.okhttp
+    implementation CommonDependencies.kotlinSerializationFactory
+    implementation SyftlibDependencies.retrofitAdapter
+    implementation SyftlibDependencies.retrofit
 
     implementation SyftlibDependencies.syftProto
     implementation SyftlibDependencies.protobuf

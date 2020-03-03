@@ -1,7 +1,12 @@
 package org.openmined.syft.networking.clients
 
 import android.util.Log
+import io.reactivex.disposables.CompositeDisposable
+import org.openmined.syft.networking.datamodels.webRTC.InternalMessageRequest
+import org.openmined.syft.networking.datamodels.webRTC.JoinRoomRequest
+import org.openmined.syft.networking.datamodels.webRTC.JoinRoomResponse
 import org.openmined.syft.networking.requests.WebRTCMessageTypes
+import org.openmined.syft.threading.ProcessSchedulers
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
 import org.webrtc.MediaStream
@@ -22,10 +27,12 @@ private const val TAG = "WebRTCClient"
 internal class WebRTCClient(
     private val peerConnectionFactory: PeerConnectionFactory,
     private val peerConfig: PeerConnection.RTCConfiguration,
-    private val syftWebSocket: SyftWebSocket
+    private val socketClient: SocketClient,
+    private val schedulers: ProcessSchedulers
 ) {
 
     private val peers = HashMap<String, Peer>()
+    private val compositeDisposable = CompositeDisposable()
     private lateinit var workerId: String
     private lateinit var scopeId: String
 
@@ -34,8 +41,9 @@ internal class WebRTCClient(
 
         this.workerId = workerId
         this.scopeId = scopeId
-        syftWebSocket.send(
-            SocketClient.joinRoom(workerId, scopeId)
+        compositeDisposable.add(socketClient.joinRoom(JoinRoomRequest(workerId, scopeId))
+                .compose(schedulers.applySingleSchedulers())
+                .subscribe { _: JoinRoomResponse?, _: Throwable? -> }
         )
     }
 
@@ -109,8 +117,16 @@ internal class WebRTCClient(
     private fun sendInternalMessage(type: WebRTCMessageTypes, message: String, target: String) {
         if (target != workerId) {
             Log.d(TAG, "Sending Internal WebRTC message via PyGrid")
-            this.syftWebSocket.send(
-                SocketClient.internalMessage(workerId, scopeId, target, type, message)
+            compositeDisposable.add(
+                this.socketClient.sendInternalMessage(
+                    InternalMessageRequest(
+                        workerId,
+                        scopeId,
+                        target,
+                        type.value,
+                        message
+                    )
+                ).compose(schedulers.applySingleSchedulers()).subscribe()
             )
         }
     }
@@ -137,6 +153,7 @@ internal class WebRTCClient(
         }
     }
 
+    //todo shift this to reactive version
     fun receiveInternalMessage(
         types: WebRTCMessageTypes,
         newWorkerId: String,

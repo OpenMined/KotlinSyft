@@ -10,5 +10,5 @@ interface SocketAPI : CommunicationAPI {
 
     fun joinRoom(joinRoomRequest: JoinRoomRequest): Single<JoinRoomResponse>
 
-    fun internalMessage(internalMessageRequest: InternalMessageRequest): Single<InternalMessageResponse>
+    fun sendInternalMessage(internalMessageRequest: InternalMessageRequest): Single<InternalMessageResponse>
 }

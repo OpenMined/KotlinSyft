@@ -111,7 +111,7 @@ class SocketClient(
     }
 
     //todo handle backpressure and first or error
-    override fun internalMessage(internalMessageRequest: InternalMessageRequest): Single<InternalMessageResponse> {
+    override fun sendInternalMessage(internalMessageRequest: InternalMessageRequest): Single<InternalMessageResponse> {
         syftWebSocket.send(appendType(REQUESTS.WEBRTC_INTERNAL, internalMessageRequest))
         return messageProcessor.onBackpressureBuffer()
                 .filter { it is InternalMessageResponse }

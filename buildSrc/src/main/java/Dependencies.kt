@@ -24,6 +24,8 @@ object Versions {
     const val okhttp = "4.3.1"
     const val protobuf = "3.11.0"
     const val syftProto = "0.0.8"
+    const val retrofit = "2.7.1"
+    const val kotlinConverter = "0.4.0"
 
     // release management
     const val netflixPublishing = "14.0.0"
@@ -45,15 +47,19 @@ object ProjectDependencies {
     const val androidGradlePlugin = "com.android.tools.build:gradle:${Versions.gradle}"
     const val kotlinGradlePlugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
     const val kotlinSerialization = "org.jetbrains.kotlin:kotlin-serialization:${Versions.kotlin}"
-    const val netflixPublishingPlugin = "com.netflix.nebula:nebula-publishing-plugin:${Versions.netflixPublishing}"
-    const val netflixReleasePlugin = "com.netflix.nebula:nebula-release-plugin:${Versions.netflixRelease}"
-    const val netflixBintrayPlugin = "com.netflix.nebula:nebula-bintray-plugin:${Versions.netflixBintray}"
+    const val netflixPublishingPlugin = "com.netflix.nebula:nebula-publishing-plugin:" +
+                                        Versions.netflixPublishing
+    const val netflixReleasePlugin = "com.netflix.nebula:nebula-release-plugin:" +
+                                     Versions.netflixRelease
+    const val netflixBintrayPlugin = "com.netflix.nebula:nebula-bintray-plugin:" +
+                                     Versions.netflixBintray
 }
 
 object CommonDependencies {
     const val appCompat = "androidx.appcompat:appcompat:${Versions.appCompat}"
     const val coreKtx = "androidx.core:core-ktx:${Versions.coreKtx}"
     const val kotlinSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-runtime:${Versions.kotlinSerialization}"
+    const val kotlinSerializationFactory = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:${Versions.kotlinConverter}"
     const val rxJava = "io.reactivex.rxjava2:rxjava:${Versions.rxJava}"
     const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"
     const val espresso = "androidx.test.espresso:espresso-core:${Versions.espresso}"
@@ -74,4 +80,6 @@ object SyftlibDependencies {
     const val syftProto = "org.openmined.kotlinsyft:syft-proto-jvm:${Versions.syftProto}"
     const val protobuf = "com.google.protobuf:protobuf-java:${Versions.protobuf}"
     const val junitJupiter = "org.junit.jupiter:junit-jupiter:${Versions.junitJupiter}"
+    const val retrofit = "com.squareup.retrofit2:retrofit:${Versions.retrofit}"
+    const val retrofitAdapter = "com.squareup.retrofit2:adapter-rxjava2:${Versions.retrofit}"
 }

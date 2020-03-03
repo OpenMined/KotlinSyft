@@ -133,7 +133,8 @@ class Syft private constructor(
             workerJobs.getValue(jobId)
         })
         job.setRequestKey(responseData)
-        job.downloadData()
+        //todo set the destination via Syft Configuration class
+        job.downloadData("/data/syft/${job.modelName}_data")
     }
 
 
