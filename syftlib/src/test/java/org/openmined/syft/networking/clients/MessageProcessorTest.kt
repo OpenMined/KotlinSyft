@@ -6,7 +6,7 @@ internal class MessageProcessorTest {
 
     @Test
     fun `Given a serialized plan then message processor deserializes it`() {
-        val planInputStream = javaClass.classLoader?.getResourceAsStream("proto_files/tp_ops.pb")
+        val planInputStream = javaClass.classLoader?.getResourceAsStream("proto_files/tp_ts.pb")
 
         val planPb = planInputStream?.buffered().use { it!!.readBytes() }
 
@@ -14,6 +14,6 @@ internal class MessageProcessorTest {
 
         val result = cut.processPlan(planPb)
 
-        assert(result.operationsCount > 0)
+        assert(result.isInitialized)
     }
 }
