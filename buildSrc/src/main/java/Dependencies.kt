@@ -1,5 +1,3 @@
-import org.codehaus.groovy.ast.Variable
-
 object Versions {
     // App versioning
     const val demoAppId = "org.openmined.syft.demo"
@@ -16,7 +14,7 @@ object Versions {
 
     // Android libraries
     const val appCompat = "1.1.0"
-    const val coreKtx= "1.2.0"
+    const val coreKtx = "1.2.0"
     const val kotlinSerialization = "0.14.0"
 
     // Tools
@@ -25,7 +23,7 @@ object Versions {
     const val webrtc = "1.0.30039"
     const val okhttp = "4.3.1"
     const val protobuf = "3.11.0"
-    const val kotlinSyft = "0.0.7"
+    const val syftProto = "0.0.8"
 
     // release management
     const val netflixPublishing = "14.0.0"
@@ -37,9 +35,9 @@ object Versions {
     const val testRunner = "1.0.2"
     const val espresso = "3.2.0"
     const val mockitoCore = "3.2.4"
-    const val mokitoJupiter = "3.2.4"
-    const val mokitoKotlin = "2.2.0"
-    const val junitJypiter = "5.6.0"
+    const val mockitoJupiter = "3.2.4"
+    const val mockitoKotlin = "2.2.0"
+    const val junitJupiter = "5.6.0"
 
 }
 
@@ -54,7 +52,7 @@ object ProjectDependencies {
 
 object CommonDependencies {
     const val appCompat = "androidx.appcompat:appcompat:${Versions.appCompat}"
-    const val corektx = "androidx.core:core-ktx:${Versions.coreKtx}"
+    const val coreKtx = "androidx.core:core-ktx:${Versions.coreKtx}"
     const val kotlinSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-runtime:${Versions.kotlinSerialization}"
     const val rxJava = "io.reactivex.rxjava2:rxjava:${Versions.rxJava}"
     const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"
@@ -67,13 +65,13 @@ object DemoAppDependencies {
 }
 
 object SyftlibDependencies {
-    const val mokitoCore = "org.mockito:mockito-core:${Versions.mockitoCore}"
+    const val mockitoCore = "org.mockito:mockito-core:${Versions.mockitoCore}"
     const val kotlinJDK = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}"
     const val webrtc = "org.webrtc:google-webrtc:${Versions.webrtc}"
     const val okhttp = "com.squareup.okhttp3:okhttp:${Versions.okhttp}"
-    const val mokitoJupiter = "org.mockito:mockito-junit-jupiter:${Versions.mokitoJupiter}"
-    const val mokitoKotlin = "com.nhaarman.mockitokotlin2:mockito-kotlin:${Versions.mokitoKotlin}"
-    const val syftProto = "org.openmined.kotlinsyft:syft-proto-jvm:${Versions.kotlinSyft}"
+    const val mockitoJupiter = "org.mockito:mockito-junit-jupiter:${Versions.mockitoJupiter}"
+    const val mockitoKotlin = "com.nhaarman.mockitokotlin2:mockito-kotlin:${Versions.mockitoKotlin}"
+    const val syftProto = "org.openmined.kotlinsyft:syft-proto-jvm:${Versions.syftProto}"
     const val protobuf = "com.google.protobuf:protobuf-java:${Versions.protobuf}"
-    const val junitJupiter = "org.junit.jupiter:junit-jupiter:${Versions.junitJypiter}"
+    const val junitJupiter = "org.junit.jupiter:junit-jupiter:${Versions.junitJupiter}"
 }
