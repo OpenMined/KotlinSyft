@@ -24,7 +24,7 @@ class SyftWebSocket(
     keepAliveTimeout: UInt
 ) {
     @Volatile
-    var sockerStatus = AtomicBoolean(false)
+    var socketStatus = AtomicBoolean(false)
 
     private var request = Request.Builder()
             .url("$protocol://$address")
@@ -60,7 +60,7 @@ class SyftWebSocket(
         override fun onOpen(webSocket: WebSocket, response: Response) {
             super.onOpen(webSocket, response)
             this@SyftWebSocket.webSocket = webSocket
-            sockerStatus.set(true)
+            socketStatus.set(true)
             statusPublishProcessor.offer(NetworkMessage.SocketOpen)
         }
 
@@ -70,7 +70,7 @@ class SyftWebSocket(
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             super.onFailure(webSocket, t, response)
-            sockerStatus.set(false)
+            socketStatus.set(false)
             statusPublishProcessor.offer(NetworkMessage.SocketError(t))
             // TODO we probably need here some backoff strategy
             connect()

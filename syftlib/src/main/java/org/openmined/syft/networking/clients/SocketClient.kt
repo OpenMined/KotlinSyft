@@ -7,23 +7,23 @@ import io.reactivex.processors.PublishProcessor
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.json.json
-import org.openmined.syft.processes.SyftJob
 import org.openmined.syft.networking.datamodels.NetworkModels
 import org.openmined.syft.networking.datamodels.SocketResponse
-import org.openmined.syft.networking.datamodels.webRTC.InternalMessageRequest
-import org.openmined.syft.networking.datamodels.webRTC.InternalMessageResponse
-import org.openmined.syft.networking.datamodels.webRTC.JoinRoomRequest
-import org.openmined.syft.networking.datamodels.webRTC.JoinRoomResponse
 import org.openmined.syft.networking.datamodels.syft.AuthenticationSuccess
 import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.datamodels.syft.ReportRequest
 import org.openmined.syft.networking.datamodels.syft.ReportResponse
+import org.openmined.syft.networking.datamodels.webRTC.InternalMessageRequest
+import org.openmined.syft.networking.datamodels.webRTC.InternalMessageResponse
+import org.openmined.syft.networking.datamodels.webRTC.JoinRoomRequest
+import org.openmined.syft.networking.datamodels.webRTC.JoinRoomResponse
 import org.openmined.syft.networking.requests.MessageTypes
 import org.openmined.syft.networking.requests.Protocol
 import org.openmined.syft.networking.requests.REQUESTS
 import org.openmined.syft.networking.requests.SocketAPI
 import org.openmined.syft.networking.requests.WebRTCMessageTypes
+import org.openmined.syft.processes.SyftJob
 import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -46,6 +46,51 @@ class SocketClient(
     private val messageProcessor = PublishProcessor.create<NetworkModels>()
     private val compositeDisposable = CompositeDisposable()
 
+    override fun authenticate(): Single<AuthenticationSuccess> {
+        initiateSocketIfEmpty()
+        syftWebSocket.send(appendType(REQUESTS.AUTHENTICATION))
+        return messageProcessor.onBackpressureLatest()
+                .ofType(AuthenticationSuccess::class.java)
+                .firstOrError()
+    }
+
+    override fun getCycle(cycleRequest: CycleRequest): Single<CycleResponseData> {
+        syftWebSocket.send(appendType(REQUESTS.CYCLE_REQUEST, cycleRequest))
+        return messageProcessor.onBackpressureBuffer()
+                .ofType(CycleResponseData::class.java)
+                .filter {
+                    SyftJob.JobID(
+                        cycleRequest.modelName,
+                        cycleRequest.version
+                    ).matchWithResponse(it.modelName, it.version)
+                }.debounce(timeout.toLong(), TimeUnit.MILLISECONDS)
+                .firstOrError()
+    }
+
+    //todo handle backpressure and first or error
+    override fun report(reportRequest: ReportRequest): Single<ReportResponse> {
+        syftWebSocket.send(appendType(REQUESTS.REPORT, reportRequest))
+        return messageProcessor.onBackpressureDrop()
+                .ofType(ReportResponse::class.java)
+                .firstOrError()
+    }
+
+    //todo handle backpressure and first or error
+    override fun joinRoom(joinRoomRequest: JoinRoomRequest): Single<JoinRoomResponse> {
+        syftWebSocket.send(appendType(WebRTCMessageTypes.WEBRTC_JOIN_ROOM, joinRoomRequest))
+        return messageProcessor.onBackpressureBuffer()
+                .ofType(JoinRoomResponse::class.java)
+                .firstOrError()
+    }
+
+    //todo handle backpressure and first or error
+    override fun sendInternalMessage(internalMessageRequest: InternalMessageRequest): Single<InternalMessageResponse> {
+        syftWebSocket.send(appendType(REQUESTS.WEBRTC_INTERNAL, internalMessageRequest))
+        return messageProcessor.onBackpressureBuffer()
+                .ofType(InternalMessageResponse::class.java)
+                .first(null)
+    }
+
     private fun initiateSocketIfEmpty() {
         if (socketClientSubscribed.get())
             return
@@ -65,58 +110,6 @@ class SocketClient(
                 .observeOn(schedulers.calleeThreadScheduler)
                 .subscribe())
         socketClientSubscribed.set(true)
-    }
-
-    override fun authenticate(): Single<AuthenticationSuccess> {
-
-        val sendStatus = syftWebSocket.send(appendType(REQUESTS.AUTHENTICATION))
-        return messageProcessor.onBackpressureLatest()
-                .filter { it is AuthenticationSuccess }
-                .map { it as AuthenticationSuccess }
-                .firstOrError()
-    }
-
-    override fun getCycle(cycleRequest: CycleRequest): Single<CycleResponseData> {
-        val sendStatus = syftWebSocket.send(appendType(REQUESTS.CYCLE_REQUEST, cycleRequest))
-
-        return messageProcessor.onBackpressureBuffer()
-                .filter { it is CycleResponseData }
-                .filter {
-                    when (it) {
-                        is CycleResponseData -> SyftJob.JobID(
-                            cycleRequest.modelName,
-                            cycleRequest.version
-                        ).matchWithResponse(it.modelName, it.version)
-                        else -> false
-                    }
-                }.debounce(timeout.toLong(), TimeUnit.MILLISECONDS)
-                .map { it as CycleResponseData }
-                .firstOrError()
-    }
-    //todo handle backpressure and first or error
-    override fun report(reportRequest: ReportRequest): Single<ReportResponse> {
-        syftWebSocket.send(appendType(REQUESTS.REPORT, reportRequest))
-        return messageProcessor.onBackpressureDrop()
-                .filter { it is ReportResponse }
-                .map { it as ReportResponse }
-                .firstOrError()
-    }
-    //todo handle backpressure and first or error
-    override fun joinRoom(joinRoomRequest: JoinRoomRequest): Single<JoinRoomResponse> {
-        syftWebSocket.send(appendType(WebRTCMessageTypes.WEBRTC_JOIN_ROOM, joinRoomRequest))
-        return messageProcessor.onBackpressureBuffer()
-                .filter { it is JoinRoomResponse }
-                .map { it as JoinRoomResponse }
-                .firstOrError()
-    }
-
-    //todo handle backpressure and first or error
-    override fun sendInternalMessage(internalMessageRequest: InternalMessageRequest): Single<InternalMessageResponse> {
-        syftWebSocket.send(appendType(REQUESTS.WEBRTC_INTERNAL, internalMessageRequest))
-        return messageProcessor.onBackpressureBuffer()
-                .filter { it is InternalMessageResponse }
-                .map { it as InternalMessageResponse }
-                .first(null)
     }
 
     private fun emitMessage(response: SocketResponse) {

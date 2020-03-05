@@ -26,7 +26,7 @@ class SyftJob(
 ) {
 
     var cycleStatus = AtomicReference<CycleStatus>(CycleStatus.APPLY)
-    var trainingParamsStatus = AtomicReference<DownloadStatus>(DownloadStatus.NOT_STARTED)
+    private var trainingParamsStatus = AtomicReference<DownloadStatus>(DownloadStatus.NOT_STARTED)
 
     private lateinit var requestKey: String
     private lateinit var modelFile: String
@@ -60,6 +60,7 @@ class SyftJob(
                     .compose(schedulers.applySingleSchedulers())
                     .subscribe { reportResponse: ReportResponse ->
                         Log.i(TAG, reportResponse.status)
+                        jobStatusProcessor.onComplete()
                     })
     }
 
@@ -87,7 +88,8 @@ class SyftJob(
         trainingParamsStatus.set(DownloadStatus.COMPLETE)
     }
 
-    fun downloadModelFile(destinationDir: String, modelName: String) {
+    //We might want to make these public if needed later
+    private fun downloadModelFile(destinationDir: String, modelName: String) {
         compositeDisposable.add(
             worker.getDownloader().downloadModel(worker.workerId, requestKey, modelName).compose(
                 schedulers.applySingleSchedulers()
@@ -97,26 +99,37 @@ class SyftJob(
                     destinationDir,
                     modelName
                 )
-            }.subscribe { fileLocation: String -> modelFile = fileLocation })
+            }.subscribe(
+                { fileLocation: String -> modelFile = fileLocation },
+                { e -> jobStatusProcessor.onError(e) })
+        )
     }
 
-    fun downloadPlanFile(destinationDir: String, planId: String, plan: Plan) {
-        compositeDisposable.add(worker.getDownloader().downloadPlan(
-            worker.workerId,
-            requestKey,
-            planId,
-            "torchscript"
-        ).compose(schedulers.applySingleSchedulers())
-                .flatMap { response ->
-                    saveFile(
-                        response.body()?.byteStream(),
-                        destinationDir,
-                        planId
-                    )
-                }.subscribe { fileLocation: String -> plan.torchScriptLocation = fileLocation })
+    private fun downloadPlanFile(destinationDir: String, planId: String, plan: Plan) {
+        compositeDisposable.add(
+            worker.getDownloader().downloadPlan(
+                worker.workerId,
+                requestKey,
+                planId,
+                "torchscript"
+            ).compose(schedulers.applySingleSchedulers())
+                    .flatMap { response ->
+                        saveFile(
+                            response.body()?.byteStream(),
+                            destinationDir,
+                            planId
+                        )
+                    }.subscribe(
+                        { fileLocation: String -> plan.torchScriptLocation = fileLocation },
+                        { e -> jobStatusProcessor.onError(e) })
+        )
     }
 
-    fun downloadProtocolFile(destinationDir: String, protocolId: String, protocol: Protocol) {
+    private fun downloadProtocolFile(
+        destinationDir: String,
+        protocolId: String,
+        protocol: Protocol
+    ) {
         compositeDisposable.add(worker.getDownloader().downloadProtocol(
             worker.workerId,
             requestKey,
@@ -128,9 +141,10 @@ class SyftJob(
                         destinationDir,
                         protocolId
                     )
-                }.subscribe { fileLocation: String ->
+                }.subscribe({ fileLocation: String ->
                     protocol.protocolFileLocation = fileLocation
-                })
+                }, { e -> jobStatusProcessor.onError(e) })
+        )
     }
 
     private fun saveFile(
@@ -142,14 +156,12 @@ class SyftJob(
         if (!destination.exists())
             destination.mkdirs()
         return Single.create { emitter ->
-            if (input == null)
-                emitter.onError(Exception("invalid response stream for torchscript"))
-            else {
+            input?.let {
                 val file = File(destination, fileName)
                 file.outputStream()
                         .use { fileName -> input.copyTo(fileName) }
                 emitter.onSuccess(file.absolutePath)
-            }
+            } ?: emitter.onError(Exception("invalid response stream for downloaded file"))
         }
     }
 

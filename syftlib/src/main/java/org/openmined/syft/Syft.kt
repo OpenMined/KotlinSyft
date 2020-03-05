@@ -102,6 +102,8 @@ class Syft private constructor(
     private fun setSyftWorkerId(workerId: String) {
         if (!this::workerId.isInitialized)
             this.workerId = workerId
+        else if (workerJobs.isEmpty())
+            this.workerId = workerId
     }
 
     private fun getPing() = ""
@@ -127,10 +129,9 @@ class Syft private constructor(
     }
 
     private fun handleCycleAccept(responseData: CycleResponseData.CycleAccept) {
-        var jobId = SyftJob.JobID(responseData.modelName, responseData.version)
+        val jobId = SyftJob.JobID(responseData.modelName, responseData.version)
         val job = workerJobs.getOrElse(jobId, {
-            jobId = SyftJob.JobID(responseData.modelName)
-            workerJobs.getValue(jobId)
+            workerJobs.getValue(SyftJob.JobID(responseData.modelName))
         })
         job.setRequestKey(responseData)
         //todo set the destination via Syft Configuration class
