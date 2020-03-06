@@ -9,6 +9,7 @@ import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.requests.CommunicationAPI
 import org.openmined.syft.networking.requests.HttpAPI
+import org.openmined.syft.processes.JobStatusSubscriber
 import org.openmined.syft.processes.SyftJob
 import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.ConcurrentHashMap
@@ -20,7 +21,11 @@ private const val TAG = "Syft"
 class Syft private constructor(
     private val socketClient: SocketClient,
     private val httpClient: HttpClient,
-    private val schedulers: ProcessSchedulers
+    //todo this will be removed by syft configuration class
+    private val computeSchedulers: ProcessSchedulers,
+    //todo change this to read from syft configuration
+    private val networkingSchedulers: ProcessSchedulers
+
 ) {
     companion object {
         @Volatile
@@ -29,35 +34,43 @@ class Syft private constructor(
         fun getInstance(
             socketClient: SocketClient,
             httpClient: HttpClient,
-            schedulers: ProcessSchedulers
+            networkingSchedulers: ProcessSchedulers,
+            //todo this will be removed by syft configuration class
+            computeSchedulers: ProcessSchedulers
         ): Syft =
                 INSTANCE ?: synchronized(this) {
                     INSTANCE ?: Syft(
                         socketClient,
                         httpClient,
-                        schedulers
+                        networkingSchedulers,
+                        computeSchedulers
                     ).also { INSTANCE = it }
                 }
     }
 
     private val workerJobs = ConcurrentHashMap<SyftJob.JobID, SyftJob>()
     private val compositeDisposable = CompositeDisposable()
+
     //todo decide if this can be changed by pygrid or will remain same irrespective of the requests we make
     @Volatile
     lateinit var workerId: String
 
-    fun newJob(model: String, version: String? = null): SyftJob {
-        val job = SyftJob(this, schedulers, model, version)
+    fun newJob(
+        model: String,
+        version: String? = null
+    ): SyftJob {
+        val job = SyftJob(this, computeSchedulers, networkingSchedulers, model, version)
         val jobId = SyftJob.JobID(model, version)
         workerJobs[jobId] = job
-        compositeDisposable.add(job.getStatusProcessor()
-                .compose(schedulers.applyFlowableSchedulers())
-                .subscribe(
-                    {},
-                    { workerJobs.remove(jobId) },
-                    { workerJobs.remove(jobId) }
-                )
-        )
+        job.subscribe(object : JobStatusSubscriber() {
+            override fun onComplete() {
+                workerJobs.remove(jobId)
+            }
+
+            override fun onError(throwable: Throwable) {
+                workerJobs.remove(jobId)
+            }
+        }, networkingSchedulers)
 
         return job
     }
@@ -65,15 +78,15 @@ class Syft private constructor(
     fun requestCycle(job: SyftJob) {
         if (this::workerId.isInitialized)
             socketClient.getCycle(
-                CycleRequest(
-                    workerId,
-                    job.modelName,
-                    job.version,
-                    getPing(),
-                    getDownloadSpeed(),
-                    getUploadSpeed()
-                )
-            ).compose(schedulers.applySingleSchedulers())
+                        CycleRequest(
+                            workerId,
+                            job.modelName,
+                            job.version,
+                            getPing(),
+                            getDownloadSpeed(),
+                            getUploadSpeed()
+                        )
+                    ).compose(networkingSchedulers.applySingleSchedulers())
                     .subscribe { response: CycleResponseData ->
                         when (response) {
                             is CycleResponseData.CycleAccept -> handleCycleAccept(response)
@@ -82,7 +95,7 @@ class Syft private constructor(
                     }
         else {
             compositeDisposable.add(socketClient.authenticate()
-                    .compose(schedulers.applySingleSchedulers())
+                    .compose(networkingSchedulers.applySingleSchedulers())
                     .subscribe { t: AuthenticationSuccess ->
                         if (!this::workerId.isInitialized)
                             setSyftWorkerId(t.workerId)
@@ -93,6 +106,7 @@ class Syft private constructor(
     }
 
     fun getDownloader(): HttpAPI = httpClient.apiClient
+
     //todo decide this based on configuration
     fun getSignallingClient(): CommunicationAPI = socketClient
 
@@ -120,7 +134,7 @@ class Syft private constructor(
         compositeDisposable.add(
             Completable
                     .timer(responseData.timeout.toLong(), TimeUnit.MILLISECONDS)
-                    .compose(schedulers.applyCompletableSchedulers())
+                    .compose(networkingSchedulers.applyCompletableSchedulers())
                     .subscribe {
                         job.cycleStatus.set(SyftJob.CycleStatus.APPLY)
                         job.start()
@@ -134,8 +148,7 @@ class Syft private constructor(
             workerJobs.getValue(SyftJob.JobID(responseData.modelName))
         })
         job.setRequestKey(responseData)
-        //todo set the destination via Syft Configuration class
-        job.downloadData("/data/syft/${job.modelName}_data")
+        job.downloadData()
     }
 
 

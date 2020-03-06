@@ -1,7 +1,6 @@
 package org.openmined.syft.processes
 
 import android.util.Log
-import io.reactivex.Flowable
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.processors.PublishProcessor
@@ -12,43 +11,56 @@ import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import org.openmined.syft.threading.ProcessSchedulers
 import java.io.File
 import java.io.InputStream
+import java.net.FileNameMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
 private const val TAG = "SyftJob"
 
+/**
+ * @param worker : The syft worker handling this job
+ * @param computeSchedulers : The threads on which networking and file saving occurs
+ * @param modelName : The model being trained or used in inference
+ * @param version : The version of the model with name modelName
+ */
 @ExperimentalUnsignedTypes
 class SyftJob(
     private val worker: Syft,
-    private val schedulers: ProcessSchedulers,
+    //todo change this to read from syft configuration
+    private val computeSchedulers: ProcessSchedulers,
+    //todo change this to read from syft configuration
+    private val networkingSchedulers: ProcessSchedulers,
     val modelName: String,
     val version: String? = null
 ) {
 
-    var cycleStatus = AtomicReference<CycleStatus>(CycleStatus.APPLY)
-    private var trainingParamsStatus = AtomicReference<DownloadStatus>(DownloadStatus.NOT_STARTED)
+
+    var cycleStatus = AtomicReference(CycleStatus.APPLY)
+    private var trainingParamsStatus = AtomicReference(DownloadStatus.NOT_STARTED)
 
     private lateinit var requestKey: String
-    private lateinit var modelFile: String
+
+    //todo need to filled based on the destination directory defined by syft configuration class
+    private val destinationDir = ""
+    private val modelFileLocation = "$destinationDir/model/$modelName"
     private val plans = ConcurrentHashMap<String, Plan>()
     private val protocols = ConcurrentHashMap<String, Protocol>()
-    private val jobStatusProcessor: PublishProcessor<JobStatusMessage> =
-            PublishProcessor.create<JobStatusMessage>()
+    private val jobStatusProcessor: PublishProcessor<JobStatusMessage> = PublishProcessor.create()
     private val compositeDisposable = CompositeDisposable()
 
     /**
      * create a worker job
      */
-    fun start(): Flowable<JobStatusMessage> {
+    fun start(subscriber: JobStatusSubscriber = JobStatusSubscriber()) {
         //todo all this in syft.kt
         //todo check for connection if doesn't exist establish one
         //todo before calling this function syft should have checked the bandwidth etc requirements
         if (cycleStatus.get() == CycleStatus.APPLY) {
             Log.d(TAG, "job awaiting timer completion to resend the Cycle Request")
-            return getStatusProcessor()
+            return
         }
         worker.requestCycle(this)
-        return jobStatusProcessor.onBackpressureBuffer()
+        subscribe(subscriber, computeSchedulers)
     }
 
     /**
@@ -57,14 +69,26 @@ class SyftJob(
     fun report(diff: String) {
         compositeDisposable.add(
             worker.getSignallingClient().report(ReportRequest(worker.workerId, requestKey, diff))
-                    .compose(schedulers.applySingleSchedulers())
+                    .compose(networkingSchedulers.applySingleSchedulers())
                     .subscribe { reportResponse: ReportResponse ->
                         Log.i(TAG, reportResponse.status)
-                        jobStatusProcessor.onComplete()
                     })
     }
 
-    fun getStatusProcessor(): Flowable<JobStatusMessage> = jobStatusProcessor.onBackpressureBuffer()
+    fun subscribe(
+        subscriber: JobStatusSubscriber,
+        schedulers: ProcessSchedulers
+    ) {
+        compositeDisposable.add(
+            jobStatusProcessor.onBackpressureBuffer()
+                    .compose(schedulers.applyFlowableSchedulers())
+                    .subscribe(
+                        { message -> subscriber.onJobStatusMessage(message) },
+                        { error -> subscriber.onError(error) },
+                        { subscriber.onComplete() }
+                    )
+        )
+    }
 
     @Synchronized
     fun setRequestKey(responseData: CycleResponseData.CycleAccept) {
@@ -73,79 +97,75 @@ class SyftJob(
         jobStatusProcessor.offer(JobStatusMessage.JobCycleAccepted)
     }
 
-    fun downloadData(destinationDir: String) {
-        trainingParamsStatus.set(DownloadStatus.RUNNING)
-        plans.forEach { (planId, plan) -> downloadPlanFile("$destinationDir/plans", planId, plan) }
-
-        protocols.forEach { (protocolId, protocol) ->
-            downloadProtocolFile(
-                "$destinationDir/protocols",
-                protocolId,
-                protocol
-            )
+    //todo before downloading check for wifi connection again
+    fun downloadData() {
+        if (trainingParamsStatus.get() != DownloadStatus.NOT_STARTED) {
+            Log.d(TAG, "download already running")
+            return
         }
-        downloadModelFile(destinationDir, modelName)
-        trainingParamsStatus.set(DownloadStatus.COMPLETE)
+        trainingParamsStatus.set(DownloadStatus.RUNNING)
+        val downloadList = mutableListOf<Single<String>>()
+
+        plans.forEach { (planId, plan) ->
+            //todo instead of hardcoding this will be defined by configuration class method and by plan class
+            plan.torchScriptLocation = "$destinationDir/plans/$planId"
+            downloadList.add(planDownloader(plan.torchScriptLocation, planId))
+        }
+        protocols.forEach { (protocolId, protocol) ->
+            //todo instead of hardcoding this will be defined by configuration class method and by protocol class
+            protocol.protocolFileLocation = "$destinationDir/plans/$protocolId"
+            downloadList.add(protocolDownloader(protocol.protocolFileLocation, protocolId))
+        }
+        downloadList.add(modelDownloader(modelName))
+
+        compositeDisposable.add(Single.zip(downloadList) { successMessages ->
+                    successMessages.joinToString(
+                        ",",
+                        prefix = "files ",
+                        postfix = "downloaded successfully"
+                    )
+                }
+                .compose(networkingSchedulers.applySingleSchedulers())
+                .subscribe(
+                    { successMsg: String ->
+                        Log.d(TAG, successMsg)
+                        trainingParamsStatus.set(DownloadStatus.COMPLETE)
+                        jobStatusProcessor.offer(JobStatusMessage.JobReady)
+                    },
+                    { e -> jobStatusProcessor.onError(e) }
+                )
+        )
     }
 
     //We might want to make these public if needed later
-    private fun downloadModelFile(destinationDir: String, modelName: String) {
-        compositeDisposable.add(
+    private fun modelDownloader(modelName: String) =
             worker.getDownloader().downloadModel(worker.workerId, requestKey, modelName).compose(
-                schedulers.applySingleSchedulers()
+                computeSchedulers.applySingleSchedulers()
             ).flatMap { response ->
-                saveFile(
-                    response.body()?.byteStream(),
-                    destinationDir,
-                    modelName
-                )
-            }.subscribe(
-                { fileLocation: String -> modelFile = fileLocation },
-                { e -> jobStatusProcessor.onError(e) })
-        )
-    }
+                saveFile(response.body()?.byteStream(), modelFileLocation, modelName)
+            }
 
-    private fun downloadPlanFile(destinationDir: String, planId: String, plan: Plan) {
-        compositeDisposable.add(
+
+    private fun planDownloader(destinationDir: String, planId: String) =
             worker.getDownloader().downloadPlan(
-                worker.workerId,
-                requestKey,
-                planId,
-                "torchscript"
-            ).compose(schedulers.applySingleSchedulers())
+                        worker.workerId,
+                        requestKey,
+                        planId,
+                        "torchscript"
+                    ).compose(computeSchedulers.applySingleSchedulers())
                     .flatMap { response ->
-                        saveFile(
-                            response.body()?.byteStream(),
-                            destinationDir,
-                            planId
-                        )
-                    }.subscribe(
-                        { fileLocation: String -> plan.torchScriptLocation = fileLocation },
-                        { e -> jobStatusProcessor.onError(e) })
-        )
-    }
+                        saveFile(response.body()?.byteStream(), destinationDir, planId)
+                    }
 
-    private fun downloadProtocolFile(
-        destinationDir: String,
-        protocolId: String,
-        protocol: Protocol
-    ) {
-        compositeDisposable.add(worker.getDownloader().downloadProtocol(
-            worker.workerId,
-            requestKey,
-            protocolId
-        ).compose(schedulers.applySingleSchedulers())
-                .flatMap { response ->
-                    saveFile(
-                        response.body()?.byteStream(),
-                        destinationDir,
+    private fun protocolDownloader(destinationDir: String, protocolId: String) =
+            worker.getDownloader().downloadProtocol(
+                        worker.workerId,
+                        requestKey,
                         protocolId
-                    )
-                }.subscribe({ fileLocation: String ->
-                    protocol.protocolFileLocation = fileLocation
-                }, { e -> jobStatusProcessor.onError(e) })
-        )
-    }
+                    ).compose(computeSchedulers.applySingleSchedulers())
+                    .flatMap { response ->
+                        saveFile(response.body()?.byteStream(), destinationDir, protocolId)
+                    }
 
     private fun saveFile(
         input: InputStream?,
@@ -157,13 +177,13 @@ class SyftJob(
             destination.mkdirs()
         return Single.create { emitter ->
             input?.let {
-                val file = File(destination, fileName)
-                file.outputStream()
-                        .use { fileName -> input.copyTo(fileName) }
+                val file = File(fileName)
+                file.outputStream().use { fileName -> input.copyTo(fileName) }
                 emitter.onSuccess(file.absolutePath)
             } ?: emitter.onError(Exception("invalid response stream for downloaded file"))
         }
     }
+
 
     data class JobID(val modelName: String, val version: String? = null) {
         fun matchWithResponse(modelName: String, version: String) =
