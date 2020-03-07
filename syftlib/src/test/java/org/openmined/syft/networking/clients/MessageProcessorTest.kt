@@ -12,7 +12,7 @@ internal class MessageProcessorTest {
 
         val cut = MessageProcessor()
 
-        val result = cut.processPlan(planPb)
+        val result = cut.processScriptModule(planPb)
 
         assert(result.isInitialized)
     }
