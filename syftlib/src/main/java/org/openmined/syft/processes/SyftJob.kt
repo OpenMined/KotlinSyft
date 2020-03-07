@@ -11,7 +11,6 @@ import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import org.openmined.syft.threading.ProcessSchedulers
 import java.io.File
 import java.io.InputStream
-import java.net.FileNameMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
@@ -177,8 +176,10 @@ class SyftJob(
             destination.mkdirs()
         return Single.create { emitter ->
             input?.let {
-                val file = File(fileName)
-                file.outputStream().use { fileName -> input.copyTo(fileName) }
+                val file = File(destination,fileName)
+                file.outputStream().use { outputFile ->
+                    input.copyTo(outputFile)
+                }
                 emitter.onSuccess(file.absolutePath)
             } ?: emitter.onError(Exception("invalid response stream for downloaded file"))
         }

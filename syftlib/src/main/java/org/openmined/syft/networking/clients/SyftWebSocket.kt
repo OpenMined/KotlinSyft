@@ -10,7 +10,6 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.openmined.syft.networking.requests.Protocol
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 
 
 const val TYPE = "type"
@@ -23,8 +22,6 @@ class SyftWebSocket(
     address: String,
     keepAliveTimeout: UInt
 ) {
-    @Volatile
-    var socketStatus = AtomicBoolean(false)
 
     private var request = Request.Builder()
             .url("$protocol://$address")
@@ -60,7 +57,6 @@ class SyftWebSocket(
         override fun onOpen(webSocket: WebSocket, response: Response) {
             super.onOpen(webSocket, response)
             this@SyftWebSocket.webSocket = webSocket
-            socketStatus.set(true)
             statusPublishProcessor.offer(NetworkMessage.SocketOpen)
         }
 
@@ -70,7 +66,6 @@ class SyftWebSocket(
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             super.onFailure(webSocket, t, response)
-            socketStatus.set(false)
             statusPublishProcessor.offer(NetworkMessage.SocketError(t))
             // TODO we probably need here some backoff strategy
             connect()
