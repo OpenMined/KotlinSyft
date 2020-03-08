@@ -49,11 +49,13 @@ dependencies {
     implementation CommonDependencies.appCompat
     implementation CommonDependencies.coreKtx
     implementation CommonDependencies.kotlinSerialization
-
     implementation SyftlibDependencies.webrtc
     implementation CommonDependencies.rxJava
     implementation CommonDependencies.rxAndroid
     implementation SyftlibDependencies.okhttp
+    implementation CommonDependencies.kotlinSerializationFactory
+    implementation SyftlibDependencies.retrofitAdapter
+    implementation SyftlibDependencies.retrofit
 
     implementation SyftlibDependencies.syftProto
     implementation SyftlibDependencies.protobuf
