@@ -26,6 +26,7 @@ object Versions {
     const val syftProto = "0.0.8"
     const val retrofit = "2.7.1"
     const val kotlinConverter = "0.4.0"
+    const val pytorchAndroid = "1.4.0"
 
     // release management
     const val netflixPublishing = "14.0.0"
@@ -82,4 +83,6 @@ object SyftlibDependencies {
     const val junitJupiter = "org.junit.jupiter:junit-jupiter:${Versions.junitJupiter}"
     const val retrofit = "com.squareup.retrofit2:retrofit:${Versions.retrofit}"
     const val retrofitAdapter = "com.squareup.retrofit2:adapter-rxjava2:${Versions.retrofit}"
+    const val pytorchAndroid = "org.pytorch:pytorch_android:${Versions.pytorchAndroid}"
+    const val torchVisionAndroid = "org.pytorch:pytorch_android_torchvision:${Versions.pytorchAndroid}"
 }

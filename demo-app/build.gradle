@@ -45,6 +45,13 @@ dependencies {
     implementation project(path: ':syftlib')
 //    implementation 'org.openmined.kotlinsyft:syftlib:0.2.0'
 
+    implementation SyftlibDependencies.pytorchAndroid
+    implementation SyftlibDependencies.torchVisionAndroid
+    implementation SyftlibDependencies.syftProto
+    implementation SyftlibDependencies.protobuf
+
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     androidTestImplementation CommonDependencies.testExtJunit
     androidTestImplementation CommonDependencies.espresso
 }

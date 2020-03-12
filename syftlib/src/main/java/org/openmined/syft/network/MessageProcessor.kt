@@ -10,7 +10,6 @@ class MessageProcessor {
     }
 
     fun processPlan(byteArray: ByteArray): PlanOuterClass.Plan {
-
         return PlanOuterClass.Plan.parseFrom(byteArray)
     }
 }
