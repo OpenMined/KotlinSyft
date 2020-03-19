@@ -14,6 +14,7 @@ sealed class CycleResponseData : NetworkModels() {
 
     @SerialName("model")
     abstract val modelName: String
+
     @SerialName("version")
     abstract val version: String
 
@@ -24,12 +25,10 @@ sealed class CycleResponseData : NetworkModels() {
         override val version: String,
         @SerialName("request_key")
         val requestKey: String,
-        @SerialName("training_plan")
-        val trainingPlanID: String,
+        val plans: HashMap<String, String>,
         @SerialName("client_config")
         val clientConfig: ClientConfig,
-        @SerialName("protocols")
-        val protocolID: String,
+        val protocols: HashMap<String, String>,
         @SerialName("model_id")
         val modelId: String
     ) : CycleResponseData()

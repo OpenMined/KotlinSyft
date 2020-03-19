@@ -4,6 +4,7 @@ import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
@@ -19,6 +20,7 @@ private const val TAG = "SocketSerializer"
 
 @Serializable(with = SocketSerializer::class)
 data class SocketResponse(
+    @SerialName("type")
     val typesResponse: ResponseMessageTypes,
     val data: NetworkModels
 )

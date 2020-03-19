@@ -9,7 +9,7 @@ import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.json.json
 import org.openmined.syft.networking.datamodels.NetworkModels
 import org.openmined.syft.networking.datamodels.SocketResponse
-import org.openmined.syft.networking.datamodels.syft.AuthenticationSuccess
+import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.datamodels.syft.ReportRequest
@@ -46,11 +46,11 @@ class SocketClient(
     private val messageProcessor = PublishProcessor.create<NetworkModels>()
     private val compositeDisposable = CompositeDisposable()
 
-    override fun authenticate(): Single<AuthenticationSuccess> {
+    override fun authenticate(): Single<AuthenticationResponse> {
         initiateSocketIfEmpty()
         syftWebSocket.send(appendType(REQUESTS.AUTHENTICATION))
         return messageProcessor.onBackpressureLatest()
-                .ofType(AuthenticationSuccess::class.java)
+                .ofType(AuthenticationResponse::class.java)
                 .firstOrError()
     }
 
