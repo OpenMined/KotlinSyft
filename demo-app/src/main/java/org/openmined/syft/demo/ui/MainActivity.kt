@@ -1,23 +1,16 @@
-package org.openmined.syft.demo
+package org.openmined.syft.demo.ui
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import androidx.lifecycle.ViewModelProvider
 import io.reactivex.Scheduler
 import io.reactivex.schedulers.Schedulers
-import org.openmined.syft.networking.clients.MessageProcessor
+import org.openmined.syft.demo.R
+import org.openmined.syft.demo.datasource.LocalMNISTDataDataSource
+import org.openmined.syft.demo.datasource.LocalMNISTModuleDataSource
+import org.openmined.syft.demo.domain.MNISTDataRepository
+import org.openmined.syft.demo.domain.MNISTModuleRepository
+import org.openmined.syft.demo.domain.MNISTTrainer
 import org.openmined.syft.threading.ProcessSchedulers
-import org.pytorch.IValue
-import org.pytorch.Module
-import org.pytorch.Tensor
-import java.io.BufferedReader
-import java.io.File
-import java.io.FileOutputStream
-import java.io.InputStreamReader
-import kotlin.math.roundToInt
-import kotlin.math.sqrt
-import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
 
@@ -39,10 +32,16 @@ class MainActivity : AppCompatActivity() {
                 get() = Schedulers.single()
         }
 
+        val localModuleDataSource = LocalMNISTModuleDataSource(resources, filesDir)
+        val moduleRepository = MNISTModuleRepository(localModuleDataSource)
+        val localMNISTDataDataSource = LocalMNISTDataDataSource(resources)
+        val dataRepository = MNISTDataRepository(localMNISTDataDataSource)
+        val trainer = MNISTTrainer()
         viewModel = MainViewModelFactory(
             computeSchedulers,
-            resources,
-            filesDir
+            moduleRepository,
+            dataRepository,
+            trainer
         ).create(MainViewModel::class.java)
     }
 }
