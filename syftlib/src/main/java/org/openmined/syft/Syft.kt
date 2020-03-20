@@ -126,9 +126,9 @@ class Syft private constructor(
             this.workerId = workerId
     }
 
-    private fun getPing() = ""
-    private fun getDownloadSpeed() = ""
-    private fun getUploadSpeed() = ""
+    private fun getPing() = "1"
+    private fun getDownloadSpeed() = "1000"
+    private fun getUploadSpeed() = "1000"
 
     private fun handleCycleReject(responseData: CycleResponseData.CycleReject) {
         var jobId = SyftJob.JobID(responseData.modelName)

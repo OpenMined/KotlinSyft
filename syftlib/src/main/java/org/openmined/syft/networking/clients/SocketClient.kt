@@ -49,6 +49,7 @@ class SocketClient(
 
     override fun authenticate(): Single<AuthenticationResponse> {
         initiateSocketIfEmpty()
+        Log.d(TAG, "sending message: " + serializeNetworkModel(REQUESTS.AUTHENTICATION).toString())
         syftWebSocket.send(serializeNetworkModel(REQUESTS.AUTHENTICATION))
         return messageProcessor.onBackpressureLatest()
                 .ofType(AuthenticationResponse::class.java)
@@ -56,6 +57,7 @@ class SocketClient(
     }
 
     override fun getCycle(cycleRequest: CycleRequest): Single<CycleResponseData> {
+        Log.d(TAG, "sending message: " + serializeNetworkModel(REQUESTS.CYCLE_REQUEST, cycleRequest))
         syftWebSocket.send(serializeNetworkModel(REQUESTS.CYCLE_REQUEST, cycleRequest))
         return messageProcessor.onBackpressureBuffer()
                 .ofType(CycleResponseData::class.java)
@@ -109,7 +111,10 @@ class SocketClient(
                             "socket error",
                             it.throwable
                         )
-                        is NetworkMessage.MessageReceived -> emitMessage(deserializeSocket(it.message))
+                        is NetworkMessage.MessageReceived -> {
+                            Log.d(TAG,"received the message "+it.message)
+                            emitMessage(deserializeSocket(it.message))
+                        }
                     }
                 }
                 .subscribeOn(schedulers.computeThreadScheduler)
