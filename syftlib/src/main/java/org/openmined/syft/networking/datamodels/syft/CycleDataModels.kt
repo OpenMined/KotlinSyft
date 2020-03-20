@@ -11,25 +11,20 @@ const val CYCLE_REJECT = "rejected"
 
 @Serializable
 sealed class CycleResponseData : NetworkModels() {
-
-    @SerialName("model")
+    
     abstract val modelName: String
-    @SerialName("version")
-    abstract val version: String
 
     @SerialName(CYCLE_ACCEPT)
     @Serializable
     data class CycleAccept(
+        @SerialName("model")
         override val modelName: String,
-        override val version: String,
         @SerialName("request_key")
         val requestKey: String,
-        @SerialName("training_plan")
-        val trainingPlanID: String,
+        val plans: HashMap<String, String>,
         @SerialName("client_config")
         val clientConfig: ClientConfig,
-        @SerialName("protocols")
-        val protocolID: String,
+        val protocols: HashMap<String, String>,
         @SerialName("model_id")
         val modelId: String
     ) : CycleResponseData()
@@ -37,8 +32,8 @@ sealed class CycleResponseData : NetworkModels() {
     @SerialName(CYCLE_REJECT)
     @Serializable
     data class CycleReject(
+        @SerialName("model")
         override val modelName: String,
-        override val version: String,
         val timeout: Int
     ) : CycleResponseData()
 }

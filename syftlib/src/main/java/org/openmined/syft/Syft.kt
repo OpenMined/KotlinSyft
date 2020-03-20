@@ -1,10 +1,11 @@
 package org.openmined.syft
 
+import android.util.Log
 import io.reactivex.Completable
 import io.reactivex.disposables.CompositeDisposable
 import org.openmined.syft.networking.clients.HttpClient
 import org.openmined.syft.networking.clients.SocketClient
-import org.openmined.syft.networking.datamodels.syft.AuthenticationSuccess
+import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.requests.CommunicationAPI
@@ -96,9 +97,14 @@ class Syft private constructor(
         else {
             compositeDisposable.add(socketClient.authenticate()
                     .compose(networkingSchedulers.applySingleSchedulers())
-                    .subscribe { t: AuthenticationSuccess ->
-                        if (!this::workerId.isInitialized)
-                            setSyftWorkerId(t.workerId)
+                    .subscribe { t: AuthenticationResponse ->
+                        when (t) {
+                            is AuthenticationResponse.AuthenticationSuccess ->
+                                if (!this::workerId.isInitialized)
+                                    setSyftWorkerId(t.workerId)
+                            is AuthenticationResponse.AuthenticationError ->
+                                Log.d(TAG, t.errorMessage)
+                        }
                         requestCycle(job)
                     }
             )
@@ -125,7 +131,7 @@ class Syft private constructor(
     private fun getUploadSpeed() = ""
 
     private fun handleCycleReject(responseData: CycleResponseData.CycleReject) {
-        var jobId = SyftJob.JobID(responseData.modelName, responseData.version)
+        var jobId = SyftJob.JobID(responseData.modelName)
         val job = workerJobs.getOrElse(jobId, {
             jobId = SyftJob.JobID(responseData.modelName)
             workerJobs.getValue(jobId)
@@ -143,7 +149,7 @@ class Syft private constructor(
     }
 
     private fun handleCycleAccept(responseData: CycleResponseData.CycleAccept) {
-        val jobId = SyftJob.JobID(responseData.modelName, responseData.version)
+        val jobId = SyftJob.JobID(responseData.modelName)
         val job = workerJobs.getOrElse(jobId, {
             workerJobs.getValue(SyftJob.JobID(responseData.modelName))
         })

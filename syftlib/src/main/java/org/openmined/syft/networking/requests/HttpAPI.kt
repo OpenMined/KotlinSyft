@@ -3,7 +3,7 @@ package org.openmined.syft.networking.requests
 import io.reactivex.Single
 import okhttp3.ResponseBody
 import org.openmined.syft.networking.datamodels.syft.AUTH_TYPE
-import org.openmined.syft.networking.datamodels.syft.AuthenticationSuccess
+import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CYCLE_TYPE
 import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
@@ -45,7 +45,7 @@ interface HttpAPI : CommunicationAPI {
     ): Single<Response<ResponseBody>>
 
     @GET(AUTH_TYPE)
-    override fun authenticate(): Single<AuthenticationSuccess>
+    override fun authenticate(): Single<AuthenticationResponse>
 
     @POST(CYCLE_TYPE)
     override fun getCycle(@Body cycleRequest: CycleRequest): Single<CycleResponseData>
