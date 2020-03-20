@@ -4,13 +4,14 @@ import android.util.Log
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.processors.PublishProcessor
+import okhttp3.ResponseBody
 import org.openmined.syft.Syft
+import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.datamodels.syft.ReportRequest
 import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import org.openmined.syft.threading.ProcessSchedulers
 import java.io.File
-import java.io.InputStream
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
@@ -40,10 +41,12 @@ class SyftJob(
     private lateinit var requestKey: String
 
     //todo need to filled based on the destination directory defined by syft configuration class
-    private val destinationDir = ""
-    private val modelFileLocation = "$destinationDir/model/$modelName"
+    private val destinationDir = "/data/data/org.openmined.syft.demo/files"
+    private val modelFileLocation = "$destinationDir/model/"
     private val plans = ConcurrentHashMap<String, Plan>()
     private val protocols = ConcurrentHashMap<String, Protocol>()
+    private lateinit var modelID: String
+    private lateinit var clientConfig: ClientConfig
     private val jobStatusProcessor: PublishProcessor<JobStatusMessage> = PublishProcessor.create()
     private val compositeDisposable = CompositeDisposable()
 
@@ -90,9 +93,15 @@ class SyftJob(
     }
 
     @Synchronized
-    fun setRequestKey(responseData: CycleResponseData.CycleAccept) {
+    fun setJobArguments(responseData: CycleResponseData.CycleAccept) {
         Log.d(TAG,"setting Request Key")
         requestKey = responseData.requestKey
+        modelID = responseData.modelId
+        responseData.plans.forEach { (_, planId) -> plans[planId] = Plan(planId) }
+        responseData.protocols.forEach { (_, protocolId) ->
+            protocols[protocolId] = Protocol(protocolId)
+        }
+        clientConfig = responseData.clientConfig
         cycleStatus.set(CycleStatus.ACCEPTED)
         jobStatusProcessor.offer(JobStatusMessage.JobCycleAccepted)
     }
@@ -109,21 +118,21 @@ class SyftJob(
 
         plans.forEach { (planId, plan) ->
             //todo instead of hardcoding this will be defined by configuration class method and by plan class
-            plan.torchScriptLocation = "$destinationDir/plans/$planId"
+            plan.torchScriptLocation = "$destinationDir/plans"
             downloadList.add(planDownloader(plan.torchScriptLocation, planId))
         }
         protocols.forEach { (protocolId, protocol) ->
             //todo instead of hardcoding this will be defined by configuration class method and by protocol class
-            protocol.protocolFileLocation = "$destinationDir/plans/$protocolId"
+            protocol.protocolFileLocation = "$destinationDir/protocols"
             downloadList.add(protocolDownloader(protocol.protocolFileLocation, protocolId))
         }
-        downloadList.add(modelDownloader(modelName))
+        downloadList.add(modelDownloader(modelID))
 
         compositeDisposable.add(Single.zip(downloadList) { successMessages ->
                     successMessages.joinToString(
                         ",",
                         prefix = "files ",
-                        postfix = "downloaded successfully"
+                        postfix = " downloaded successfully"
                     )
                 }
                 .compose(networkingSchedulers.applySingleSchedulers())
@@ -139,11 +148,11 @@ class SyftJob(
     }
 
     //We might want to make these public if needed later
-    private fun modelDownloader(modelName: String) =
-            worker.getDownloader().downloadModel(worker.workerId, requestKey, modelName).compose(
+    private fun modelDownloader(modelId: String) =
+            worker.getDownloader().downloadModel(worker.workerId, requestKey, modelId).compose(
                 computeSchedulers.applySingleSchedulers()
             ).flatMap { response ->
-                saveFile(response.body()?.byteStream(), modelFileLocation, modelName)
+                saveFile(response.body(), modelFileLocation, modelName)
             }
 
 
@@ -155,7 +164,7 @@ class SyftJob(
                         "torchscript"
                     ).compose(computeSchedulers.applySingleSchedulers())
                     .flatMap { response ->
-                        saveFile(response.body()?.byteStream(), destinationDir, planId)
+                        saveFile(response.body(), destinationDir, planId)
                     }
 
     private fun protocolDownloader(destinationDir: String, protocolId: String) =
@@ -165,25 +174,28 @@ class SyftJob(
                         protocolId
                     ).compose(computeSchedulers.applySingleSchedulers())
                     .flatMap { response ->
-                        saveFile(response.body()?.byteStream(), destinationDir, protocolId)
+                        saveFile(response.body(), destinationDir, protocolId)
                     }
 
     private fun saveFile(
-        input: InputStream?,
+        input: ResponseBody?,
         destinationDir: String,
         fileName: String
     ): Single<String> {
         val destination = File(destinationDir)
-        if (!destination.exists())
-            destination.mkdirs()
+        if (!destination.mkdirs())
+            Log.d(TAG, "directory already exists")
+
         return Single.create { emitter ->
-            input?.let {
-                val file = File(destination,fileName)
+            input?.byteStream().use { inputStream ->
+                val file = File(destination, "$fileName.pb")
                 file.outputStream().use { outputFile ->
-                    input.copyTo(outputFile)
+                    inputStream?.copyTo(outputFile)
+                    ?: emitter.onError(Exception("invalid input stream"))
                 }
+                Log.d(TAG, "file written at ${file.absolutePath}")
                 emitter.onSuccess(file.absolutePath)
-            } ?: emitter.onError(Exception("invalid response stream for downloaded file"))
+            }
         }
     }
 

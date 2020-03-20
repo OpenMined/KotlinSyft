@@ -34,7 +34,7 @@ sealed class CycleResponseData : NetworkModels() {
     data class CycleReject(
         @SerialName("model")
         override val modelName: String,
-        val timeout: Int
+        val timeout: String
     ) : CycleResponseData()
 }
 

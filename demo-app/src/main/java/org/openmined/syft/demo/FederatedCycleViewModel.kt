@@ -20,7 +20,7 @@ class FederatedCycleViewModel(
         socketClient, httpClient,
         networkSchedulers, computeSchedulers
     )
-    private val mnistJob = syftWorker.newJob("mnist")
+    private val mnistJob = syftWorker.newJob("mnist","1.0.0")
 
     fun startCycle() {
         Log.d(TAG,"mnist job started")
