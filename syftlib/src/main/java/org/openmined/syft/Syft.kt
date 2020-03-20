@@ -149,6 +149,7 @@ class Syft private constructor(
     }
 
     private fun handleCycleAccept(responseData: CycleResponseData.CycleAccept) {
+        Log.d(TAG,"cycle accepted ${responseData.modelName}")
         val jobId = SyftJob.JobID(responseData.modelName)
         val job = workerJobs.getOrElse(jobId, {
             workerJobs.getValue(SyftJob.JobID(responseData.modelName))

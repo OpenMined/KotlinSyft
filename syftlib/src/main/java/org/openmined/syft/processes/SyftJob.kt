@@ -91,6 +91,7 @@ class SyftJob(
 
     @Synchronized
     fun setRequestKey(responseData: CycleResponseData.CycleAccept) {
+        Log.d(TAG,"setting Request Key")
         requestKey = responseData.requestKey
         cycleStatus.set(CycleStatus.ACCEPTED)
         jobStatusProcessor.offer(JobStatusMessage.JobCycleAccepted)
@@ -102,6 +103,7 @@ class SyftJob(
             Log.d(TAG, "download already running")
             return
         }
+        Log.d(TAG,"beginning download")
         trainingParamsStatus.set(DownloadStatus.RUNNING)
         val downloadList = mutableListOf<Single<String>>()
 

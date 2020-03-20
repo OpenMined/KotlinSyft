@@ -61,12 +61,12 @@ class SocketClient(
         syftWebSocket.send(serializeNetworkModel(REQUESTS.CYCLE_REQUEST, cycleRequest))
         return messageProcessor.onBackpressureBuffer()
                 .ofType(CycleResponseData::class.java)
-                .filter {
-                    SyftJob.JobID(
-                        cycleRequest.modelName,
-                        cycleRequest.version
-                    ).matchWithResponse(it.modelName)
-                }.debounce(timeout.toLong(), TimeUnit.MILLISECONDS)
+//                .filter {
+////                    SyftJob.JobID(
+////                        cycleRequest.modelName,
+////                        cycleRequest.version
+////                    ).matchWithResponse(it.modelName)
+//                }
                 .firstOrError()
     }
 
