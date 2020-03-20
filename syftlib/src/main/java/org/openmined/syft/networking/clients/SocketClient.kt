@@ -21,6 +21,7 @@ import org.openmined.syft.networking.datamodels.webRTC.JoinRoomResponse
 import org.openmined.syft.networking.requests.MessageTypes
 import org.openmined.syft.networking.requests.Protocol
 import org.openmined.syft.networking.requests.REQUESTS
+import org.openmined.syft.networking.requests.ResponseMessageTypes
 import org.openmined.syft.networking.requests.SocketAPI
 import org.openmined.syft.networking.requests.WebRTCMessageTypes
 import org.openmined.syft.processes.SyftJob
@@ -48,14 +49,14 @@ class SocketClient(
 
     override fun authenticate(): Single<AuthenticationResponse> {
         initiateSocketIfEmpty()
-        syftWebSocket.send(appendType(REQUESTS.AUTHENTICATION))
+        syftWebSocket.send(serializeNetworkModel(REQUESTS.AUTHENTICATION))
         return messageProcessor.onBackpressureLatest()
                 .ofType(AuthenticationResponse::class.java)
                 .firstOrError()
     }
 
     override fun getCycle(cycleRequest: CycleRequest): Single<CycleResponseData> {
-        syftWebSocket.send(appendType(REQUESTS.CYCLE_REQUEST, cycleRequest))
+        syftWebSocket.send(serializeNetworkModel(REQUESTS.CYCLE_REQUEST, cycleRequest))
         return messageProcessor.onBackpressureBuffer()
                 .ofType(CycleResponseData::class.java)
                 .filter {
@@ -69,7 +70,7 @@ class SocketClient(
 
     //todo handle backpressure and first or error
     override fun report(reportRequest: ReportRequest): Single<ReportResponse> {
-        syftWebSocket.send(appendType(REQUESTS.REPORT, reportRequest))
+        syftWebSocket.send(serializeNetworkModel(REQUESTS.REPORT, reportRequest))
         return messageProcessor.onBackpressureDrop()
                 .ofType(ReportResponse::class.java)
                 .firstOrError()
@@ -77,7 +78,12 @@ class SocketClient(
 
     //todo handle backpressure and first or error
     override fun joinRoom(joinRoomRequest: JoinRoomRequest): Single<JoinRoomResponse> {
-        syftWebSocket.send(appendType(WebRTCMessageTypes.WEBRTC_JOIN_ROOM, joinRoomRequest))
+        syftWebSocket.send(
+            serializeNetworkModel(
+                WebRTCMessageTypes.WEBRTC_JOIN_ROOM,
+                joinRoomRequest
+            )
+        )
         return messageProcessor.onBackpressureBuffer()
                 .ofType(JoinRoomResponse::class.java)
                 .firstOrError()
@@ -85,7 +91,7 @@ class SocketClient(
 
     //todo handle backpressure and first or error
     override fun sendInternalMessage(internalMessageRequest: InternalMessageRequest): Single<InternalMessageResponse> {
-        syftWebSocket.send(appendType(REQUESTS.WEBRTC_INTERNAL, internalMessageRequest))
+        syftWebSocket.send(serializeNetworkModel(REQUESTS.WEBRTC_INTERNAL, internalMessageRequest))
         return messageProcessor.onBackpressureBuffer()
                 .ofType(InternalMessageResponse::class.java)
                 .first(null)
@@ -120,9 +126,14 @@ class SocketClient(
         return Json.parse(SocketResponse.serializer(), socketMessage)
     }
 
-    private fun appendType(types: MessageTypes, data: NetworkModels? = null) = json {
+    private fun serializeNetworkModel(types: MessageTypes, data: NetworkModels? = null) = json {
         TYPE to types.value
-        if (data != null)
-            DATA to data
+        if (data != null) {
+            if (types is ResponseMessageTypes)
+                DATA to types.serialize(data)
+            else
+            //todo change this appropriately when needed
+                DATA to data.toString()
+        }
     }
 }
