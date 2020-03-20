@@ -187,7 +187,7 @@ class SyftJob(
 
 
     data class JobID(val modelName: String, val version: String? = null) {
-        fun matchWithResponse(modelName: String, version: String) =
+        fun matchWithResponse(modelName: String, version: String? = null) =
                 if (this.version.isNullOrEmpty())
                     this.modelName == modelName
                 else

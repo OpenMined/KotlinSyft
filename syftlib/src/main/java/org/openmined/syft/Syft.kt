@@ -131,7 +131,7 @@ class Syft private constructor(
     private fun getUploadSpeed() = ""
 
     private fun handleCycleReject(responseData: CycleResponseData.CycleReject) {
-        var jobId = SyftJob.JobID(responseData.modelName, responseData.version)
+        var jobId = SyftJob.JobID(responseData.modelName)
         val job = workerJobs.getOrElse(jobId, {
             jobId = SyftJob.JobID(responseData.modelName)
             workerJobs.getValue(jobId)
@@ -149,7 +149,7 @@ class Syft private constructor(
     }
 
     private fun handleCycleAccept(responseData: CycleResponseData.CycleAccept) {
-        val jobId = SyftJob.JobID(responseData.modelName, responseData.version)
+        val jobId = SyftJob.JobID(responseData.modelName)
         val job = workerJobs.getOrElse(jobId, {
             workerJobs.getValue(SyftJob.JobID(responseData.modelName))
         })

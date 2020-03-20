@@ -63,7 +63,7 @@ class SocketClient(
                     SyftJob.JobID(
                         cycleRequest.modelName,
                         cycleRequest.version
-                    ).matchWithResponse(it.modelName, it.version)
+                    ).matchWithResponse(it.modelName)
                 }.debounce(timeout.toLong(), TimeUnit.MILLISECONDS)
                 .firstOrError()
     }
