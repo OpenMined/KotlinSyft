@@ -18,7 +18,7 @@ import org.openmined.syft.networking.datamodels.webRTC.WEBRTC_INTERNAL_TYPE
 enum class REQUESTS(override val value: String) : ResponseMessageTypes {
 
     AUTHENTICATION(AUTH_TYPE) {
-        override val jsonParser = Json(JsonConfiguration.Stable)
+        override val jsonParser = Json(JsonConfiguration.Stable.copy(classDiscriminator = "status"))
         override fun parseJson(jsonString: String): NetworkModels =
                 jsonParser.parse(AuthenticationResponse.serializer(), jsonString)
 
