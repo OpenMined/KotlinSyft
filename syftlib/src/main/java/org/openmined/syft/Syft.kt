@@ -115,7 +115,6 @@ class Syft private constructor(
     }
 
     fun getDownloader(): HttpAPI = httpClient.apiClient
-
     //todo decide this based on configuration
     fun getSignallingClient(): CommunicationAPI = socketClient
     fun getWebRTCSignallingClient(): SocketAPI = socketClient
@@ -127,7 +126,7 @@ class Syft private constructor(
     fun setSocketClient(socketClient: SocketClient) {
         this.socketClient = socketClient
     }
-
+    
     @Synchronized
     private fun setSyftWorkerId(workerId: String) {
         if (!this::workerId.isInitialized)
