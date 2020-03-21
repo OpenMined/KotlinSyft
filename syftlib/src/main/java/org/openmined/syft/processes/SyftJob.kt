@@ -103,7 +103,11 @@ class SyftJob(
         }
         clientConfig = responseData.clientConfig
         cycleStatus.set(CycleStatus.ACCEPTED)
-        jobStatusProcessor.offer(JobStatusMessage.JobCycleAccepted)
+    }
+
+    fun cycleRejected(responseData: CycleResponseData.CycleReject) {
+        cycleStatus.set(CycleStatus.REJECT)
+        jobStatusProcessor.offer(JobStatusMessage.JobCycleRejected(responseData.timeout))
     }
 
     //todo before downloading check for wifi connection again
@@ -140,7 +144,7 @@ class SyftJob(
                     { successMsg: String ->
                         Log.d(TAG, successMsg)
                         trainingParamsStatus.set(DownloadStatus.COMPLETE)
-                        jobStatusProcessor.offer(JobStatusMessage.JobReady)
+                        jobStatusProcessor.offer(JobStatusMessage.JobReady(modelName, clientConfig))
                     },
                     { e -> jobStatusProcessor.onError(e) }
                 )
@@ -202,7 +206,7 @@ class SyftJob(
 
     data class JobID(val modelName: String, val version: String? = null) {
         fun matchWithResponse(modelName: String, version: String? = null) =
-                if (this.version.isNullOrEmpty())
+                if (version.isNullOrEmpty() || this.version.isNullOrEmpty())
                     this.modelName == modelName
                 else
                     (this.modelName == modelName) && (this.version == version)

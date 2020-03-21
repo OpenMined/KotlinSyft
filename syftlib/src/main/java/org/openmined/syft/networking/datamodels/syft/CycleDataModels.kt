@@ -13,12 +13,14 @@ const val CYCLE_REJECT = "rejected"
 sealed class CycleResponseData : NetworkModels() {
     
     abstract val modelName: String
+    abstract val version: String?
 
     @SerialName(CYCLE_ACCEPT)
     @Serializable
     data class CycleAccept(
         @SerialName("model")
         override val modelName: String,
+        override val version: String? = null,
         @SerialName("request_key")
         val requestKey: String,
         val plans: HashMap<String, String>,
@@ -33,7 +35,9 @@ sealed class CycleResponseData : NetworkModels() {
     @Serializable
     data class CycleReject(
         @SerialName("model")
-        override val modelName: String,
+        //todo making this optional till pygrid makes this compulsory
+        override val modelName: String = "",
+        override val version: String? = null,
         val timeout: String
     ) : CycleResponseData()
 }

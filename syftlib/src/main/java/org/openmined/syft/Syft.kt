@@ -136,11 +136,10 @@ class Syft private constructor(
             jobId = SyftJob.JobID(responseData.modelName)
             workerJobs.getValue(jobId)
         })
-        job.cycleStatus.set(SyftJob.CycleStatus.REJECT)
+        job.cycleRejected(responseData)
     }
 
     private fun handleCycleAccept(responseData: CycleResponseData.CycleAccept) {
-        Log.d(TAG,"cycle accepted ${responseData.modelName}")
         val jobId = SyftJob.JobID(responseData.modelName)
         val job = workerJobs.getOrElse(jobId, {
             //todo change this when pygrid updates
