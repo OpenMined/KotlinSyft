@@ -9,6 +9,7 @@ import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.requests.CommunicationAPI
 import org.openmined.syft.networking.requests.HttpAPI
+import org.openmined.syft.networking.requests.SocketAPI
 import org.openmined.syft.processes.JobStatusSubscriber
 import org.openmined.syft.processes.SyftJob
 import org.openmined.syft.threading.ProcessSchedulers
@@ -49,8 +50,8 @@ class Syft private constructor(
 
     private val workerJobs = ConcurrentHashMap<SyftJob.JobID, SyftJob>()
     private val compositeDisposable = CompositeDisposable()
-    private val socketClient = SocketClient(baseUrl, 2000u, networkingSchedulers)
-    private val httpClient = HttpClient(baseUrl)
+    private var socketClient = SocketClient(baseUrl, 2000u, networkingSchedulers)
+    private var httpClient = HttpClient(baseUrl)
 
     //todo decide if this can be changed by pygrid or will remain same irrespective of the requests we make
     @Volatile
@@ -114,12 +115,18 @@ class Syft private constructor(
     }
 
     fun getDownloader(): HttpAPI = httpClient.apiClient
-
     //todo decide this based on configuration
     fun getSignallingClient(): CommunicationAPI = socketClient
+    fun getWebRTCSignallingClient(): SocketAPI = socketClient
 
-    fun getWebRTCSignallingClient(): SocketClient = socketClient
+    fun setHttpClient(httpClient: HttpClient) {
+        this.httpClient = httpClient
+    }
 
+    fun setSocketClient(socketClient: SocketClient) {
+        this.socketClient = socketClient
+    }
+    
     @Synchronized
     private fun setSyftWorkerId(workerId: String) {
         if (!this::workerId.isInitialized)

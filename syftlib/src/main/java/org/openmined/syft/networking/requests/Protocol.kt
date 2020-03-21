@@ -12,4 +12,14 @@ sealed class Protocol {
             return "http"
         }
     }
+    object HTTP : Protocol() {
+        override fun toString(): String {
+            return "http"
+        }
+    }
+    object HTTPS : Protocol() {
+        override fun toString(): String {
+            return "https"
+        }
+    }
 }
