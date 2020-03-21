@@ -14,6 +14,7 @@ object Versions {
 
     // Android libraries
     const val appCompat = "1.1.0"
+    const val constraintLayout = "1.1.3"
     const val coreKtx = "1.2.0"
     const val kotlinSerialization = "0.14.0"
 
@@ -65,6 +66,7 @@ object CommonDependencies {
     const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"
     const val espresso = "androidx.test.espresso:espresso-core:${Versions.espresso}"
     const val testExtJunit = "androidx.test.ext:junit:${Versions.junit}"
+    const val constraintLayout = "androidx.constraintlayout:constraintlayout:${Versions.constraintLayout}"
 }
 
 object DemoAppDependencies {

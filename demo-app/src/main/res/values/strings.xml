@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">DemoApp</string>
+    <string name="start">Start!</string>
+    <string name="log_message_hint">Syft will tell you what happens in this area</string>
 </resources>

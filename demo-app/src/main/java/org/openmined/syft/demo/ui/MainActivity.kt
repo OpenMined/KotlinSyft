@@ -1,11 +1,13 @@
 package org.openmined.syft.demo.ui
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import io.reactivex.Scheduler
 import io.reactivex.schedulers.Schedulers
+import kotlinx.android.synthetic.main.activity_main.log_area
+import kotlinx.android.synthetic.main.activity_main.start_btn
 import org.openmined.syft.demo.R
 import org.openmined.syft.demo.datasource.LocalMNISTDataDataSource
 import org.openmined.syft.demo.datasource.LocalMNISTModuleDataSource
@@ -24,9 +26,9 @@ class MainActivity : AppCompatActivity() {
 
         injectMe()
         viewModel.trainingState.observe(this, Observer {
-            Toast.makeText(this, it.toString(), Toast.LENGTH_LONG).show()
+            log_area.append(it.toString())
         })
-        viewModel.process().subscribe()
+        start_btn.setOnClickListener { viewModel.process().subscribe() }
     }
 
     private fun injectMe() {
