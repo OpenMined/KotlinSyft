@@ -60,6 +60,9 @@ dependencies {
     implementation SyftlibDependencies.syftProto
     implementation SyftlibDependencies.protobuf
 
+    implementation SyftlibDependencies.pytorchAndroid
+    implementation SyftlibDependencies.torchVisionAndroid
+
     debugImplementation SyftlibDependencies.mockitoJupiter
 
     androidTestImplementation CommonDependencies.testExtJunit

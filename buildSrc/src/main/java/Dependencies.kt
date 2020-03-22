@@ -14,6 +14,7 @@ object Versions {
 
     // Android libraries
     const val appCompat = "1.1.0"
+    const val constraintLayout = "1.1.3"
     const val coreKtx = "1.2.0"
     const val kotlinSerialization = "0.14.0"
 
@@ -26,6 +27,7 @@ object Versions {
     const val syftProto = "0.0.8"
     const val retrofit = "2.7.1"
     const val kotlinConverter = "0.4.0"
+    const val pytorchAndroid = "1.4.0"
 
     // release management
     const val netflixPublishing = "14.0.0"
@@ -64,6 +66,7 @@ object CommonDependencies {
     const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"
     const val espresso = "androidx.test.espresso:espresso-core:${Versions.espresso}"
     const val testExtJunit = "androidx.test.ext:junit:${Versions.junit}"
+    const val constraintLayout = "androidx.constraintlayout:constraintlayout:${Versions.constraintLayout}"
 }
 
 object DemoAppDependencies {
@@ -82,4 +85,6 @@ object SyftlibDependencies {
     const val junitJupiter = "org.junit.jupiter:junit-jupiter:${Versions.junitJupiter}"
     const val retrofit = "com.squareup.retrofit2:retrofit:${Versions.retrofit}"
     const val retrofitAdapter = "com.squareup.retrofit2:adapter-rxjava2:${Versions.retrofit}"
+    const val pytorchAndroid = "org.pytorch:pytorch_android:${Versions.pytorchAndroid}"
+    const val torchVisionAndroid = "org.pytorch:pytorch_android_torchvision:${Versions.pytorchAndroid}"
 }
