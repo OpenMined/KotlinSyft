@@ -1,7 +1,6 @@
 package org.openmined.syft
 
 import android.util.Log
-import io.reactivex.Completable
 import io.reactivex.disposables.CompositeDisposable
 import org.openmined.syft.networking.clients.HttpClient
 import org.openmined.syft.networking.clients.SocketClient
@@ -14,7 +13,6 @@ import org.openmined.syft.processes.JobStatusSubscriber
 import org.openmined.syft.processes.SyftJob
 import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 
 private const val TAG = "Syft"
 
@@ -99,13 +97,15 @@ class Syft private constructor(
                     .compose(networkingSchedulers.applySingleSchedulers())
                     .subscribe { t: AuthenticationResponse ->
                         when (t) {
-                            is AuthenticationResponse.AuthenticationSuccess ->
+                            is AuthenticationResponse.AuthenticationSuccess -> {
                                 if (!this::workerId.isInitialized)
                                     setSyftWorkerId(t.workerId)
+                                requestCycle(job)
+                            }
                             is AuthenticationResponse.AuthenticationError ->
                                 Log.d(TAG, t.errorMessage)
                         }
-                        requestCycle(job)
+
                     }
             )
         }
@@ -126,9 +126,9 @@ class Syft private constructor(
             this.workerId = workerId
     }
 
-    private fun getPing() = ""
-    private fun getDownloadSpeed() = ""
-    private fun getUploadSpeed() = ""
+    private fun getPing() = "1"
+    private fun getDownloadSpeed() = "1000"
+    private fun getUploadSpeed() = "1000"
 
     private fun handleCycleReject(responseData: CycleResponseData.CycleReject) {
         var jobId = SyftJob.JobID(responseData.modelName)
@@ -136,24 +136,21 @@ class Syft private constructor(
             jobId = SyftJob.JobID(responseData.modelName)
             workerJobs.getValue(jobId)
         })
-        job.cycleStatus.set(SyftJob.CycleStatus.REJECT)
-        compositeDisposable.add(
-            Completable
-                    .timer(responseData.timeout.toLong(), TimeUnit.MILLISECONDS)
-                    .compose(networkingSchedulers.applyCompletableSchedulers())
-                    .subscribe {
-                        job.cycleStatus.set(SyftJob.CycleStatus.APPLY)
-                        job.start()
-                    }
-        )
+        job.cycleRejected(responseData)
     }
 
     private fun handleCycleAccept(responseData: CycleResponseData.CycleAccept) {
         val jobId = SyftJob.JobID(responseData.modelName)
         val job = workerJobs.getOrElse(jobId, {
-            workerJobs.getValue(SyftJob.JobID(responseData.modelName))
+            //todo change this when pygrid updates
+            workerJobs.getValue(
+                SyftJob.JobID(
+                    responseData.modelName,
+                    responseData.clientConfig.modelVersion
+                )
+            )
         })
-        job.setRequestKey(responseData)
+        job.setJobArguments(responseData)
         job.downloadData()
     }
 

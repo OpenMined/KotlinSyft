@@ -1,8 +1,7 @@
 apply plugin: 'com.android.application'
-
 apply plugin: 'kotlin-android'
-
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion Versions.compileSdk
@@ -16,8 +15,11 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     compileOptions {
-        sourceCompatibility = 1.8
-        targetCompatibility = 1.8
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    dataBinding {
+        enabled true
     }
     buildTypes {
         release {
@@ -30,18 +32,25 @@ android {
         exclude 'META-INF/LICENSE-notice.md'
 
     }
+// To inline the bytecode built with JVM target 1.8 into
+// bytecode that is being built with JVM target 1.6. (e.g. navArgs)
+
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }
 
 dependencies {
     implementation DemoAppDependencies.kotlinJDK
     implementation CommonDependencies.appCompat
     implementation CommonDependencies.constraintLayout
+    implementation DemoAppDependencies.materialAndroid
     implementation CommonDependencies.coreKtx
     implementation CommonDependencies.kotlinSerialization
     implementation CommonDependencies.rxJava
     implementation CommonDependencies.rxAndroid
-
-
+    
     // TODO During the first stages of the project, include the library here. Later on we should use the library from the repository
     implementation project(path: ':syftlib')
 //    implementation 'org.openmined.kotlinsyft:syftlib:0.2.0'

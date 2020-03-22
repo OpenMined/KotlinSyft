@@ -26,7 +26,6 @@ import org.openmined.syft.networking.requests.SocketAPI
 import org.openmined.syft.networking.requests.WebRTCMessageTypes
 import org.openmined.syft.processes.SyftJob
 import org.openmined.syft.threading.ProcessSchedulers
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val TAG = "SocketClient"
@@ -49,6 +48,7 @@ class SocketClient(
 
     override fun authenticate(): Single<AuthenticationResponse> {
         initiateSocketIfEmpty()
+        Log.d(TAG, "sending message: " + serializeNetworkModel(REQUESTS.AUTHENTICATION).toString())
         syftWebSocket.send(serializeNetworkModel(REQUESTS.AUTHENTICATION))
         return messageProcessor.onBackpressureLatest()
                 .ofType(AuthenticationResponse::class.java)
@@ -56,6 +56,7 @@ class SocketClient(
     }
 
     override fun getCycle(cycleRequest: CycleRequest): Single<CycleResponseData> {
+        Log.d(TAG, "sending message: " + serializeNetworkModel(REQUESTS.CYCLE_REQUEST, cycleRequest))
         syftWebSocket.send(serializeNetworkModel(REQUESTS.CYCLE_REQUEST, cycleRequest))
         return messageProcessor.onBackpressureBuffer()
                 .ofType(CycleResponseData::class.java)
@@ -63,8 +64,10 @@ class SocketClient(
                     SyftJob.JobID(
                         cycleRequest.modelName,
                         cycleRequest.version
+                        //todo when pygrid updates to have version in rejected
+                        // we need to supply version here as well
                     ).matchWithResponse(it.modelName)
-                }.debounce(timeout.toLong(), TimeUnit.MILLISECONDS)
+                }
                 .firstOrError()
     }
 
@@ -103,19 +106,22 @@ class SocketClient(
         compositeDisposable.add(syftWebSocket.start()
                 .map {
                     when (it) {
-                        is NetworkMessage.SocketOpen -> authenticate()
+                        is NetworkMessage.SocketOpen -> {
+                        }
                         is NetworkMessage.SocketError -> Log.e(
                             TAG,
                             "socket error",
                             it.throwable
                         )
-                        is NetworkMessage.MessageReceived -> emitMessage(deserializeSocket(it.message))
+                        is NetworkMessage.MessageReceived -> {
+                            Log.d(TAG,"received the message "+it.message)
+                            emitMessage(deserializeSocket(it.message))
+                        }
                     }
                 }
                 .subscribeOn(schedulers.computeThreadScheduler)
                 .observeOn(schedulers.calleeThreadScheduler)
-                .subscribe())
-        socketClientSubscribed.set(true)
+                .subscribe { socketClientSubscribed.set(true) })
     }
 
     private fun emitMessage(response: SocketResponse) {
