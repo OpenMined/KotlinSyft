@@ -17,6 +17,7 @@ object Versions {
     const val constraintLayout = "1.1.3"
     const val coreKtx = "1.2.0"
     const val kotlinSerialization = "0.14.0"
+    const val material="1.1.0"
 
     // Tools
     const val rxJava = "2.2.12"
@@ -71,6 +72,7 @@ object CommonDependencies {
 
 object DemoAppDependencies {
     const val kotlinJDK = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
+    const val materialAndroid = "com.google.android.material:material:${Versions.material}"
 }
 
 object SyftlibDependencies {

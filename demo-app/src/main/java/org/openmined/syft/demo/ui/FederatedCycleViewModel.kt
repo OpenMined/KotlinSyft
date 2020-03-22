@@ -1,4 +1,4 @@
-package org.openmined.syft.demo
+package org.openmined.syft.demo.ui
 
 import android.util.Log
 import androidx.lifecycle.ViewModel

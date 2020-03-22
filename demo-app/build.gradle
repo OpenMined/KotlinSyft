@@ -45,12 +45,12 @@ dependencies {
     implementation DemoAppDependencies.kotlinJDK
     implementation CommonDependencies.appCompat
     implementation CommonDependencies.constraintLayout
+    implementation DemoAppDependencies.materialAndroid
     implementation CommonDependencies.coreKtx
     implementation CommonDependencies.kotlinSerialization
     implementation CommonDependencies.rxJava
     implementation CommonDependencies.rxAndroid
-
-
+    
     // TODO During the first stages of the project, include the library here. Later on we should use the library from the repository
     implementation project(path: ':syftlib')
 //    implementation 'org.openmined.kotlinsyft:syftlib:0.2.0'
@@ -60,11 +60,6 @@ dependencies {
     implementation SyftlibDependencies.syftProto
     implementation SyftlibDependencies.protobuf
 
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'com.google.android.material:material:1.1.0'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.2.1'
-    implementation 'androidx.navigation:navigation-ui-ktx:2.2.1'
     androidTestImplementation CommonDependencies.testExtJunit
     androidTestImplementation CommonDependencies.espresso
 }
