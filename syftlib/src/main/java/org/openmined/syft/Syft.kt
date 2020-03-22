@@ -18,9 +18,10 @@ import java.util.concurrent.ConcurrentHashMap
 private const val TAG = "Syft"
 
 @ExperimentalUnsignedTypes
-class Syft private constructor(
-    baseUrl: String,
+class Syft internal constructor(
     private val authToken: String,
+    private var socketClient: SocketClient,
+    private var httpClient: HttpClient,
     //todo this will be removed by syft configuration class
     private val computeSchedulers: ProcessSchedulers,
     //todo change this to read from syft configuration
@@ -40,8 +41,9 @@ class Syft private constructor(
         ): Syft =
                 INSTANCE ?: synchronized(this) {
                     INSTANCE ?: Syft(
-                        baseUrl,
                         authToken,
+                        SocketClient(baseUrl, 2000u, networkingSchedulers),
+                        HttpClient(baseUrl),
                         networkingSchedulers,
                         computeSchedulers
                     ).also { INSTANCE = it }
@@ -50,8 +52,6 @@ class Syft private constructor(
 
     private val workerJobs = ConcurrentHashMap<SyftJob.JobID, SyftJob>()
     private val compositeDisposable = CompositeDisposable()
-    private var socketClient = SocketClient(baseUrl, 2000u, networkingSchedulers)
-    private var httpClient = HttpClient(baseUrl)
 
     //todo decide if this can be changed by pygrid or will remain same irrespective of the requests we make
     @Volatile
@@ -126,7 +126,7 @@ class Syft private constructor(
     fun setSocketClient(socketClient: SocketClient) {
         this.socketClient = socketClient
     }
-    
+
     @Synchronized
     private fun setSyftWorkerId(workerId: String) {
         if (!this::workerId.isInitialized)
