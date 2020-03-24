@@ -34,14 +34,20 @@
             android:layout_height="match_parent"
             tools:context=".FederatedCycleFragment">
 
-            <TextView
-                android:id="@+id/log_area"
-                android:layout_width="wrap_content"
+            <ScrollView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
+                app:layout_constraintBottom_toTopOf="@id/button_first"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@id/button_first" />
+                app:layout_constraintStart_toStartOf="parent">
+
+                <TextView
+                    android:id="@+id/log_area"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:text="@{viewModel.logger}" />
+            </ScrollView>
 
             <Button
                 android:id="@+id/button_first"

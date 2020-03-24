@@ -35,10 +35,10 @@ class MainActivity : AppCompatActivity() {
         binding.lifecycleOwner = this
         binding.viewModel = initiateViewModel("10.0.2.2:5000")
 
-        (binding.viewModel as FederatedCycleViewModel).cycleState.observe(this, Observer {
-            Log.d(TAG, "Received IValue from training")
-            log_area.append(it.toString())
-        })
+//        (binding.viewModel as FederatedCycleViewModel).cycleState.observe(this, Observer {
+//            Log.d(TAG, "Received IValue from training")
+//            log_area.append(it.toString())
+//        })
     }
 
     private fun initiateViewModel(baseUrl: String): FederatedCycleViewModel {

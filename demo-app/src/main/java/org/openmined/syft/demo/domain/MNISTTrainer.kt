@@ -33,7 +33,8 @@ class MNISTTrainer {
         val batchSize = IValue.from(Tensor.fromBlob(intArrayOf(32), longArrayOf(1)))
         val lr = IValue.from(Tensor.fromBlob(floatArrayOf(0.01F), longArrayOf(1)))
 
-        return script.forward(x, y, batchSize, lr, w1, b1, w2, b2)
+        val params = arrayOf(x, y, batchSize, lr, w1, b1, w2, b2)
+        return script.forward(*params)
     }
 
     private fun oneHot(trainingSet: Float): FloatArray {
