@@ -12,7 +12,7 @@ class ModuleDataSource constructor(
 ) {
     fun loadModule(modelName: String): Module {
         val downloadedModel =
-                File("${localConfiguration.downloadPath}${File.separator}${modelName}")
+                File("${localConfiguration.downloadPath}${File.separator}${modelName}.pb")
         val byteArray = FileInputStream(downloadedModel).readBytes()
         val module = MessageProcessor().processTorchScript(byteArray)
         val path = saveScript(module.obj, modelName)
