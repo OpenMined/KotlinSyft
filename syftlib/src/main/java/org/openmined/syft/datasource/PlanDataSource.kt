@@ -7,20 +7,19 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
-class ModuleDataSource constructor(
+class PlanDataSource constructor(
     private val localConfiguration: LocalConfiguration
 ) {
-    fun loadModule(modelName: String): Module {
-        val downloadedModel =
-                File("${localConfiguration.downloadPath}${File.separator}${modelName}.pb")
+    fun loadPlan(planPath: String): Module {
+        val downloadedModel = File("$planPath.pb")
         val byteArray = FileInputStream(downloadedModel).readBytes()
-        val module = MessageProcessor().processTorchScript(byteArray)
-        val path = saveScript(module.obj, modelName)
+        val plan = MessageProcessor().processTorchScript(byteArray)
+        val path = saveScript(plan.obj, planPath)
         return Module.load(path)
     }
 
-    private fun saveScript(obj: com.google.protobuf.ByteString, modelName: String): String {
-        val file = File(localConfiguration.modelLocation, modelName)
+    private fun saveScript(obj: com.google.protobuf.ByteString, planPath: String): String {
+        val file = File(planPath)
         FileOutputStream(file).use {
             it.write(obj.toByteArray())
             it.flush()
