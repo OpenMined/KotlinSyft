@@ -1,4 +1,4 @@
-package org.openmined.syft.processes
+package org.openmined.syft.execution
 
 import org.openmined.syft.networking.datamodels.ClientConfig
 

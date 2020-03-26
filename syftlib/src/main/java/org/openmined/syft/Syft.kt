@@ -9,9 +9,9 @@ import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.requests.CommunicationAPI
 import org.openmined.syft.networking.requests.HttpAPI
+import org.openmined.syft.execution.JobStatusSubscriber
+import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.networking.requests.SocketAPI
-import org.openmined.syft.processes.JobStatusSubscriber
-import org.openmined.syft.processes.SyftJob
 import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.ConcurrentHashMap
 

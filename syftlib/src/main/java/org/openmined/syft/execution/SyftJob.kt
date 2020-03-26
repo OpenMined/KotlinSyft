@@ -1,4 +1,4 @@
-package org.openmined.syft.processes
+package org.openmined.syft.execution
 
 import android.util.Log
 import io.reactivex.Single
@@ -122,8 +122,8 @@ class SyftJob(
 
         plans.forEach { (planId, plan) ->
             //todo instead of hardcoding this will be defined by configuration class method and by plan class
-            plan.torchScriptLocation = "$destinationDir/plans"
-            downloadList.add(planDownloader(plan.torchScriptLocation, planId))
+            plan.planFileLocation = "$destinationDir/plans"
+            downloadList.add(planDownloader(plan.planFileLocation, planId))
         }
         protocols.forEach { (protocolId, protocol) ->
             //todo instead of hardcoding this will be defined by configuration class method and by protocol class

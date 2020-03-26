@@ -1,4 +1,4 @@
-package org.openmined.syft.processes
+package org.openmined.syft.execution
 
 class Protocol(val protocolId: String) {
     lateinit var protocolFileLocation: String

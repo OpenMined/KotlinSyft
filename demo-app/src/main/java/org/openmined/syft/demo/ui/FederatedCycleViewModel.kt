@@ -6,7 +6,7 @@ import org.openmined.syft.Syft
 import org.openmined.syft.networking.clients.HttpClient
 import org.openmined.syft.networking.clients.SocketClient
 import org.openmined.syft.networking.datamodels.ClientConfig
-import org.openmined.syft.processes.JobStatusSubscriber
+import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.threading.ProcessSchedulers
 
 private const val TAG = "FederatedCycleViewModel"
