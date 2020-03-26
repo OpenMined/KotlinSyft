@@ -115,6 +115,7 @@ class Syft internal constructor(
     }
 
     fun getDownloader(): HttpAPI = httpClient.apiClient
+
     //todo decide this based on configuration
     fun getSignallingClient(): CommunicationAPI = socketClient
     fun getWebRTCSignallingClient(): SocketAPI = socketClient

@@ -12,7 +12,7 @@ sealed class Protocol {
             return "http"
         }
     }
-    
+
     object HTTPS : Protocol() {
         override fun toString(): String {
             return "https"
