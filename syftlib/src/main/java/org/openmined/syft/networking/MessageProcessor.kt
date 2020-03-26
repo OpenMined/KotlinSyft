@@ -5,7 +5,7 @@ import org.openmined.syftproto.types.torch.v1.ScriptModuleOuterClass
 
 class MessageProcessor {
 
-    fun rocessTorchScript(byteArray: ByteArray): ScriptModuleOuterClass.ScriptModule {
+    fun processTorchScript(byteArray: ByteArray): ScriptModuleOuterClass.ScriptModule {
         return ScriptModuleOuterClass.ScriptModule.parseFrom(byteArray)
     }
 

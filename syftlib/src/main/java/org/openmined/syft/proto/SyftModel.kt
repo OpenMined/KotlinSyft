@@ -1,24 +1,38 @@
 package org.openmined.syft.proto
 
-import java.util.*
-import kotlin.collections.HashMap
+import android.util.Log
+import org.openmined.syftproto.execution.v1.StateOuterClass
+import java.io.File
 
-class SyftModel {
-    var params = HashMap<String, FloatArray>()
-    var paramIndex = HashMap<String, Int>()
+private const val TAG = "SyftModel"
 
-    fun createSerializedDiff(newModelParams: HashMap<String, FloatArray>) {
-        val diff = HashMap<String, FloatArray>()
-        newModelParams.forEach { (key, value) ->
-            params[key]?.let {
-                diff[key] = it - value
+@ExperimentalUnsignedTypes
+data class SyftModel(
+    val modelName: String,
+    val version: String? = null,
+    var pyGridModelId: String? = null,
+    var modelState: State? = null
+) {
+
+    @ExperimentalStdlibApi
+    fun updateAndCreateDiff(newModelParams: List<PytorchTensorWrapper>): State? {
+        val diff = mutableListOf<SyftTensor>()
+        modelState?.let { currentState ->
+            newModelParams.forEachIndexed { index, value ->
+                diff[index] = SyftTensor.fromTorchTensor(
+                    currentState.syftTensors[index].getTorchTensorWrapper() - value
+                )
+                currentState.syftTensors[index] = SyftTensor.fromTorchTensor(value)
             }
-            ?: throw InvalidPropertiesFormatException("The updated model does not match with the original model")
-        }
+            return currentState.copy(syftTensors = diff)
+        } ?: return null
+    }
 
+    fun loadModelState(modelFile: String) {
+        modelState = State.deserialize(
+            StateOuterClass.State.parseFrom(File(modelFile).readBytes())
+        )
+        Log.d(TAG, "Model loaded from $modelFile")
     }
 }
 
-private operator fun FloatArray.minus(value: FloatArray): FloatArray {
-    return this.zip(value).map { it.first - it.second }.toFloatArray()
-}

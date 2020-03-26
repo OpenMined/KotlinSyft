@@ -2,6 +2,8 @@ package org.openmined.syft
 
 import android.util.Log
 import io.reactivex.disposables.CompositeDisposable
+import org.openmined.syft.execution.JobStatusSubscriber
+import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.networking.clients.HttpClient
 import org.openmined.syft.networking.clients.SocketClient
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
@@ -9,8 +11,6 @@ import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.requests.CommunicationAPI
 import org.openmined.syft.networking.requests.HttpAPI
-import org.openmined.syft.execution.JobStatusSubscriber
-import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.networking.requests.SocketAPI
 import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.ConcurrentHashMap
@@ -55,7 +55,7 @@ class Syft internal constructor(
 
     //todo decide if this can be changed by pygrid or will remain same irrespective of the requests we make
     @Volatile
-    lateinit var workerId: String
+    private var workerId: String? = null
 
     fun newJob(
         model: String,
@@ -78,12 +78,11 @@ class Syft internal constructor(
     }
 
     fun requestCycle(job: SyftJob) {
-        if (this::workerId.isInitialized)
-            socketClient.getCycle(
+        workerId?.let { id ->
+            compositeDisposable.add(getSignallingClient().getCycle(
                 CycleRequest(
-                    workerId,
-                    job.modelName,
-                    job.version,
+                    id, job.jobId.modelName,
+                    job.jobId.version,
                     getPing(),
                     getDownloadSpeed(),
                     getUploadSpeed()
@@ -94,25 +93,22 @@ class Syft internal constructor(
                             is CycleResponseData.CycleAccept -> handleCycleAccept(response)
                             is CycleResponseData.CycleReject -> handleCycleReject(response)
                         }
-                    }
-        else {
-            compositeDisposable.add(socketClient.authenticate()
+                    })
+        } ?: compositeDisposable.add(socketClient.authenticate()
                     .compose(networkingSchedulers.applySingleSchedulers())
                     .subscribe { t: AuthenticationResponse ->
                         when (t) {
                             is AuthenticationResponse.AuthenticationSuccess -> {
-                                if (!this::workerId.isInitialized)
+                                if (workerId == null)
                                     setSyftWorkerId(t.workerId)
                                 requestCycle(job)
                             }
                             is AuthenticationResponse.AuthenticationError ->
                                 Log.d(TAG, t.errorMessage)
                         }
-
-                    }
-            )
-        }
+                    })
     }
+
 
     fun getDownloader(): HttpAPI = httpClient.apiClient
 
@@ -130,11 +126,13 @@ class Syft internal constructor(
 
     @Synchronized
     private fun setSyftWorkerId(workerId: String) {
-        if (!this::workerId.isInitialized)
+        if (this.workerId == null)
             this.workerId = workerId
         else if (workerJobs.isEmpty())
             this.workerId = workerId
     }
+
+    fun getSyftWorkerId() = workerId
 
     private fun getPing() = "1"
     private fun getDownloadSpeed() = "1000"

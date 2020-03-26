@@ -1,13 +1,16 @@
 package org.openmined.syft.proto
 
-import com.google.protobuf.ProtocolStringList
 import org.openmined.syftproto.types.syft.v1.IdOuterClass
 import org.openmined.syftproto.types.torch.v1.SizeOuterClass
 import org.openmined.syftproto.types.torch.v1.Tensor
 import org.openmined.syftproto.types.torch.v1.TensorDataOuterClass
+import org.pytorch.DType
+import java.io.InvalidClassException
+import java.lang.Math.random
 import java.nio.DoubleBuffer
+import java.util.*
 import org.openmined.syftproto.types.torch.v1.Tensor.TorchTensor as SyftProtoTensor
-import org.pytorch.Tensor as PytorchTensor
+import org.pytorch.Tensor as TorchTensor
 
 @ExperimentalUnsignedTypes
 data class SyftTensor(
@@ -15,9 +18,9 @@ data class SyftTensor(
     val contents: TensorDataOuterClass.TensorData,
     val shape: MutableList<Int>,
     val dtype: String,
-    val chain: SyftTensor?,
-    val grad_chain: SyftTensor?,
-    val tags: ProtocolStringList,
+    val chain: SyftTensor? = null,
+    val grad_chain: SyftTensor? = null,
+    val tags: List<String>,
     val description: String
 ) {
     companion object {
@@ -34,6 +37,7 @@ data class SyftTensor(
             return SyftTensor(
                 tensor.id,
                 tensorData,
+                //todo we should ideally have long here
                 tensorData.shape.dimsList,
                 tensorData.dtype,
                 chain,
@@ -43,8 +47,47 @@ data class SyftTensor(
             )
         }
 
-        fun fromTorchTensor(tensor: PytorchTensor): SyftTensor {
-            return SyftTensor()
+        @ExperimentalStdlibApi
+        fun fromTorchTensor(tensorWrapper: PytorchTensorWrapper): SyftTensor {
+            val shape = SizeOuterClass.Size.newBuilder()
+                    .addAllDims(tensorWrapper.torchTensor.shape().map { it.toInt() })
+                    .build()
+            val tensorDataBuilder = TensorDataOuterClass.TensorData.newBuilder()
+                    .setShape(shape)
+                    .setDtype(tensorWrapper.torchTensor.dtype().name.capitalize(Locale.US))
+            val tensorData = tensorDataBuilderFromTorchTensor(
+                tensorWrapper.torchTensor,
+                tensorDataBuilder
+            ).build()
+            val id = IdOuterClass.Id.newBuilder().setIdInt(random().toLong()).build()
+            return SyftTensor(
+                id,
+                tensorData,
+                shape.dimsList,
+                tensorData.dtype,
+                tags = listOf(),
+                description = ""
+            )
+        }
+
+        private fun tensorDataBuilderFromTorchTensor(
+            tensor: TorchTensor,
+            tensorBuilder: TensorDataOuterClass.TensorData.Builder
+        ): TensorDataOuterClass.TensorData.Builder {
+            when (tensor.dtype()) {
+//                todo Uint8 is converted to int below due to no Pytorch constructor `fromBlob`
+//                DType.UINT8 ->
+//                    tensorBuilder.addAllContentsUint8(tensor.dataAsUnsignedByteArray)
+//                todo Int8 protobuf implementation uses List<Int> losing all the memory efficiency
+//                DType.INT8 ->
+//                    tensorBuilder.addAllContentsInt8(tensor.dataAsByteArray)
+                DType.INT32 -> tensorBuilder.addAllContentsInt32(tensor.dataAsIntArray.toList())
+                DType.FLOAT32 -> tensorBuilder.addAllContentsFloat32(tensor.dataAsFloatArray.toList())
+                DType.INT64 -> tensorBuilder.addAllContentsInt64(tensor.dataAsLongArray.toList())
+                DType.FLOAT64 -> tensorBuilder.addAllContentsFloat64(tensor.dataAsDoubleArray.toList())
+                else -> throw InvalidClassException("Dtype does not exist")
+            }
+            return tensorBuilder
         }
     }
 
@@ -63,63 +106,65 @@ data class SyftTensor(
         return syftTensorBuilder.build()
     }
 
-    fun getTorchTensor(): PytorchTensor {
+    fun getTorchTensorWrapper() = PytorchTensorWrapper(getTorchTensor())
+
+    fun getTorchTensor(): TorchTensor {
         return when (dtype) {
-            "Uint8" -> PytorchTensor.fromBlob(
+            "Uint8" -> TorchTensor.fromBlob(
                 contents.contentsUint8List.toIntArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Int8" -> PytorchTensor.fromBlob(
+            "Int8" -> TorchTensor.fromBlob(
                 contents.contentsInt8List.toIntArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Int16" -> PytorchTensor.fromBlob(
+            "Int16" -> TorchTensor.fromBlob(
                 contents.contentsInt16List.toIntArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Int32" -> PytorchTensor.fromBlob(
+            "Int32" -> TorchTensor.fromBlob(
                 contents.contentsInt32List.toIntArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Int64" -> PytorchTensor.fromBlob(
+            "Int64" -> TorchTensor.fromBlob(
                 contents.contentsInt64List.toLongArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Float16" -> PytorchTensor.fromBlob(
+            "Float16" -> TorchTensor.fromBlob(
                 contents.contentsFloat16List.toFloatArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Float32" -> PytorchTensor.fromBlob(
+            "Float32" -> TorchTensor.fromBlob(
                 contents.contentsFloat32List.toFloatArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Float64" -> PytorchTensor.fromBlob(
+            "Float64" -> TorchTensor.fromBlob(
                 DoubleBuffer.wrap(
                     contents.contentsFloat64List.toDoubleArray()
                 ), shape.map { it.toLong() }.toLongArray()
             )
-//            "Bool" -> PytorchTensor.fromBlob(
+//            "Bool" -> org.pytorch.Tensor.fromBlob(
 //                contents.data.contentsUint8List.toIntArray(),
 //                shape.map { it.toLong() }.toLongArray()
 //            )
-            "Qint8" -> PytorchTensor.fromBlob(
+            "Qint8" -> TorchTensor.fromBlob(
                 contents.contentsQint8List.toIntArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Quint8" -> PytorchTensor.fromBlob(
+            "Quint8" -> TorchTensor.fromBlob(
                 contents.contentsQuint8List.toIntArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Qint32" -> PytorchTensor.fromBlob(
+            "Qint32" -> TorchTensor.fromBlob(
                 contents.contentsQint32List.toIntArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Bfloat16" -> PytorchTensor.fromBlob(
+            "Bfloat16" -> TorchTensor.fromBlob(
                 contents.contentsBfloat16List.toFloatArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
             else -> throw Exception("Invalid Tensor type")
         }
-
     }
+
 }

@@ -10,6 +10,8 @@ import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.datamodels.syft.ReportRequest
 import org.openmined.syft.networking.datamodels.syft.ReportResponse
+import org.openmined.syft.proto.State
+import org.openmined.syft.proto.SyftModel
 import org.openmined.syft.threading.ProcessSchedulers
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
@@ -30,23 +32,23 @@ class SyftJob(
     private val computeSchedulers: ProcessSchedulers,
     //todo change this to read from syft configuration
     private val networkingSchedulers: ProcessSchedulers,
-    val modelName: String,
-    val version: String? = null
+    modelName: String,
+    version: String? = null
 ) {
 
+    val jobId = JobID(modelName, version)
 
-    var cycleStatus = AtomicReference(CycleStatus.APPLY)
+    private var cycleStatus = AtomicReference(CycleStatus.APPLY)
     private var trainingParamsStatus = AtomicReference(DownloadStatus.NOT_STARTED)
-
-    private lateinit var requestKey: String
+    private var requestKey: String? = null
+    private var clientConfig: ClientConfig? = null
 
     //todo need to filled based on the destination directory defined by syft configuration class
     private val destinationDir = "/data/data/org.openmined.syft.demo/files"
     private val modelFileLocation = "$destinationDir/model/"
     private val plans = ConcurrentHashMap<String, Plan>()
     private val protocols = ConcurrentHashMap<String, Protocol>()
-    private lateinit var modelID: String
-    private lateinit var clientConfig: ClientConfig
+    private val model = SyftModel(modelName, version)
     private val jobStatusProcessor: PublishProcessor<JobStatusMessage> = PublishProcessor.create()
     private val compositeDisposable = CompositeDisposable()
 
@@ -63,18 +65,6 @@ class SyftJob(
         }
         worker.requestCycle(this)
         subscribe(subscriber, computeSchedulers)
-    }
-
-    /**
-     * report the results back to PyGrid
-     */
-    fun report(diff: String) {
-        compositeDisposable.add(
-            worker.getSignallingClient().report(ReportRequest(worker.workerId, requestKey, diff))
-                    .compose(networkingSchedulers.applySingleSchedulers())
-                    .subscribe { reportResponse: ReportResponse ->
-                        Log.i(TAG, reportResponse.status)
-                    })
     }
 
     fun subscribe(
@@ -96,12 +86,12 @@ class SyftJob(
     fun setJobArguments(responseData: CycleResponseData.CycleAccept) {
         Log.d(TAG, "setting Request Key")
         requestKey = responseData.requestKey
-        modelID = responseData.modelId
+        clientConfig = responseData.clientConfig
         responseData.plans.forEach { (_, planId) -> plans[planId] = Plan(planId) }
         responseData.protocols.forEach { (_, protocolId) ->
             protocols[protocolId] = Protocol(protocolId)
         }
-        clientConfig = responseData.clientConfig
+        model.pyGridModelId = responseData.modelId
         cycleStatus.set(CycleStatus.ACCEPTED)
     }
 
@@ -120,17 +110,16 @@ class SyftJob(
         trainingParamsStatus.set(DownloadStatus.RUNNING)
         val downloadList = mutableListOf<Single<String>>()
 
-        plans.forEach { (planId, plan) ->
+        plans.forEach { (_, plan) ->
             //todo instead of hardcoding this will be defined by configuration class method and by plan class
-            plan.planFileLocation = "$destinationDir/plans"
-            downloadList.add(planDownloader(plan.planFileLocation, planId))
+            downloadList.add(planDownloader("$destinationDir/plans", plan))
         }
         protocols.forEach { (protocolId, protocol) ->
             //todo instead of hardcoding this will be defined by configuration class method and by protocol class
             protocol.protocolFileLocation = "$destinationDir/protocols"
             downloadList.add(protocolDownloader(protocol.protocolFileLocation, protocolId))
         }
-        downloadList.add(modelDownloader(modelID))
+        downloadList.add(modelDownloader())
 
         compositeDisposable.add(Single.zip(downloadList) { successMessages ->
             successMessages.joinToString(
@@ -144,47 +133,95 @@ class SyftJob(
                     { successMsg: String ->
                         Log.d(TAG, successMsg)
                         trainingParamsStatus.set(DownloadStatus.COMPLETE)
-                        jobStatusProcessor.offer(
-                            JobStatusMessage.JobReady(
-                                modelName,
-                                clientConfig
-                            )
-                        )
+                        jobStatusProcessor.offer(JobStatusMessage.JobReady(model, clientConfig))
                     },
                     { e -> jobStatusProcessor.onError(e) }
                 )
         )
     }
 
+
+    /**
+     * report the results back to PyGrid
+     */
+    fun report(diff: State) {
+        val requestKey = requestKey
+        val workerId = worker.getSyftWorkerId()
+        if (requestKey != null && workerId != null)
+            compositeDisposable.add(
+                worker.getSignallingClient()
+                        .report(
+                            ReportRequest(
+                                workerId,
+                                requestKey,
+                                //todo this should be sent via post call on http client
+                                //todo Not yet yet decided on pygrid
+                                diff.serialize().toString()
+                            )
+                        )
+                        .compose(networkingSchedulers.applySingleSchedulers())
+                        .subscribe { reportResponse: ReportResponse ->
+                            Log.i(TAG, reportResponse.status)
+                        })
+    }
+
     //We might want to make these public if needed later
-    private fun modelDownloader(modelId: String) =
-            worker.getDownloader().downloadModel(worker.workerId, requestKey, modelId).compose(
-                computeSchedulers.applySingleSchedulers()
-            ).flatMap { response ->
-                saveFile(response.body(), modelFileLocation, modelName)
-            }
+    private fun modelDownloader(): Single<String> {
+        val requestKey = requestKey
+        val workerId = worker.getSyftWorkerId()
+        val modelId = model.pyGridModelId
+        return if (requestKey == null || modelId == null || workerId == null)
+            Single.error(IllegalStateException("request Key,workerId or modelId has not been set"))
+        else
+            worker.getDownloader()
+                    .downloadModel(workerId, requestKey, modelId)
+                    .compose(
+                        computeSchedulers.applySingleSchedulers()
+                    ).flatMap { response ->
+                        saveFile(response.body(), modelFileLocation, modelId)
+                    }.flatMap { modelFile ->
+                        Single.create<String> { emitter ->
+                            model.loadModelState(modelFile)
+                            emitter.onSuccess(modelFile)
+                        }
+                    }
+    }
 
-
-    private fun planDownloader(destinationDir: String, planId: String) =
+    private fun planDownloader(destinationDir: String, plan: Plan): Single<String> {
+        val workerId = worker.getSyftWorkerId()
+        val requestKey = requestKey
+        return if (workerId == null || requestKey == null)
+            Single.error(IllegalStateException("workerId or request not initialised yet"))
+        else
             worker.getDownloader().downloadPlan(
-                worker.workerId,
+                workerId,
                 requestKey,
-                planId,
+                plan.planId,
                 "torchscript"
             ).compose(computeSchedulers.applySingleSchedulers())
                     .flatMap { response ->
-                        saveFile(response.body(), destinationDir, planId)
+                        saveFile(response.body(), destinationDir, plan.planId)
+                    }.flatMap { filepath ->
+                        Single.create<String> { emitter ->
+                            plan.generateScriptModule(destinationDir, filepath)
+                            emitter.onSuccess(filepath)
+                        }
                     }
+    }
 
-    private fun protocolDownloader(destinationDir: String, protocolId: String) =
+    private fun protocolDownloader(destinationDir: String, protocolId: String): Single<String> {
+        val workerId = worker.getSyftWorkerId()
+        val requestKey = requestKey
+        return if (workerId == null || requestKey == null)
+            Single.error(IllegalStateException("workerId or request not initialised yet"))
+        else
             worker.getDownloader().downloadProtocol(
-                worker.workerId,
-                requestKey,
-                protocolId
+                workerId, requestKey, protocolId
             ).compose(computeSchedulers.applySingleSchedulers())
                     .flatMap { response ->
                         saveFile(response.body(), destinationDir, protocolId)
                     }
+    }
 
     private fun saveFile(
         input: ResponseBody?,
@@ -200,7 +237,7 @@ class SyftJob(
                 val file = File(destination, "$fileName.pb")
                 file.outputStream().use { outputFile ->
                     inputStream?.copyTo(outputFile)
-                    ?: emitter.onError(Exception("invalid input stream"))
+                    ?: emitter.onError(FileSystemException(file))
                 }
                 Log.d(TAG, "file written at ${file.absolutePath}")
                 emitter.onSuccess(file.absolutePath)
