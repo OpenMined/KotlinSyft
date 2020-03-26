@@ -14,7 +14,9 @@ class LocalMNISTModuleDataSource constructor(
 
     fun loadModule(): Module {
         val module =
-                MessageProcessor().processTorchScript(resources.openRawResource(R.raw.tp_ts).readBytes())
+                MessageProcessor().processTorchScript(
+                    resources.openRawResource(R.raw.tp_ts).readBytes()
+                )
         val path = saveScript(module.obj)
         Log.d("MainActivity", "TorchScript saved at $path")
         return Module.load(path)

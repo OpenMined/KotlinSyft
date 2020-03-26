@@ -80,15 +80,15 @@ class Syft internal constructor(
     fun requestCycle(job: SyftJob) {
         if (this::workerId.isInitialized)
             socketClient.getCycle(
-                        CycleRequest(
-                            workerId,
-                            job.modelName,
-                            job.version,
-                            getPing(),
-                            getDownloadSpeed(),
-                            getUploadSpeed()
-                        )
-                    ).compose(networkingSchedulers.applySingleSchedulers())
+                CycleRequest(
+                    workerId,
+                    job.modelName,
+                    job.version,
+                    getPing(),
+                    getDownloadSpeed(),
+                    getUploadSpeed()
+                )
+            ).compose(networkingSchedulers.applySingleSchedulers())
                     .subscribe { response: CycleResponseData ->
                         when (response) {
                             is CycleResponseData.CycleAccept -> handleCycleAccept(response)
@@ -115,6 +115,7 @@ class Syft internal constructor(
     }
 
     fun getDownloader(): HttpAPI = httpClient.apiClient
+
     //todo decide this based on configuration
     fun getSignallingClient(): CommunicationAPI = socketClient
     fun getWebRTCSignallingClient(): SocketAPI = socketClient

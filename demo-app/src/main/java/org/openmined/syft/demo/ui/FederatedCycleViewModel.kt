@@ -22,11 +22,11 @@ class FederatedCycleViewModel(
         socketClient, httpClient,
         networkSchedulers, computeSchedulers
     )
-    private val mnistJob = syftWorker.newJob("mnist","1.0.0")
+    private val mnistJob = syftWorker.newJob("mnist", "1.0.0")
 
     fun startCycle() {
-        Log.d(TAG,"mnist job started")
-        val jobStatusSubscriber = object : JobStatusSubscriber(){
+        Log.d(TAG, "mnist job started")
+        val jobStatusSubscriber = object : JobStatusSubscriber() {
             override fun onReady(model: String, clientConfig: ClientConfig) {
                 //todo training code goes here
             }

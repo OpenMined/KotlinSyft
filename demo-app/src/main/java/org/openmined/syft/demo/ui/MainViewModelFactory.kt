@@ -2,9 +2,6 @@ package org.openmined.syft.demo.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import org.openmined.syft.demo.domain.MNISTModuleRepository
-import org.openmined.syft.demo.domain.MNISTDataRepository
-import org.openmined.syft.demo.domain.MNISTTrainer
 import org.openmined.syft.networking.clients.HttpClient
 import org.openmined.syft.networking.clients.SocketClient
 import org.openmined.syft.threading.ProcessSchedulers

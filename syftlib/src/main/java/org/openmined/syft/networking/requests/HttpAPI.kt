@@ -15,11 +15,10 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
-import retrofit2.http.Streaming
 
 interface HttpAPI : CommunicationAPI {
 
-//    @Streaming
+    //    @Streaming
     @GET("/federated/get-plan")
     fun downloadPlan(
         @Query("worker_id") workerId: String,
@@ -28,7 +27,7 @@ interface HttpAPI : CommunicationAPI {
         @Query("receive_operations_as") op_type: String
     ): Single<Response<ResponseBody>>
 
-//    @Streaming
+    //    @Streaming
     @GET("/federated/get-protocol")
     fun downloadProtocol(
         @Query("worker_id") workerId: String,
@@ -36,7 +35,7 @@ interface HttpAPI : CommunicationAPI {
         @Query("protocol_id") protocolId: String
     ): Single<Response<ResponseBody>>
 
-//    @Streaming
+    //    @Streaming
     @GET("/federated/get-model")
     fun downloadModel(
         @Query("worker_id") workerId: String,

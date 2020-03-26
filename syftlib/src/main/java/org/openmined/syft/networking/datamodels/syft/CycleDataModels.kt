@@ -11,7 +11,7 @@ const val CYCLE_REJECT = "rejected"
 
 @Serializable
 sealed class CycleResponseData : NetworkModels() {
-    
+
     abstract val modelName: String
     abstract val version: String?
 
