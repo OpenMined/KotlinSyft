@@ -47,16 +47,15 @@ data class SyftTensor(
             )
         }
 
-        @ExperimentalStdlibApi
-        fun fromTorchTensor(tensorWrapper: PytorchTensorWrapper): SyftTensor {
+        fun fromTorchTensor(tensor: TorchTensor): SyftTensor {
             val shape = SizeOuterClass.Size.newBuilder()
-                    .addAllDims(tensorWrapper.torchTensor.shape().map { it.toInt() })
+                    .addAllDims(tensor.shape().map { it.toInt() })
                     .build()
             val tensorDataBuilder = TensorDataOuterClass.TensorData.newBuilder()
                     .setShape(shape)
-                    .setDtype(tensorWrapper.torchTensor.dtype().name.capitalize(Locale.US))
+                    .setDtype(tensor.dtype().name.toLowerCase(Locale.US))
             val tensorData = tensorDataBuilderFromTorchTensor(
-                tensorWrapper.torchTensor,
+                tensor,
                 tensorDataBuilder
             ).build()
             val id = IdOuterClass.Id.newBuilder().setIdInt(random().toLong()).build()
@@ -106,39 +105,37 @@ data class SyftTensor(
         return syftTensorBuilder.build()
     }
 
-    fun getTorchTensorWrapper() = PytorchTensorWrapper(getTorchTensor())
-
     fun getTorchTensor(): TorchTensor {
         return when (dtype) {
-            "Uint8" -> TorchTensor.fromBlob(
+            "uint8" -> TorchTensor.fromBlob(
                 contents.contentsUint8List.toIntArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Int8" -> TorchTensor.fromBlob(
+            "int8" -> TorchTensor.fromBlob(
                 contents.contentsInt8List.toIntArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Int16" -> TorchTensor.fromBlob(
+            "int16" -> TorchTensor.fromBlob(
                 contents.contentsInt16List.toIntArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Int32" -> TorchTensor.fromBlob(
+            "int32" -> TorchTensor.fromBlob(
                 contents.contentsInt32List.toIntArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Int64" -> TorchTensor.fromBlob(
+            "int64" -> TorchTensor.fromBlob(
                 contents.contentsInt64List.toLongArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Float16" -> TorchTensor.fromBlob(
+            "float16" -> TorchTensor.fromBlob(
                 contents.contentsFloat16List.toFloatArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Float32" -> TorchTensor.fromBlob(
+            "float32" -> TorchTensor.fromBlob(
                 contents.contentsFloat32List.toFloatArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Float64" -> TorchTensor.fromBlob(
+            "float64" -> TorchTensor.fromBlob(
                 DoubleBuffer.wrap(
                     contents.contentsFloat64List.toDoubleArray()
                 ), shape.map { it.toLong() }.toLongArray()
@@ -147,19 +144,19 @@ data class SyftTensor(
 //                contents.data.contentsUint8List.toIntArray(),
 //                shape.map { it.toLong() }.toLongArray()
 //            )
-            "Qint8" -> TorchTensor.fromBlob(
+            "qint8" -> TorchTensor.fromBlob(
                 contents.contentsQint8List.toIntArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Quint8" -> TorchTensor.fromBlob(
+            "quint8" -> TorchTensor.fromBlob(
                 contents.contentsQuint8List.toIntArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Qint32" -> TorchTensor.fromBlob(
+            "qint32" -> TorchTensor.fromBlob(
                 contents.contentsQint32List.toIntArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            "Bfloat16" -> TorchTensor.fromBlob(
+            "bfloat16" -> TorchTensor.fromBlob(
                 contents.contentsBfloat16List.toFloatArray(),
                 shape.map { it.toLong() }.toLongArray()
             )

@@ -2,7 +2,6 @@ package org.openmined.syft.execution
 
 import android.util.Log
 import org.openmined.syft.networking.datamodels.ClientConfig
-import org.openmined.syft.proto.PytorchTensorWrapper
 import org.openmined.syft.proto.SyftModel
 import org.openmined.syftproto.types.torch.v1.ScriptModuleOuterClass
 import org.pytorch.IValue
@@ -45,11 +44,9 @@ class Plan(val planId: String) {
         val outputArray = localModuleState.forward(x, y, batchSize, lr, *params).toTuple()
         val beginIndex = outputArray.size-params.size
         val updatedParams = outputArray.slice(beginIndex..(beginIndex + params.size))
-        val diff = model.updateAndCreateDiff(
-            updatedParams.map {
-                PytorchTensorWrapper(it.toTensor())
-            }
-        )
+        model.updateModel(updatedParams.map { it.toTensor() })
+        //todo set this via another way probably from plan?
+        val diff=null
         return listOf(outputArray.slice(0..beginIndex), diff)
     }
 
