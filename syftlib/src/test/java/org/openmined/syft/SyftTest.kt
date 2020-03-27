@@ -8,10 +8,10 @@ import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.junit.jupiter.api.Test
+import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.networking.clients.HttpClient
 import org.openmined.syft.networking.clients.SocketClient
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
-import org.openmined.syft.processes.SyftJob
 import org.openmined.syft.threading.ProcessSchedulers
 
 internal class SyftTest {
