@@ -13,13 +13,13 @@ private const val TAG = "FederatedCycleViewModel"
 
 @ExperimentalUnsignedTypes
 class FederatedCycleViewModel(
-    socketClient: SocketClient,
-    httpClient: HttpClient,
+    baseurl: String,
+    authToken: String,
     networkSchedulers: ProcessSchedulers,
     computeSchedulers: ProcessSchedulers
 ) : ViewModel() {
     private val syftWorker = Syft.getInstance(
-        socketClient, httpClient,
+        baseurl, authToken,
         networkSchedulers, computeSchedulers
     )
     private val mnistJob = syftWorker.newJob("mnist", "1.0.0")
