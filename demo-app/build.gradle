@@ -50,7 +50,7 @@ dependencies {
     implementation CommonDependencies.kotlinSerialization
     implementation CommonDependencies.rxJava
     implementation CommonDependencies.rxAndroid
-    
+
     // TODO During the first stages of the project, include the library here. Later on we should use the library from the repository
     implementation project(path: ':syftlib')
 //    implementation 'org.openmined.kotlinsyft:syftlib:0.2.0'

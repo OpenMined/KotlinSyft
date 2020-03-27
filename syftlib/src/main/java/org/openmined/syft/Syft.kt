@@ -9,6 +9,7 @@ import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.requests.CommunicationAPI
 import org.openmined.syft.networking.requests.HttpAPI
+import org.openmined.syft.networking.requests.SocketAPI
 import org.openmined.syft.processes.JobStatusSubscriber
 import org.openmined.syft.processes.SyftJob
 import org.openmined.syft.threading.ProcessSchedulers
@@ -17,9 +18,10 @@ import java.util.concurrent.ConcurrentHashMap
 private const val TAG = "Syft"
 
 @ExperimentalUnsignedTypes
-class Syft private constructor(
-    private val socketClient: SocketClient,
-    private val httpClient: HttpClient,
+class Syft internal constructor(
+    private val authToken: String,
+    private var socketClient: SocketClient,
+    private var httpClient: HttpClient,
     //todo this will be removed by syft configuration class
     private val computeSchedulers: ProcessSchedulers,
     //todo change this to read from syft configuration
@@ -31,16 +33,17 @@ class Syft private constructor(
         private var INSTANCE: Syft? = null
 
         fun getInstance(
-            socketClient: SocketClient,
-            httpClient: HttpClient,
+            baseUrl: String,
+            authToken: String,
             networkingSchedulers: ProcessSchedulers,
             //todo this will be removed by syft configuration class
             computeSchedulers: ProcessSchedulers
         ): Syft =
                 INSTANCE ?: synchronized(this) {
                     INSTANCE ?: Syft(
-                        socketClient,
-                        httpClient,
+                        authToken,
+                        SocketClient(baseUrl, 2000u, networkingSchedulers),
+                        HttpClient(baseUrl),
                         networkingSchedulers,
                         computeSchedulers
                     ).also { INSTANCE = it }
@@ -77,15 +80,15 @@ class Syft private constructor(
     fun requestCycle(job: SyftJob) {
         if (this::workerId.isInitialized)
             socketClient.getCycle(
-                        CycleRequest(
-                            workerId,
-                            job.modelName,
-                            job.version,
-                            getPing(),
-                            getDownloadSpeed(),
-                            getUploadSpeed()
-                        )
-                    ).compose(networkingSchedulers.applySingleSchedulers())
+                CycleRequest(
+                    workerId,
+                    job.modelName,
+                    job.version,
+                    getPing(),
+                    getDownloadSpeed(),
+                    getUploadSpeed()
+                )
+            ).compose(networkingSchedulers.applySingleSchedulers())
                     .subscribe { response: CycleResponseData ->
                         when (response) {
                             is CycleResponseData.CycleAccept -> handleCycleAccept(response)
@@ -115,8 +118,15 @@ class Syft private constructor(
 
     //todo decide this based on configuration
     fun getSignallingClient(): CommunicationAPI = socketClient
+    fun getWebRTCSignallingClient(): SocketAPI = socketClient
 
-    fun getWebRTCSignallingClient(): SocketClient = socketClient
+    fun setHttpClient(httpClient: HttpClient) {
+        this.httpClient = httpClient
+    }
+
+    fun setSocketClient(socketClient: SocketClient) {
+        this.socketClient = socketClient
+    }
 
     @Synchronized
     private fun setSyftWorkerId(workerId: String) {

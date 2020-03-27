@@ -41,6 +41,7 @@ class SocketClient(
     private val Json = Json(JsonConfiguration.Stable)
 
     private val syftWebSocket = SyftWebSocket(Protocol.WSS, baseUrl, timeout)
+
     @Volatile
     private var socketClientSubscribed = AtomicBoolean(false)
     private val messageProcessor = PublishProcessor.create<NetworkModels>()
@@ -56,7 +57,10 @@ class SocketClient(
     }
 
     override fun getCycle(cycleRequest: CycleRequest): Single<CycleResponseData> {
-        Log.d(TAG, "sending message: " + serializeNetworkModel(REQUESTS.CYCLE_REQUEST, cycleRequest))
+        Log.d(
+            TAG,
+            "sending message: " + serializeNetworkModel(REQUESTS.CYCLE_REQUEST, cycleRequest)
+        )
         syftWebSocket.send(serializeNetworkModel(REQUESTS.CYCLE_REQUEST, cycleRequest))
         return messageProcessor.onBackpressureBuffer()
                 .ofType(CycleResponseData::class.java)
@@ -114,7 +118,7 @@ class SocketClient(
                             it.throwable
                         )
                         is NetworkMessage.MessageReceived -> {
-                            Log.d(TAG,"received the message "+it.message)
+                            Log.d(TAG, "received the message " + it.message)
                             emitMessage(deserializeSocket(it.message))
                         }
                     }

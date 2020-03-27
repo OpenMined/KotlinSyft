@@ -14,8 +14,6 @@ import org.openmined.syft.demo.datasource.LocalMNISTModuleDataSource
 import org.openmined.syft.demo.domain.MNISTDataRepository
 import org.openmined.syft.demo.domain.MNISTModuleRepository
 import org.openmined.syft.demo.domain.MNISTTrainer
-import org.openmined.syft.networking.clients.HttpClient
-import org.openmined.syft.networking.clients.SocketClient
 import org.openmined.syft.threading.ProcessSchedulers
 
 @ExperimentalUnsignedTypes
@@ -23,7 +21,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
         val binding: ActivityMainBinding =
                 DataBindingUtil.setContentView(this, R.layout.activity_main)
         setSupportActionBar(toolbar)
@@ -44,12 +41,6 @@ class MainActivity : AppCompatActivity() {
             override val calleeThreadScheduler: Scheduler
                 get() = Schedulers.single()
         }
-        val socketClient = SocketClient(
-            baseUrl,
-            2000u,
-            computeSchedulers
-        )
-        val httpClient = HttpClient(baseUrl)
 
         val localModuleDataSource = LocalMNISTModuleDataSource(resources, filesDir)
         val moduleRepository = MNISTModuleRepository(localModuleDataSource)
@@ -57,8 +48,8 @@ class MainActivity : AppCompatActivity() {
         val dataRepository = MNISTDataRepository(localMNISTDataDataSource)
         val trainer = MNISTTrainer()
         return MainViewModelFactory(
-            socketClient,
-            httpClient,
+            baseUrl,
+            "auth",
             networkingSchedulers,
             computeSchedulers
         ).create(FederatedCycleViewModel::class.java)

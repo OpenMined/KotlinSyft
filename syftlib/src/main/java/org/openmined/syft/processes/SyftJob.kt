@@ -94,7 +94,7 @@ class SyftJob(
 
     @Synchronized
     fun setJobArguments(responseData: CycleResponseData.CycleAccept) {
-        Log.d(TAG,"setting Request Key")
+        Log.d(TAG, "setting Request Key")
         requestKey = responseData.requestKey
         modelID = responseData.modelId
         responseData.plans.forEach { (_, planId) -> plans[planId] = Plan(planId) }
@@ -116,7 +116,7 @@ class SyftJob(
             Log.d(TAG, "download already running")
             return
         }
-        Log.d(TAG,"beginning download")
+        Log.d(TAG, "beginning download")
         trainingParamsStatus.set(DownloadStatus.RUNNING)
         val downloadList = mutableListOf<Single<String>>()
 
@@ -133,18 +133,23 @@ class SyftJob(
         downloadList.add(modelDownloader(modelID))
 
         compositeDisposable.add(Single.zip(downloadList) { successMessages ->
-                    successMessages.joinToString(
-                        ",",
-                        prefix = "files ",
-                        postfix = " downloaded successfully"
-                    )
-                }
+            successMessages.joinToString(
+                ",",
+                prefix = "files ",
+                postfix = " downloaded successfully"
+            )
+        }
                 .compose(networkingSchedulers.applySingleSchedulers())
                 .subscribe(
                     { successMsg: String ->
                         Log.d(TAG, successMsg)
                         trainingParamsStatus.set(DownloadStatus.COMPLETE)
-                        jobStatusProcessor.offer(JobStatusMessage.JobReady(modelName, clientConfig))
+                        jobStatusProcessor.offer(
+                            JobStatusMessage.JobReady(
+                                modelName,
+                                clientConfig
+                            )
+                        )
                     },
                     { e -> jobStatusProcessor.onError(e) }
                 )
@@ -162,21 +167,21 @@ class SyftJob(
 
     private fun planDownloader(destinationDir: String, planId: String) =
             worker.getDownloader().downloadPlan(
-                        worker.workerId,
-                        requestKey,
-                        planId,
-                        "torchscript"
-                    ).compose(computeSchedulers.applySingleSchedulers())
+                worker.workerId,
+                requestKey,
+                planId,
+                "torchscript"
+            ).compose(computeSchedulers.applySingleSchedulers())
                     .flatMap { response ->
                         saveFile(response.body(), destinationDir, planId)
                     }
 
     private fun protocolDownloader(destinationDir: String, protocolId: String) =
             worker.getDownloader().downloadProtocol(
-                        worker.workerId,
-                        requestKey,
-                        protocolId
-                    ).compose(computeSchedulers.applySingleSchedulers())
+                worker.workerId,
+                requestKey,
+                protocolId
+            ).compose(computeSchedulers.applySingleSchedulers())
                     .flatMap { response ->
                         saveFile(response.body(), destinationDir, protocolId)
                     }
