@@ -17,7 +17,7 @@ data class Placeholder(
         )
     }
 
-    fun serialize() = PlaceholderOuterClass.Placeholder
+    fun serialize(): PlaceholderOuterClass.Placeholder = PlaceholderOuterClass.Placeholder
             .newBuilder()
             .setId(id)
             .setDescription(description)

@@ -8,7 +8,7 @@ import org.pytorch.DType
 import java.io.InvalidClassException
 import java.lang.Math.random
 import java.nio.DoubleBuffer
-import java.util.*
+import java.util.Locale
 import org.openmined.syftproto.types.torch.v1.Tensor.TorchTensor as SyftProtoTensor
 import org.pytorch.Tensor as TorchTensor
 
