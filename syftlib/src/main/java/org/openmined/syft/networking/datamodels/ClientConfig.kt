@@ -11,7 +11,7 @@ data class ClientConfig(
     @SerialName("version")
     val modelVersion: String,
     @SerialName("batch_size")
-    val batchSize: Int,
+    val batchSize: Long,
     val lr: Float,
     @SerialName("max_updates")
     val maxUpdates: Int

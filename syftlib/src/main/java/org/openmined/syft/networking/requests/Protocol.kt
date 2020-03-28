@@ -7,7 +7,7 @@ sealed class Protocol {
         }
     }
 
-    object HTTP : Protocol() {
+    object HTTP:Protocol(){
         override fun toString(): String {
             return "http"
         }
