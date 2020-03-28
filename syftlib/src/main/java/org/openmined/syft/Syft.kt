@@ -23,9 +23,9 @@ class Syft internal constructor(
     private var socketClient: SocketClient,
     private var httpClient: HttpClient,
     //todo this will be removed by syft configuration class
-    private val computeSchedulers: ProcessSchedulers,
+    private val networkingSchedulers: ProcessSchedulers,
     //todo change this to read from syft configuration
-    private val networkingSchedulers: ProcessSchedulers
+    private val computeSchedulers: ProcessSchedulers
 
 ) {
     companion object {
