@@ -5,6 +5,9 @@ import org.junit.jupiter.api.Test
 @ExperimentalUnsignedTypes
 internal class SyftModelTest {
 
+    /**
+     * This test also verifies the correct serialization to State and Placeholders
+     */
     @Test
     fun `given a model param file test it correctly serialises to SyftModel`() {
         val syftModel = SyftModel("model name", "1.0.0-version")
