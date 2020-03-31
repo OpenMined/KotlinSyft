@@ -42,14 +42,16 @@ class Plan(val planId: String) {
             Tensor.fromBlob(floatArrayOf(clientConfig.lr), longArrayOf(1))
         )
         val outputArray = localModuleState.forward(x, y, batchSize, lr, *params).toTuple()
-        val beginIndex = outputArray.size-params.size
+        val beginIndex = outputArray.size - params.size
         val updatedParams = outputArray.slice(beginIndex..(beginIndex + params.size))
         model.updateModel(updatedParams.map { it.toTensor() })
         //todo set this via another way probably from plan?
-        val diff=null
+        val diff = null
         return listOf(outputArray.slice(0..beginIndex), diff)
     }
 
+    // TODO The way a plan is generated should be provided.
+    // TODO We should enforce this to  happen in a background thread.
     fun generateScriptModule(filesDir: String, torchScriptPlan: String) {
         val scriptModule = ScriptModuleOuterClass.ScriptModule.parseFrom(
             File(torchScriptPlan).readBytes()

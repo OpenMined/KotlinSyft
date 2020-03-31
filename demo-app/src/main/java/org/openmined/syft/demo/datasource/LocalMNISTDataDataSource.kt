@@ -8,7 +8,7 @@ import java.io.InputStreamReader
 class LocalMNISTDataDataSource constructor(
     private val resources: Resources
 ) {
-    fun loadData(): Pair<ArrayList<FloatArray>, ArrayList<Float>> {
+    fun loadData(): Pair<List<FloatArray>, List<Float>> {
         val trainInput = arrayListOf(FloatArray(784))
         val labels = arrayListOf<Float>()
 

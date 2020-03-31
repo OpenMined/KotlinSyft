@@ -133,7 +133,7 @@ class SyftJob(
                     { successMsg: String ->
                         Log.d(TAG, successMsg)
                         trainingParamsStatus.set(DownloadStatus.COMPLETE)
-                        jobStatusProcessor.offer(JobStatusMessage.JobReady(model, clientConfig))
+                        jobStatusProcessor.offer(JobStatusMessage.JobReady(model, plans, clientConfig))
                     },
                     { e -> jobStatusProcessor.onError(e) }
                 )
