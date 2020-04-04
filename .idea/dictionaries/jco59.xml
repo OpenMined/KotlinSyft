@@ -3,6 +3,7 @@
     <words>
       <w>mnist</w>
       <w>syft</w>
+      <w>torchscript</w>
     </words>
   </dictionary>
 </component>

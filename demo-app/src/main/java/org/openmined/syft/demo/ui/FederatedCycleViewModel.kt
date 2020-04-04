@@ -11,10 +11,11 @@ import org.openmined.syft.execution.Plan
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
 import org.openmined.syft.threading.ProcessSchedulers
+import org.pytorch.IValue
 import java.util.concurrent.ConcurrentHashMap
 
 private const val TAG = "FederatedCycleViewModel"
-
+private const val EPOCHS = 100
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class FederatedCycleViewModel(
@@ -29,7 +30,7 @@ class FederatedCycleViewModel(
         baseUrl, authToken,
         networkSchedulers, computeSchedulers
     )
-    private val mnistJob = syftWorker.newJob("mnist", "1.0.0")
+    private val mnistJob = syftWorker.newJob("mnist", "1.0.2")
 
     val logger
             get() = _logger
@@ -69,11 +70,14 @@ class FederatedCycleViewModel(
         plans: ConcurrentHashMap<String, Plan>,
         clientConfig: ClientConfig
     ) {
-        val destinationDir = "/data/data/org.openmined.syft.demo/files/plans"
+        val destinationDir = localConfiguration.plansLocation
 
         val plan = plans.toList().first().second
-        plan.generateScriptModule(localConfiguration.plansLocation, "$destinationDir/${plan.planId}")
         val loadData = mnistDataRepository.loadData()
-        plan.execute(model, loadData, clientConfig)
+        repeat(EPOCHS) {
+            val output = plan.execute(model, loadData, clientConfig)
+            val result = (output[0] as IValue).toTensor().dataAsFloatArray.last().toString()
+            postLog(result)
+        }
     }
 }
