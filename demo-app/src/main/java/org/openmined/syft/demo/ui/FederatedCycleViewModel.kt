@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 private const val TAG = "FederatedCycleViewModel"
 private const val EPOCHS = 100
+
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class FederatedCycleViewModel(
@@ -33,7 +34,7 @@ class FederatedCycleViewModel(
     private val mnistJob = syftWorker.newJob("mnist", "1.0.3")
 
     val logger
-            get() = _logger
+        get() = _logger
     private val _logger = MutableLiveData<String>()
 
 
@@ -74,8 +75,8 @@ class FederatedCycleViewModel(
 
         val plan = plans.toList().first().second
         val loadData = mnistDataRepository.loadData()
+        val zipData = loadData.first zip loadData.second
         repeat(EPOCHS) {
-            val zipData = loadData.first zip loadData.second
             zipData.forEach {
                 val output = plan.execute(model, it, clientConfig)
                 val result = (output[0] as IValue).toTensor().dataAsFloatArray.last().toString()
