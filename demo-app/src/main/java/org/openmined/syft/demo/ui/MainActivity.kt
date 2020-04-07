@@ -1,11 +1,15 @@
 package org.openmined.syft.demo.ui
 
+import android.opengl.Visibility
 import android.os.Bundle
+import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Observer
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kotlinx.android.synthetic.main.activity_main.progressBar
 import kotlinx.android.synthetic.main.activity_main.toolbar
 import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityMainBinding
@@ -27,26 +31,36 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         binding.lifecycleOwner = this
         binding.viewModel = initiateViewModel("10.0.2.2:5000")
+
+        (binding.viewModel as FederatedCycleViewModel).processState.observe(this, Observer { onProcessStateChanged(it) })
+    }
+
+    private fun onProcessStateChanged(processState: ProcessState?) {
+        when (processState) {
+            ProcessState.Hidden -> progressBar.visibility = ProgressBar.GONE
+            ProcessState.Loading -> progressBar.visibility = ProgressBar.VISIBLE
+        }
     }
 
     private fun initiateViewModel(baseUrl: String): FederatedCycleViewModel {
         val networkingSchedulers = object : ProcessSchedulers {
             override val computeThreadScheduler: Scheduler
-                get() = Schedulers.io()
+                get() = Schedulers.single()
             override val calleeThreadScheduler: Scheduler
                 get() = AndroidSchedulers.mainThread()
         }
         val computeSchedulers = object : ProcessSchedulers {
             override val computeThreadScheduler: Scheduler
-                get() = Schedulers.computation()
-            override val calleeThreadScheduler: Scheduler
                 get() = Schedulers.single()
+            override val calleeThreadScheduler: Scheduler
+                get() = AndroidSchedulers.mainThread()
         }
 
         val localConfiguration = LocalConfiguration(
             filesDir.absolutePath,
             filesDir.absolutePath,
-            filesDir.absolutePath)
+            filesDir.absolutePath
+        )
         val localMNISTDataDataSource = LocalMNISTDataDataSource(resources)
         val dataRepository = MNISTDataRepository(localMNISTDataDataSource)
         return MainViewModelFactory(

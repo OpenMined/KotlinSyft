@@ -37,9 +37,13 @@ class FederatedCycleViewModel(
         get() = _logger
     private val _logger = MutableLiveData<String>()
 
+    val processState
+        get() = _processState
+    private val _processState = MutableLiveData<ProcessState>()
 
     fun startCycle() {
-        Log.d(TAG, "mnist job started")
+        postLog("MNIST job started")
+        _processState.postValue(ProcessState.Loading)
         val jobStatusSubscriber = object : JobStatusSubscriber() {
 
             override fun onReady(
@@ -71,17 +75,31 @@ class FederatedCycleViewModel(
         plans: ConcurrentHashMap<String, Plan>,
         clientConfig: ClientConfig
     ) {
-        val destinationDir = localConfiguration.plansLocation
 
-        val plan = plans.toList().first().second
-        val loadData = mnistDataRepository.loadData()
-        val zipData = loadData.first zip loadData.second
-        repeat(EPOCHS) {
-            zipData.forEach {
-                val output = plan.execute(model, it, clientConfig)
-                val result = (output[0] as IValue).toTensor().dataAsFloatArray.last().toString()
-                postLog(result)
+        plans.values.first().let { plan ->
+
+            val loadData = mnistDataRepository.loadData()
+            val zipData = loadData.first zip loadData.second
+            repeat(EPOCHS) {
+                zipData.forEach { trainingBatch ->
+                    val output = plan.execute(
+                        model,
+                        trainingBatch,
+                        clientConfig.copy(batchSize = 1)
+                    )?.toTuple()
+                    output?.let { outputResult ->
+                        val paramSize = model.modelState!!.syftTensors.size
+                        val beginIndex = output.size - paramSize
+                        val updatedParams =
+                                outputResult.slice(beginIndex until beginIndex + paramSize - 1)
+                        model.updateModel(updatedParams.map { it.toTensor() })
+                        val result =
+                                (output[0] as IValue).toTensor().dataAsFloatArray.last().toString()
+                        Log.d(TAG, result)
+                    } ?: postLog("the model returned empty array")
+                }
             }
         }
+        _processState.postValue(ProcessState.Hidden)
     }
 }

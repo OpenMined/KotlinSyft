@@ -2,6 +2,7 @@
   <dictionary name="jco59">
     <words>
       <w>mnist</w>
+      <w>openmined</w>
       <w>syft</w>
       <w>torchscript</w>
     </words>

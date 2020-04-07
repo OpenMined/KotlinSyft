@@ -21,16 +21,16 @@ class Plan(val planId: String) {
         model: SyftModel,
         trainingBatch: Pair<IValue, IValue>,
         clientConfig: ClientConfig
-    ): List<Any?> {
+    ): IValue? {
         val localModuleState = pytorchModule
         if (localModuleState == null) {
             Log.e(TAG, "pytorch module not initialized yet")
-            return listOf()
+            return null
         }
         val params = model.modelState?.getIValueTensorArray()
         if (params == null) {
             Log.e(TAG, "model state not initialised yet")
-            return listOf()
+            return null
         }
         val x = trainingBatch.first
         val y = trainingBatch.second
@@ -41,13 +41,7 @@ class Plan(val planId: String) {
         val lr = IValue.from(
             Tensor.fromBlob(floatArrayOf(clientConfig.lr), longArrayOf(1))
         )
-        val outputArray = localModuleState.forward(x, y, batchSize, lr, *params).toTuple()
-        val beginIndex = outputArray.size - params.size
-        val updatedParams = outputArray.slice(beginIndex..(beginIndex + params.size))
-        model.updateModel(updatedParams.map { it.toTensor() })
-        //todo set this via another way probably from plan?
-        val diff = null
-        return listOf(outputArray.slice(0..beginIndex), diff)
+        return localModuleState.forward(x, y, batchSize, lr, *params)
     }
 
     // TODO The way a plan is generated should be provided.
