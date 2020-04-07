@@ -30,7 +30,7 @@ class FederatedCycleViewModel(
         baseUrl, authToken,
         networkSchedulers, computeSchedulers
     )
-    private val mnistJob = syftWorker.newJob("mnist", "1.0.2")
+    private val mnistJob = syftWorker.newJob("mnist", "1.0.3")
 
     val logger
             get() = _logger
@@ -75,9 +75,12 @@ class FederatedCycleViewModel(
         val plan = plans.toList().first().second
         val loadData = mnistDataRepository.loadData()
         repeat(EPOCHS) {
-            val output = plan.execute(model, loadData, clientConfig)
-            val result = (output[0] as IValue).toTensor().dataAsFloatArray.last().toString()
-            postLog(result)
+            val zipData = loadData.first zip loadData.second
+            zipData.forEach {
+                val output = plan.execute(model, it, clientConfig)
+                val result = (output[0] as IValue).toTensor().dataAsFloatArray.last().toString()
+                postLog(result)
+            }
         }
     }
 }

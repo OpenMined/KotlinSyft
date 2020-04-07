@@ -8,15 +8,15 @@ import kotlin.math.sign
 class MNISTDataRepository constructor(
     private val localMNISTDataDataSource: LocalMNISTDataDataSource
 ) {
-    fun loadData(): Pair<IValue, IValue> {
+    fun loadData(): Pair<List<IValue>, List<IValue>> {
         val data = localMNISTDataDataSource.loadData()
         val tensorsX = data.first.map {
             Tensor.fromBlob(it, longArrayOf(it.size.toLong()))
         }.toTypedArray()
         val tensorsY = Tensor.fromBlob(data.second.toFloatArray(), longArrayOf(data.second.size.toLong()))
 
-        val x = IValue.listFrom(*tensorsX)
-        val y = IValue.listFrom(tensorsY)
+        val x = tensorsX.map { IValue.from(it) }
+        val y = listOf(IValue.from(tensorsY))
         return Pair(x, y)
     }
 }
