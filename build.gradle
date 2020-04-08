@@ -25,6 +25,7 @@ allprojects {
         maven {
             url "https://dl.bintray.com/openmined/KotlinSyft"
         }
+        maven { url 'https://jitpack.io' }
     }
 }
 

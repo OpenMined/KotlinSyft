@@ -39,6 +39,16 @@ For understanding the overall objective of the library please refer to [openmine
 5. Push to your fork
 6. Submit a PR to openmined/KotlinSyft
 
+### Demo App
+
+To run the demo app, create a file `local_config.properties` under the folder `demo-app` and add the following line:
+
+```
+syft.base_url="10.0.2.2:5000"
+```
+
+Change the URL accordingly to connect to your PyGrid instance. The above example URL is used by the emulator.
+
 ### Contributing
 
 Read [CONTRIBUTING.md](https://github.com/OpenMined/KotlinSyft/blob/master/CONTRIBUTING.md)

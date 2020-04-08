@@ -43,7 +43,7 @@ class FederatedCycleViewModel(
 
     fun startCycle() {
         postLog("MNIST job started")
-        _processState.postValue(ProcessState.Loading)
+        postState(ProcessState.Loading)
         val jobStatusSubscriber = object : JobStatusSubscriber() {
 
             override fun onReady(
@@ -64,10 +64,6 @@ class FederatedCycleViewModel(
             }
         }
         mnistJob.start(jobStatusSubscriber)
-    }
-
-    private fun postLog(message: String) {
-        _logger.postValue("${_logger.value ?: ""}\n$message")
     }
 
     private fun trainingProcess(
@@ -93,13 +89,24 @@ class FederatedCycleViewModel(
                         val updatedParams =
                                 outputResult.slice(beginIndex until beginIndex + paramSize - 1)
                         model.updateModel(updatedParams.map { it.toTensor() })
-                        val result =
-                                (output[0] as IValue).toTensor().dataAsFloatArray.last().toString()
-                        Log.d(TAG, result)
+                        val result = outputResult[0].toTensor().dataAsFloatArray.last().toString()
+                        postData(result)
                     } ?: postLog("the model returned empty array")
                 }
             }
         }
-        _processState.postValue(ProcessState.Hidden)
+        postState(ProcessState.Hidden)
+    }
+
+    private fun postState(state: ProcessState) {
+        _processState.postValue(state)
+    }
+
+    private fun postData(result: String) {
+        _processState.postValue(ProcessState.ProcessData(result))
+    }
+
+    private fun postLog(message: String) {
+        _logger.postValue("${_logger.value ?: ""}\n$message")
     }
 }
