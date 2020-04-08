@@ -1,6 +1,5 @@
 package org.openmined.syft.demo.ui
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import org.openmined.syft.Syft
@@ -11,11 +10,10 @@ import org.openmined.syft.execution.Plan
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
 import org.openmined.syft.threading.ProcessSchedulers
-import org.pytorch.IValue
 import java.util.concurrent.ConcurrentHashMap
 
 private const val TAG = "FederatedCycleViewModel"
-private const val EPOCHS = 100
+private const val EPOCHS = 1
 
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
@@ -40,6 +38,10 @@ class FederatedCycleViewModel(
     val processState
         get() = _processState
     private val _processState = MutableLiveData<ProcessState>()
+
+    val processData
+        get() = _processData
+    private val _processData = MutableLiveData<ProcessData>()
 
     fun startCycle() {
         postLog("MNIST job started")
@@ -73,10 +75,11 @@ class FederatedCycleViewModel(
     ) {
 
         plans.values.first().let { plan ->
-
+            val result = mutableListOf<String>()
             val loadData = mnistDataRepository.loadData()
             val zipData = loadData.first zip loadData.second
             repeat(EPOCHS) {
+                postLog("Starting epoch ${it + 1}")
                 zipData.forEach { trainingBatch ->
                     val output = plan.execute(
                         model,
@@ -89,11 +92,12 @@ class FederatedCycleViewModel(
                         val updatedParams =
                                 outputResult.slice(beginIndex until beginIndex + paramSize - 1)
                         model.updateModel(updatedParams.map { it.toTensor() })
-                        val result = outputResult[0].toTensor().dataAsFloatArray.last().toString()
-                        postData(result)
+                        result.add(outputResult[0].toTensor().dataAsFloatArray.last().toString())
                     } ?: postLog("the model returned empty array")
                 }
             }
+            postLog("Training done!")
+            postData(result)
         }
         postState(ProcessState.Hidden)
     }
@@ -102,8 +106,8 @@ class FederatedCycleViewModel(
         _processState.postValue(state)
     }
 
-    private fun postData(result: String) {
-        _processState.postValue(ProcessState.ProcessData(result))
+    private fun postData(result: List<String>) {
+        _processData.postValue(ProcessData(result))
     }
 
     private fun postLog(message: String) {

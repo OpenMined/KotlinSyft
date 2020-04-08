@@ -5,10 +5,13 @@ import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.activity_main.log_area
+import kotlinx.android.synthetic.main.activity_main.chart
 import kotlinx.android.synthetic.main.activity_main.progressBar
 import kotlinx.android.synthetic.main.activity_main.toolbar
 import org.openmined.syft.demo.BuildConfig
@@ -37,19 +40,34 @@ class MainActivity : AppCompatActivity() {
             this,
             Observer { onProcessStateChanged(it) }
         )
+
+        (binding.viewModel as FederatedCycleViewModel).processData.observe(
+            this,
+            Observer { onProcessData(it) }
+        )
+    }
+
+    private fun onProcessData(it: ProcessData?) {
+        processData(it ?: ProcessData(emptyList()))
     }
 
     private fun onProcessStateChanged(processState: ProcessState?) {
         when (processState) {
             ProcessState.Hidden -> progressBar.visibility = ProgressBar.GONE
             ProcessState.Loading -> progressBar.visibility = ProgressBar.VISIBLE
-            is ProcessState.ProcessData -> processData(processState)
         }
     }
 
-    private fun processData(processState: ProcessState.ProcessData) {
-        // TODO Show diagram
-        log_area.append("${processState.message}/n")
+    private fun processData(processState: ProcessData) {
+        // TODO do with fold
+        val entries = mutableListOf<Entry>()
+        processState.data.forEachIndexed { index, value ->
+            entries.add(Entry(index.toFloat(), value.toFloat()))
+        }
+        val dataSet = LineDataSet(entries, "loss")
+        val lineData = LineData(dataSet)
+        chart.data = lineData
+        chart.invalidate()
     }
 
     private fun initiateViewModel(baseUrl: String): FederatedCycleViewModel {
