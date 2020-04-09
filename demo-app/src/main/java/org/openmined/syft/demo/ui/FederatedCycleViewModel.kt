@@ -75,7 +75,7 @@ class FederatedCycleViewModel(
     ) {
 
         plans.values.first().let { plan ->
-            val result = mutableListOf<String>()
+            val result = mutableListOf<Float>()
             val loadData = mnistDataRepository.loadData()
             val zipData = loadData.first zip loadData.second
             repeat(EPOCHS) {
@@ -92,7 +92,7 @@ class FederatedCycleViewModel(
                         val updatedParams =
                                 outputResult.slice(beginIndex until beginIndex + paramSize - 1)
                         model.updateModel(updatedParams.map { it.toTensor() })
-                        result.add(outputResult[0].toTensor().dataAsFloatArray.last().toString())
+                        result.add(outputResult[0].toTensor().dataAsFloatArray.last())
                     } ?: postLog("the model returned empty array")
                 }
             }
@@ -106,7 +106,7 @@ class FederatedCycleViewModel(
         _processState.postValue(state)
     }
 
-    private fun postData(result: List<String>) {
+    private fun postData(result: List<Float>) {
         _processData.postValue(ProcessData(result))
     }
 

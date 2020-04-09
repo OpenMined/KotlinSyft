@@ -5,4 +5,4 @@ sealed class ProcessState {
     object Loading : ProcessState()
 }
 
-data class ProcessData(internal val data: List<String>)
+data class ProcessData(internal val data: List<Float>)

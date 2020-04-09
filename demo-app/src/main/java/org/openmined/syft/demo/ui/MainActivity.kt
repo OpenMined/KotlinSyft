@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity() {
         // TODO do with fold
         val entries = mutableListOf<Entry>()
         processState.data.forEachIndexed { index, value ->
-            entries.add(Entry(index.toFloat(), value.toFloat()))
+            entries.add(Entry(index.toFloat(), value))
         }
         val dataSet = LineDataSet(entries, "loss")
         val lineData = LineData(dataSet)
