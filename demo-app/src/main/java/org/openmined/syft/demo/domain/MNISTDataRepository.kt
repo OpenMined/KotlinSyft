@@ -7,13 +7,13 @@ import org.pytorch.Tensor
 class MNISTDataRepository constructor(
     private val localMNISTDataDataSource: LocalMNISTDataDataSource
 ) {
-    fun loadData(): Pair<List<IValue>, List<IValue>> {
-        val data = localMNISTDataDataSource.loadData()
+    fun loadData(batchSize: Int): Pair<List<IValue>, List<IValue>> {
+        val data = localMNISTDataDataSource.loadData(batchSize)
         val tensorsX = data.first.map {
-            IValue.from(Tensor.fromBlob(it, longArrayOf(1L, 784L)))
+            IValue.from(Tensor.fromBlob(it.flattenedArray, it.shape))
         }
         val tensorsY = data.second.map {
-            IValue.from(Tensor.fromBlob(floatArrayOf(it), longArrayOf(1, 1)))
+            IValue.from(Tensor.fromBlob(it.flattenedArray, it.shape))
         }
 
         return Pair(tensorsX, tensorsY)

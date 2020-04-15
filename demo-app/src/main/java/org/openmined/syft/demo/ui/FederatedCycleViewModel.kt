@@ -13,7 +13,7 @@ import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.ConcurrentHashMap
 
 private const val TAG = "FederatedCycleViewModel"
-private const val EPOCHS = 35
+private const val EPOCHS = 8000
 
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
@@ -34,6 +34,10 @@ class FederatedCycleViewModel(
     val logger
         get() = _logger
     private val _logger = MutableLiveData<String>()
+
+    val epoch
+        get() = _epoch
+    private val _epoch = MutableLiveData<String>()
 
     val processState
         get() = _processState
@@ -76,29 +80,31 @@ class FederatedCycleViewModel(
 
         plans.values.first().let { plan ->
             val result = mutableListOf<Float>()
-            val loadData = mnistDataRepository.loadData()
+            val loadData = mnistDataRepository.loadData(clientConfig.batchSize.toInt())
             val zipData = loadData.first zip loadData.second
             repeat(EPOCHS) {epoch->
                 postLog("Starting epoch ${epoch + 1}")
-                val temp_re = mutableListOf<Float>()
+                val tempRe = mutableListOf<Float>()
                 zipData.forEach { trainingBatch ->
                     val output = plan.execute(
                         model,
                         trainingBatch,
-                        clientConfig.copy(batchSize = 1)
+                        clientConfig
                     )?.toTuple()
                     output?.let { outputResult ->
                         val paramSize = model.modelState!!.syftTensors.size
-                        val beginIndex = 2
+                        val beginIndex = outputResult.size - paramSize
                         val updatedParams =
-                                outputResult.slice(beginIndex until 5)
+                                outputResult.slice(beginIndex until outputResult.size - 1)
                         model.updateModel(updatedParams.map { it.toTensor() })
-                        temp_re.add(outputResult[1].toTensor().dataAsFloatArray.last())
+                        tempRe.add(outputResult[1].toTensor().dataAsFloatArray.last())
                     } ?: postLog("the model returned empty array")
                 }
-                result.add(temp_re.sum())
                 postState(ProcessState.Hidden)
-                postData(result)
+                if (epoch % 10 == 0) {
+                    result.add(tempRe.sum())
+                    postData(result)
+                }
             }
             postLog("Training done!")
 
@@ -112,6 +118,10 @@ class FederatedCycleViewModel(
 
     private fun postData(result: List<Float>) {
         _processData.postValue(ProcessData(result))
+    }
+
+    private fun postEpoch(epoch: Int) {
+        _epoch.postValue("EPOCH : $epoch")
     }
 
     private fun postLog(message: String) {

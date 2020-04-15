@@ -6,3 +6,5 @@ sealed class ProcessState {
 }
 
 data class ProcessData(internal val data: List<Float>)
+
+data class Epoch(internal val epoch:Int)
