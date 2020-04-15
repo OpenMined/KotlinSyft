@@ -28,9 +28,9 @@ data class SyftModel(
 //        } ?: return null
 //    }
 
-    fun updateModel(newModelparam: List<Tensor>) {
+    fun updateModel(newModelParams: List<Tensor>) {
         modelState?.let { state ->
-            newModelparam.forEachIndexed { index, pytorchTensor ->
+            newModelParams.forEachIndexed { index, pytorchTensor ->
                 state.syftTensors[index] = SyftTensor.fromTorchTensor(pytorchTensor)
             }
         }

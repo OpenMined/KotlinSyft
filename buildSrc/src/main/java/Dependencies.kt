@@ -29,6 +29,7 @@ object Versions {
     const val retrofit = "2.7.1"
     const val kotlinConverter = "0.4.0"
     const val pytorchAndroid = "1.4.0"
+    const val mpAndroidChart = "v3.1.0"
 
     // release management
     const val netflixPublishing = "14.0.0"
@@ -73,6 +74,7 @@ object CommonDependencies {
 object DemoAppDependencies {
     const val kotlinJDK = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
     const val materialAndroid = "com.google.android.material:material:${Versions.material}"
+    const val mpAndroidChart = "com.github.PhilJay:MPAndroidChart:${Versions.mpAndroidChart}"
 }
 
 object SyftlibDependencies {

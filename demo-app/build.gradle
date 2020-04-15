@@ -13,6 +13,10 @@ android {
         versionCode Versions.appVersionCode
         versionName Versions.appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        Properties properties = new Properties()
+        properties.load(project.rootProject.file('demo-app/local_config.properties').newDataInputStream())
+        buildConfigField 'String', 'SYFT_BASE_URL', properties.getProperty('syft.base_url')
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -50,6 +54,7 @@ dependencies {
     implementation CommonDependencies.kotlinSerialization
     implementation CommonDependencies.rxJava
     implementation CommonDependencies.rxAndroid
+    implementation DemoAppDependencies.mpAndroidChart
 
     // TODO During the first stages of the project, include the library here. Later on we should use the library from the repository
     implementation project(path: ':syftlib')

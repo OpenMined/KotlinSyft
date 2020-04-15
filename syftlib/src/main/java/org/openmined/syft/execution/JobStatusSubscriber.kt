@@ -2,10 +2,14 @@ package org.openmined.syft.execution
 
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
+import java.util.concurrent.ConcurrentHashMap
 
 @ExperimentalUnsignedTypes
 open class JobStatusSubscriber {
-    open fun onReady(model: SyftModel, clientConfig: ClientConfig) {}
+    open fun onReady(
+        model: SyftModel,
+        plans: ConcurrentHashMap<String, Plan>,
+        clientConfig: ClientConfig) {}
     open fun onComplete() {}
     open fun onRejected(timeout: String) {}
     open fun onError(throwable: Throwable) {}
@@ -16,6 +20,7 @@ open class JobStatusSubscriber {
                 if (jobStatusMessage.clientConfig != null)
                     onReady(
                         jobStatusMessage.model,
+                        jobStatusMessage.plans,
                         jobStatusMessage.clientConfig
                     )
                 else
