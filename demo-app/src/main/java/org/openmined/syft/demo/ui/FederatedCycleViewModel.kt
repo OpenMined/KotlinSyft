@@ -13,7 +13,7 @@ import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.ConcurrentHashMap
 
 private const val TAG = "FederatedCycleViewModel"
-private const val EPOCHS = 1
+private const val EPOCHS = 35
 
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
@@ -29,7 +29,7 @@ class FederatedCycleViewModel(
         baseUrl, authToken,
         networkSchedulers, computeSchedulers
     )
-    private val mnistJob = syftWorker.newJob("mnist", "1.0.3")
+    private val mnistJob = syftWorker.newJob("mnist", "1.0.2")
 
     val logger
         get() = _logger
@@ -78,8 +78,9 @@ class FederatedCycleViewModel(
             val result = mutableListOf<Float>()
             val loadData = mnistDataRepository.loadData()
             val zipData = loadData.first zip loadData.second
-            repeat(EPOCHS) {
-                postLog("Starting epoch ${it + 1}")
+            repeat(EPOCHS) {epoch->
+                postLog("Starting epoch ${epoch + 1}")
+                val temp_re = mutableListOf<Float>()
                 zipData.forEach { trainingBatch ->
                     val output = plan.execute(
                         model,
@@ -88,18 +89,21 @@ class FederatedCycleViewModel(
                     )?.toTuple()
                     output?.let { outputResult ->
                         val paramSize = model.modelState!!.syftTensors.size
-                        val beginIndex = output.size - paramSize
+                        val beginIndex = 2
                         val updatedParams =
-                                outputResult.slice(beginIndex until beginIndex + paramSize - 1)
+                                outputResult.slice(beginIndex until 5)
                         model.updateModel(updatedParams.map { it.toTensor() })
-                        result.add(outputResult[0].toTensor().dataAsFloatArray.last())
+                        temp_re.add(outputResult[0].toTensor().dataAsFloatArray.last())
                     } ?: postLog("the model returned empty array")
                 }
+                result.add(temp_re.sum())
+                postState(ProcessState.Hidden)
+                postData(result)
             }
             postLog("Training done!")
-            postData(result)
+
         }
-        postState(ProcessState.Hidden)
+
     }
 
     private fun postState(state: ProcessState) {
