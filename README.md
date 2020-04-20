@@ -19,7 +19,7 @@ For understanding the overall objective of the library please refer to [openmine
 
 - [x] Create the basic structure of KotlinSyft
 - [x] Implement WebRTC flow in Android
-- [ ] Implement Protobuf in Android
+- [x] Implement Protobuf in Android
 - [x] Set up deployment to Maven
 - [ ] Implement split and stitch algorithm for data channels in Android
 - [x] Add support for background task scheduling in Android
@@ -27,7 +27,7 @@ For understanding the overall objective of the library please refer to [openmine
 - [ ] Add support for charge detection and wifi detection in Android
 - [ ] Add bandwidth and Internet connectivity test in Android
 - [ ] Scaffold basic proposed worker API in Android
-- [ ] Execute plans in Android
+- [x] Execute plans in Android
 - [ ] Execute protocols in Android
 - [ ] Allow for training state to be persisted to temporary storage in the event of a failure in Android
 
@@ -41,13 +41,36 @@ For understanding the overall objective of the library please refer to [openmine
 
 ### Demo App
 
-To run the demo app, create a file `local_config.properties` under the folder `demo-app` and add the following line:
+Follow these steps to setup an environment where to test the demo app.
+
+
+1. Clone the repo https://github.com/OpenMined/PyGrid
+2. `cd PyGrid`
+3. Install docker: https://github.com/OpenMined/PyGrid/#getting-started
+4. Install docker-compose.
+5. Execute `docker-compose up` in the command line.
+6. Clone the repo https://github.com/OpenMined/PySyft
+7. `cd PySyft`
+8. `virtualenv -p python3 venv`
+9. `make venv`
+10. `make notebook`
+11. Open a browser and navigate to http://localhost:8888/
+12. In the jupyter notebook, navigate to `examples/experimental/FL Training Plan`
+13. Run the notebooks `Create Plan`. It should save three files in the `FL Training Plan` folder
+14. Run the notebook `Host Plan`. Now PyGrid is setup and the model is hosted over it.
+15. The android app connects to your PC's localhost via router (easier approach)
+16. Get the IP address of your computer by running 
+    `ip address show | grep "inet " | grep -v 127.0.0.1` if using Linux/Mac.
+    
+    For windows there are different steps.
+
+    Alternatively, if you want to run the Demo app in the emulator, use `10.0.2.2` as the IP address.
+
+17. Create a file `local_config.properties` under the folder `demo-app` and add the following line:
 
 ```
-syft.base_url="10.0.2.2:5000"
+syft.base_url="<IP_address_from_step_16>:5000"
 ```
-
-Change the URL accordingly to connect to your PyGrid instance. The above example URL is used by the emulator.
 
 ### Contributing
 
