@@ -45,6 +45,10 @@ class MainActivity : AppCompatActivity() {
             this,
             Observer { onProcessData(it) }
         )
+
+        (binding.viewModel as FederatedCycleViewModel).steps.observe(
+            this,
+            Observer { binding.step.text = it })
     }
 
     private fun onProcessData(it: ProcessData?) {
@@ -64,9 +68,11 @@ class MainActivity : AppCompatActivity() {
         processState.data.forEachIndexed { index, value ->
             entries.add(Entry(index.toFloat(), value))
         }
-        val dataSet = LineDataSet(entries, "loss")
+        val dataSet = LineDataSet(entries, "accuracy")
         val lineData = LineData(dataSet)
         chart.data = lineData
+        chart.setMaxVisibleValueCount(0)
+        chart.setNoDataText("Waiting for data")
         chart.invalidate()
     }
 

@@ -37,10 +37,9 @@
             </com.google.android.material.appbar.AppBarLayout>
 
             <TextView
-                android:id="@+id/textView"
+                android:id="@+id/step"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@{viewModel.epoch}"
                 android:textAlignment="center"
                 android:textSize="24sp"
                 app:layout_constraintTop_toBottomOf="@+id/toolbar_wrapper"
@@ -54,7 +53,7 @@
                 android:layout_marginStart="16dp"
                 app:layout_constraintBottom_toTopOf="@+id/guideline"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView">
+                app:layout_constraintTop_toBottomOf="@+id/step">
 
             </com.github.mikephil.charting.charts.LineChart>
 

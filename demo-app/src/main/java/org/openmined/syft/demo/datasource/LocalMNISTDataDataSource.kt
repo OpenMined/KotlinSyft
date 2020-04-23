@@ -2,64 +2,65 @@ package org.openmined.syft.demo.datasource
 
 import android.content.res.Resources
 import org.openmined.syft.demo.R
+import org.openmined.syft.demo.domain.Batch
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.security.InvalidKeyException
 
 class LocalMNISTDataDataSource constructor(
     private val resources: Resources
 ) {
-    fun loadData(batchSize: Int): Pair<List<Batch>, List<Batch>> {
+    private var trainDataReader = returnNewReader()
+    private val oneHotMap = HashMap<Int, List<Float>>()
+
+    init {
+        for (i in 0..9) {
+            oneHotMap[i] = List(10) { idx ->
+                if (idx == i)
+                    1.0f
+                else
+                    0.0f
+            }
+        }
+    }
+
+    private val featureSize = 784
+
+    fun loadDataBatch(batchSize: Int): Pair<Batch, Batch> {
         val trainInput = arrayListOf<List<Float>>()
-        val labels = arrayListOf<Float>()
-
-        val x = resources.openRawResource(R.raw.train_small)
-        BufferedReader(InputStreamReader(x))
-                .forEachLine { line ->
+        val labels = arrayListOf<List<Float>>()
+        for (idx in 0..batchSize) {
+            val sample: List<String>? = trainDataReader.readLine()?.split(',')
+            sample?.let { sampleList ->
                     trainInput.add(
-                        line.split(',')
-                                .map {
-                                    it.trim().toFloat() / 255
-                                }
+                        sampleList.slice(1..featureSize).map { it.trim().toFloat() }
                     )
-                }
+                oneHotMap[sampleList[0].toInt()]?.let {
+                    labels.add(it)
+                } ?: throw InvalidKeyException("key not found ${sampleList[0]}")
+            } ?: break
+        }
 
-        val y = resources.openRawResource(R.raw.labels_small)
-        BufferedReader(InputStreamReader(y))
-                .forEachLine { line ->
-                    labels.add(line.toFloat() / 10)
-                }
-        val trainingData = trainInput.chunked(batchSize) { batch: List<List<Float>> ->
-            Batch(
-                batch.flatten().toFloatArray(),
-                longArrayOf(batch.size.toLong(), 784)
-            )
+        //restart buffered reader to start of file
+        if (labels.size == 0) {
+            trainDataReader.close()
+            trainDataReader = returnNewReader()
+            return loadDataBatch(batchSize)
         }
-        val trainingLabel = labels.chunked(batchSize) { batch: List<Float> ->
-            Batch(
-                batch.toFloatArray(),
-                longArrayOf(batch.size.toLong(), 1)
-            )
-        }
+        val trainingData = Batch(
+            trainInput.flatten().toFloatArray(),
+            longArrayOf(trainInput.size.toLong(), featureSize.toLong())
+        )
+        val trainingLabel = Batch(
+            labels.flatten().toFloatArray(),
+            longArrayOf(labels.size.toLong(), 10)
+        )
         return Pair(trainingData, trainingLabel)
     }
-}
 
-data class Batch(val flattenedArray: FloatArray, val shape: LongArray) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Batch
-
-        if (!flattenedArray.contentEquals(other.flattenedArray)) return false
-        if (!shape.contentEquals(other.shape)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = flattenedArray.contentHashCode()
-        result = 31 * result + shape.contentHashCode()
-        return result
-    }
+    private fun returnNewReader() = BufferedReader(
+        InputStreamReader(
+            resources.openRawResource(R.raw.mnist_train)
+        )
+    )
 }
