@@ -29,7 +29,7 @@ class FederatedCycleViewModel(
         baseUrl, authToken,
         networkSchedulers, computeSchedulers
     )
-    private val mnistJob = syftWorker.newJob("mnist", "1.0.2")
+    private val mnistJob = syftWorker.newJob("mnist", "1.0.0")
 
     val logger
         get() = _logger
@@ -93,7 +93,7 @@ class FederatedCycleViewModel(
                         val updatedParams =
                                 outputResult.slice(beginIndex until 5)
                         model.updateModel(updatedParams.map { it.toTensor() })
-                        temp_re.add(outputResult[0].toTensor().dataAsFloatArray.last())
+                        temp_re.add(outputResult[1].toTensor().dataAsFloatArray.last())
                     } ?: postLog("the model returned empty array")
                 }
                 result.add(temp_re.sum())
