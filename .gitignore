@@ -5,6 +5,5 @@ local.properties
 .gradle/
 .idea/*.xml
 .idea/caches
-demo-app/src/main/res/raw/*.csv
 .idea/libraries
 demo-app/local_config.properties
