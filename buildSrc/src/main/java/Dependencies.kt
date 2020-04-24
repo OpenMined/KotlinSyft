@@ -25,7 +25,7 @@ object Versions {
     const val webrtc = "1.0.30039"
     const val okhttp = "4.3.1"
     const val protobuf = "3.11.0"
-    const val syftProto = "0.0.8"
+    const val syftProto = "0.0.9"
     const val retrofit = "2.7.1"
     const val kotlinConverter = "0.4.0"
     const val pytorchAndroid = "1.4.0"
