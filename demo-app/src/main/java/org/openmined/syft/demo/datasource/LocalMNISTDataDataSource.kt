@@ -7,6 +7,8 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.security.InvalidKeyException
 
+private const val FEATURESIZE = 784
+
 class LocalMNISTDataDataSource constructor(
     private val resources: Resources
 ) {
@@ -14,7 +16,7 @@ class LocalMNISTDataDataSource constructor(
     private val oneHotMap = HashMap<Int, List<Float>>()
 
     init {
-        for (i in 0..9) {
+        (0..9).forEach { i ->
             oneHotMap[i] = List(10) { idx ->
                 if (idx == i)
                     1.0f
@@ -24,8 +26,6 @@ class LocalMNISTDataDataSource constructor(
         }
     }
 
-    private val featureSize = 784
-
     fun loadDataBatch(batchSize: Int): Pair<Batch, Batch> {
         val trainInput = arrayListOf<List<Float>>()
         val labels = arrayListOf<List<Float>>()
@@ -33,7 +33,7 @@ class LocalMNISTDataDataSource constructor(
             val sample: List<String>? = trainDataReader.readLine()?.split(',')
             sample?.let { sampleList ->
                     trainInput.add(
-                        sampleList.slice(1..featureSize).map { it.trim().toFloat() }
+                        sampleList.slice(1..FEATURESIZE).map { it.trim().toFloat() }
                     )
                 oneHotMap[sampleList[0].toInt()]?.let {
                     labels.add(it)
@@ -49,7 +49,7 @@ class LocalMNISTDataDataSource constructor(
         }
         val trainingData = Batch(
             trainInput.flatten().toFloatArray(),
-            longArrayOf(trainInput.size.toLong(), featureSize.toLong())
+            longArrayOf(trainInput.size.toLong(), FEATURESIZE.toLong())
         )
         val trainingLabel = Batch(
             labels.flatten().toFloatArray(),
