@@ -3,7 +3,7 @@ package org.openmined.syft.execution
 import android.util.Log
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
-import org.openmined.syftproto.types.torch.v1.ScriptModuleOuterClass
+import org.openmined.syftproto.execution.v1.PlanOuterClass
 import org.pytorch.IValue
 import org.pytorch.Module
 import org.pytorch.Tensor
@@ -47,10 +47,10 @@ class Plan(val planId: String) {
     // TODO The way a plan is generated should be provided.
     // TODO We should enforce this to  happen in a background thread.
     fun generateScriptModule(filesDir: String, torchScriptPlan: String) {
-        val scriptModule = ScriptModuleOuterClass.ScriptModule.parseFrom(
+        val scriptModule = PlanOuterClass.Plan.parseFrom(
             File(torchScriptPlan).readBytes()
         )
-        val torchscriptLocation = saveScript(filesDir, scriptModule.obj)
+        val torchscriptLocation = saveScript(filesDir, scriptModule.torchscript)
         Log.d(TAG, "TorchScript saved at $torchscriptLocation")
         pytorchModule = Module.load(torchscriptLocation)
     }

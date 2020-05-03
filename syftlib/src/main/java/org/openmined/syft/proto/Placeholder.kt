@@ -1,6 +1,6 @@
 package org.openmined.syft.proto
 
-import org.openmined.syftproto.frameworks.torch.tensors.interpreters.v1.PlaceholderOuterClass
+import org.openmined.syftproto.execution.v1.PlaceholderOuterClass
 import org.openmined.syftproto.types.syft.v1.IdOuterClass
 
 data class Placeholder(
