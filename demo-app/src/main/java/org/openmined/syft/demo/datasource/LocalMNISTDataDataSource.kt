@@ -5,6 +5,7 @@ import org.openmined.syft.demo.R
 import org.openmined.syft.demo.domain.Batch
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.lang.Exception
 import java.security.InvalidKeyException
 
 private const val FEATURESIZE = 784
@@ -29,24 +30,9 @@ class LocalMNISTDataDataSource constructor(
     fun loadDataBatch(batchSize: Int): Pair<Batch, Batch> {
         val trainInput = arrayListOf<List<Float>>()
         val labels = arrayListOf<List<Float>>()
-        for (idx in 0..batchSize) {
-            val sample: List<String>? = trainDataReader.readLine()?.split(',')
-            sample?.let { sampleList ->
-                    trainInput.add(
-                        sampleList.slice(1..FEATURESIZE).map { it.trim().toFloat() }
-                    )
-                oneHotMap[sampleList[0].toInt()]?.let {
-                    labels.add(it)
-                } ?: throw InvalidKeyException("key not found ${sampleList[0]}")
-            } ?: break
-        }
+        for (idx in 0..batchSize)
+            readSample(trainInput, labels)
 
-        //restart buffered reader to start of file
-        if (labels.size == 0) {
-            trainDataReader.close()
-            trainDataReader = returnNewReader()
-            return loadDataBatch(batchSize)
-        }
         val trainingData = Batch(
             trainInput.flatten().toFloatArray(),
             longArrayOf(trainInput.size.toLong(), FEATURESIZE.toLong())
@@ -56,6 +42,28 @@ class LocalMNISTDataDataSource constructor(
             longArrayOf(labels.size.toLong(), 10)
         )
         return Pair(trainingData, trainingLabel)
+    }
+
+    private fun readSample(
+        trainInput: ArrayList<List<Float>>,
+        labels: ArrayList<List<Float>>
+    ) {
+        val sample = trainDataReader.readLine()?.split(',') ?: run {
+            restartReader()
+            trainDataReader.readLine()?.split(',')
+        } ?: throw Exception("cannot read from dataset file")
+
+        trainInput.add(
+            sample.slice(1..FEATURESIZE).map { it.trim().toFloat() }
+        )
+        oneHotMap[sample[0].toInt()]?.let {
+            labels.add(it)
+        } ?: throw InvalidKeyException("key not found ${sample[0]}")
+    }
+
+    private fun restartReader() {
+        trainDataReader.close()
+        trainDataReader = returnNewReader()
     }
 
     private fun returnNewReader() = BufferedReader(
