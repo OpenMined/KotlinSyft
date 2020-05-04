@@ -198,7 +198,7 @@ class SyftJob(
                 requestKey,
                 plan.planId,
                 "torchscript"
-            ).compose(computeSchedulers.applySingleSchedulers())
+            ).compose(networkingSchedulers.applySingleSchedulers())
                     .flatMap { response ->
                         saveFile(response.body(), destinationDir, plan.planId)
                     }.flatMap { filepath ->
@@ -217,7 +217,7 @@ class SyftJob(
         else
             worker.getDownloader().downloadProtocol(
                 workerId, requestKey, protocolId
-            ).compose(computeSchedulers.applySingleSchedulers())
+            ).compose(networkingSchedulers.applySingleSchedulers())
                     .flatMap { response ->
                         saveFile(response.body(), destinationDir, protocolId)
                     }
