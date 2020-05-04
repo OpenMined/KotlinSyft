@@ -60,9 +60,7 @@ Follow these steps to setup an environment where to test the demo app.
 14. Run the notebook `Host Plan`. Now PyGrid is setup and the model is hosted over it.
 15. The android app connects to your PC's localhost via router (easier approach)
 16. Get the IP address of your computer by running 
-    `ip address show | grep "inet " | grep -v 127.0.0.1` if using Linux/Mac.
-    
-    For windows there are different steps.
+    `ip address show | grep "inet " | grep -v 127.0.0.1` if using Linux/Mac. For windows there are different steps.
 
     Alternatively, if you want to run the Demo app in the emulator, use `10.0.2.2` as the IP address.
 
@@ -72,6 +70,11 @@ Follow these steps to setup an environment where to test the demo app.
 syft.base_url="<IP_address_from_step_16>:5000"
 ```
 
+### Training Dataset
+
+The demo app has a smaller randomly sampled subset of MNIST Training Data. You can replace the `demo-app/src/main/res/raw/mnist_train.csv` with the 100MB file from [here](https://drive.google.com/file/d/1oHegwSc9pDFQDZe0FeKW51-SQsTz4i3W/view?usp=sharing)
+
+Download the above file and replace it with `train_mnist.csv` to train on complete mnist data. 
 ### Contributing
 
 Read [CONTRIBUTING.md](https://github.com/OpenMined/KotlinSyft/blob/master/CONTRIBUTING.md)

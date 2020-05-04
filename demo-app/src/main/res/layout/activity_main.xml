@@ -24,24 +24,49 @@
                 android:id="@+id/toolbar_wrapper"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:layout_constraintTop_toTopOf="parent"
-                android:theme="@style/AppTheme.AppBarOverlay">
+                android:theme="@style/AppTheme.AppBarOverlay"
+                app:layout_constraintTop_toTopOf="parent">
 
                 <androidx.appcompat.widget.Toolbar
                     android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
-                    android:background="?attr/colorPrimary"
+                    android:background="@color/colorPrimary"
                     app:popupTheme="@style/AppTheme.PopupOverlay" />
 
             </com.google.android.material.appbar.AppBarLayout>
 
+            <TextView
+                android:id="@+id/step"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:textSize="24sp"
+                app:layout_constraintTop_toBottomOf="@+id/toolbar_wrapper"
+                tools:layout_editor_absoluteX="-27dp" />
+
+
             <com.github.mikephil.charting.charts.LineChart
                 android:id="@+id/chart"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
+                android:layout_width="379dp"
+                android:layout_height="432dp"
+                android:layout_marginStart="16dp"
                 app:layout_constraintBottom_toTopOf="@+id/guideline"
-                app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper" />
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/step">
+
+            </com.github.mikephil.charting.charts.LineChart>
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="164dp"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/chart" />
 
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guideline"
@@ -52,10 +77,12 @@
 
             <ScrollView
                 android:id="@+id/logger_wrapper"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_constraintTop_toBottomOf="@id/guideline"
-                >
+                android:layout_width="275dp"
+                android:layout_height="187dp"
+                android:layout_marginEnd="20dp"
+                app:layout_constraintBaseline_toBaselineOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/button_first">
 
                 <TextView
                     android:id="@+id/log_area"
@@ -67,22 +94,20 @@
 
             <Button
                 android:id="@+id/button_first"
+                style="@android:style/Widget.DeviceDefault.Button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="68dp"
+                android:backgroundTint="@android:color/holo_green_light"
                 android:onClick="@{() -> viewModel.startCycle()}"
                 android:text="@string/start"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toStartOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyleLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:layout_gravity="center" />
+
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

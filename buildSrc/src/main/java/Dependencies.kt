@@ -8,7 +8,7 @@ object Versions {
     const val minSdk = 24
     const val targetSdk = 29
 
-    const val gradle = "3.5.3"
+    const val gradle = "3.6.0"
     const val kotlin = "1.3.61"
     const val buildTools = "29.0.2"
 
@@ -24,11 +24,11 @@ object Versions {
     const val rxAndroid = "2.1.1"
     const val webrtc = "1.0.30039"
     const val okhttp = "4.3.1"
-    const val protobuf = "3.11.0"
-    const val syftProto = "0.0.9"
+    const val protobuf = "3.11.4"
+    const val syftProto = "v0.3.0"
     const val retrofit = "2.7.1"
     const val kotlinConverter = "0.4.0"
-    const val pytorchAndroid = "1.4.0"
+    const val pytorchAndroid = "1.5.0"
     const val mpAndroidChart = "v3.1.0"
 
     // release management

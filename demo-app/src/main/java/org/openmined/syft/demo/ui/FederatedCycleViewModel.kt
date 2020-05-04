@@ -13,7 +13,6 @@ import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.ConcurrentHashMap
 
 private const val TAG = "FederatedCycleViewModel"
-private const val EPOCHS = 35
 
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
@@ -34,6 +33,10 @@ class FederatedCycleViewModel(
     val logger
         get() = _logger
     private val _logger = MutableLiveData<String>()
+
+    val steps
+        get() = _steps
+    private val _steps = MutableLiveData<String>()
 
     val processState
         get() = _processState
@@ -76,29 +79,26 @@ class FederatedCycleViewModel(
 
         plans.values.first().let { plan ->
             val result = mutableListOf<Float>()
-            val loadData = mnistDataRepository.loadData()
-            val zipData = loadData.first zip loadData.second
-            repeat(EPOCHS) {epoch->
-                postLog("Starting epoch ${epoch + 1}")
-                val temp_re = mutableListOf<Float>()
-                zipData.forEach { trainingBatch ->
-                    val output = plan.execute(
-                        model,
-                        trainingBatch,
-                        clientConfig.copy(batchSize = 1)
-                    )?.toTuple()
-                    output?.let { outputResult ->
-                        val paramSize = model.modelState!!.syftTensors.size
-                        val beginIndex = 2
-                        val updatedParams =
-                                outputResult.slice(beginIndex until 5)
-                        model.updateModel(updatedParams.map { it.toTensor() })
-                        temp_re.add(outputResult[1].toTensor().dataAsFloatArray.last())
-                    } ?: postLog("the model returned empty array")
-                }
-                result.add(temp_re.sum())
+
+            repeat(clientConfig.maxUpdates) { step ->
+                postEpoch(step + 1)
+                val batchData = mnistDataRepository.loadDataBatch(clientConfig.batchSize.toInt())
+                val output = plan.execute(
+                    model,
+                    batchData,
+                    clientConfig
+                )?.toTuple()
+                output?.let { outputResult ->
+                    val paramSize = model.modelState!!.syftTensors.size
+                    val beginIndex = outputResult.size - paramSize
+                    val updatedParams =
+                            outputResult.slice(beginIndex until outputResult.size - 1)
+                    model.updateModel(updatedParams.map { it.toTensor() })
+                    result.add(outputResult[1].toTensor().dataAsFloatArray.last())
+                } ?: postLog("the model returned empty array")
                 postState(ProcessState.Hidden)
                 postData(result)
+
             }
             postLog("Training done!")
 
@@ -112,6 +112,10 @@ class FederatedCycleViewModel(
 
     private fun postData(result: List<Float>) {
         _processData.postValue(ProcessData(result))
+    }
+
+    private fun postEpoch(epoch: Int) {
+        _steps.postValue("Step : $epoch")
     }
 
     private fun postLog(message: String) {

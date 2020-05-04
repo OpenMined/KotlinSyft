@@ -6,4 +6,4 @@ local.properties
 .idea/*.xml
 .idea/caches
 .idea/libraries
-*/local_config.properties
+demo-app/local_config.properties
