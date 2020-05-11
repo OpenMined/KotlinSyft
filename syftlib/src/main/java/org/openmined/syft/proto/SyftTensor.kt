@@ -12,6 +12,7 @@ import java.util.Locale
 import org.openmined.syftproto.types.torch.v1.Tensor.TorchTensor as SyftProtoTensor
 import org.pytorch.Tensor as TorchTensor
 
+// SyftTensor is a model class for syft tensor type.
 @ExperimentalUnsignedTypes
 data class SyftTensor(
     val id: IdOuterClass.Id,
@@ -24,6 +25,7 @@ data class SyftTensor(
     val description: String
 ) {
     companion object {
+        // Generate & Return SyftTensor from SyftProtoTensor
         fun deserialize(tensor: SyftProtoTensor): SyftTensor {
             val tensorData = tensor.contentsData
             val chain = if (tensor.hasChain())
@@ -47,6 +49,7 @@ data class SyftTensor(
             )
         }
 
+        // Generate & Return SyftTensor from TorchTensor
         fun fromTorchTensor(tensor: TorchTensor): SyftTensor {
             val shape = SizeOuterClass.Size.newBuilder()
                     .addAllDims(tensor.shape().map { it.toInt() })
@@ -90,6 +93,7 @@ data class SyftTensor(
         }
     }
 
+    // Generate & Return SyftProtoTensor object
     fun serialize(): SyftProtoTensor {
         SizeOuterClass.Size.newBuilder().addAllDims(shape)
         val syftTensorBuilder = SyftProtoTensor.newBuilder()
@@ -105,6 +109,7 @@ data class SyftTensor(
         return syftTensorBuilder.build()
     }
 
+    // Generate & Return TorchTensor object based on the dtype
     fun getTorchTensor(): TorchTensor {
         return when (dtype) {
             "uint8" -> TorchTensor.fromBlob(
