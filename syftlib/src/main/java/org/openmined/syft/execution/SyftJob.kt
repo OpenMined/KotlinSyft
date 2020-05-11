@@ -4,7 +4,6 @@ import android.util.Log
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.processors.PublishProcessor
-import okhttp3.ResponseBody
 import org.openmined.syft.Syft
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
@@ -13,7 +12,7 @@ import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import org.openmined.syft.proto.State
 import org.openmined.syft.proto.SyftModel
 import org.openmined.syft.threading.ProcessSchedulers
-import java.io.File
+import org.openmined.syft.utilities.FileWriter
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
@@ -27,13 +26,15 @@ private const val TAG = "SyftJob"
  */
 @ExperimentalUnsignedTypes
 class SyftJob(
+    modelName: String,
+    version: String? = null,
     private val worker: Syft,
+    private val jobStatusProcessor: PublishProcessor<JobStatusMessage>,
     //todo change this to read from syft configuration
     private val computeSchedulers: ProcessSchedulers,
     //todo change this to read from syft configuration
-    private val networkingSchedulers: ProcessSchedulers,
-    modelName: String,
-    version: String? = null
+    private val networkingSchedulers: ProcessSchedulers
+
 ) {
 
     val jobId = JobID(modelName, version)
@@ -49,7 +50,6 @@ class SyftJob(
     private val plans = ConcurrentHashMap<String, Plan>()
     private val protocols = ConcurrentHashMap<String, Protocol>()
     private val model = SyftModel(modelName, version)
-    private val jobStatusProcessor: PublishProcessor<JobStatusMessage> = PublishProcessor.create()
     private val compositeDisposable = CompositeDisposable()
 
     /**
@@ -63,7 +63,7 @@ class SyftJob(
             Log.d(TAG, "job awaiting timer completion to resend the Cycle Request")
             return
         }
-        worker.requestCycle(this)
+        worker.executeCycleRequest(this)
         subscribe(subscriber, computeSchedulers)
     }
 
@@ -175,16 +175,17 @@ class SyftJob(
         else
             worker.getDownloader()
                     .downloadModel(workerId, requestKey, modelId)
-                    .compose(
-                        computeSchedulers.applySingleSchedulers()
-                    ).flatMap { response ->
-                        saveFile(response.body(), modelFileLocation, modelId)
+                    .flatMap { response ->
+                        FileWriter(modelFileLocation, "$modelId.pb")
+                                .writeFromNetwork(response.body())
                     }.flatMap { modelFile ->
                         Single.create<String> { emitter ->
                             model.loadModelState(modelFile)
                             emitter.onSuccess(modelFile)
                         }
                     }
+                    .compose(networkingSchedulers.applySingleSchedulers())
+
     }
 
     private fun planDownloader(destinationDir: String, plan: Plan): Single<String> {
@@ -198,15 +199,18 @@ class SyftJob(
                 requestKey,
                 plan.planId,
                 "torchscript"
-            ).compose(networkingSchedulers.applySingleSchedulers())
+            )
                     .flatMap { response ->
-                        saveFile(response.body(), destinationDir, plan.planId)
+                        FileWriter(destinationDir, plan.planId + ".pb")
+                                .writeFromNetwork(response.body())
                     }.flatMap { filepath ->
                         Single.create<String> { emitter ->
                             plan.generateScriptModule(destinationDir, filepath)
                             emitter.onSuccess(filepath)
                         }
                     }
+                    .compose(networkingSchedulers.applySingleSchedulers())
+
     }
 
     private fun protocolDownloader(destinationDir: String, protocolId: String): Single<String> {
@@ -217,34 +221,13 @@ class SyftJob(
         else
             worker.getDownloader().downloadProtocol(
                 workerId, requestKey, protocolId
-            ).compose(networkingSchedulers.applySingleSchedulers())
+            )
                     .flatMap { response ->
-                        saveFile(response.body(), destinationDir, protocolId)
+                        FileWriter(destinationDir, "$protocolId.pb")
+                                .writeFromNetwork(response.body())
                     }
+                    .compose(networkingSchedulers.applySingleSchedulers())
     }
-
-    private fun saveFile(
-        input: ResponseBody?,
-        destinationDir: String,
-        fileName: String
-    ): Single<String> {
-        val destination = File(destinationDir)
-        if (!destination.mkdirs())
-            Log.d(TAG, "directory already exists")
-
-        return Single.create { emitter ->
-            input?.byteStream().use { inputStream ->
-                val file = File(destination, "$fileName.pb")
-                file.outputStream().use { outputFile ->
-                    inputStream?.copyTo(outputFile)
-                    ?: emitter.onError(FileSystemException(file))
-                }
-                Log.d(TAG, "file written at ${file.absolutePath}")
-                emitter.onSuccess(file.absolutePath)
-            }
-        }
-    }
-
 
     data class JobID(val modelName: String, val version: String? = null) {
         fun matchWithResponse(modelName: String, version: String? = null) =

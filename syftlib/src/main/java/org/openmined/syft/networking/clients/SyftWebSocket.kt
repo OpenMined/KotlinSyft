@@ -8,7 +8,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
-import org.openmined.syft.networking.requests.Protocol
+import org.openmined.syft.networking.requests.NetworkingProtocol
 import java.util.concurrent.TimeUnit
 
 
@@ -18,7 +18,7 @@ private const val SOCKET_CLOSE_CLIENT = 1000
 
 @ExperimentalUnsignedTypes
 class SyftWebSocket(
-    protocol: Protocol,
+    protocol: NetworkingProtocol,
     address: String,
     keepAliveTimeout: UInt
 ) {

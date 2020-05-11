@@ -3,12 +3,12 @@ package org.openmined.syft.execution
 import android.util.Log
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
+import org.openmined.syft.utilities.FileWriter
 import org.openmined.syftproto.execution.v1.PlanOuterClass
 import org.pytorch.IValue
 import org.pytorch.Module
 import org.pytorch.Tensor
 import java.io.File
-import java.io.FileOutputStream
 
 private const val TAG = "syft.processes.Plan"
 
@@ -64,8 +64,6 @@ class Plan(val planId: String) {
         return localModuleState.forward(x, y, batchSize, lr, *params)
     }
 
-    // TODO The way a plan is generated should be provided.
-    // TODO We should enforce this to  happen in a background thread.
     /**
      * Loads a TorchScript module from the specified path on the disk.
      *
@@ -89,12 +87,10 @@ class Plan(val planId: String) {
      * @return the absolute path of the file containing the TorchScript model.
      */
     private fun saveScript(filesDir: String, obj: com.google.protobuf.ByteString): String {
-        val file = File(filesDir, "torchscript_${planId}.pt")
-        FileOutputStream(file).use {
+        val fileWriter = FileWriter(filesDir, "torchscript_${planId}.pt")
+        fileWriter.outputStream().use {
             it.write(obj.toByteArray())
-            it.flush()
-            it.close()
         }
-        return file.absolutePath
+        return fileWriter.absolutePath
     }
 }

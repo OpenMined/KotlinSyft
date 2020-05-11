@@ -6,11 +6,14 @@ import com.nhaarman.mockitokotlin2.verify
 import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.processors.PublishProcessor
 import io.reactivex.schedulers.Schedulers
 import org.junit.jupiter.api.Test
+import org.openmined.syft.execution.JobStatusMessage
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.networking.clients.HttpClient
 import org.openmined.syft.networking.clients.SocketClient
+import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.threading.ProcessSchedulers
 
@@ -20,7 +23,7 @@ internal class SyftTest {
     @ExperimentalUnsignedTypes
     fun `Given a syft object when requestCycle is invoked the socket client calls authenticate api`() {
         val socketClient = mock<SocketClient> {
-            on { authenticate() }.thenReturn(
+            on { authenticate(AuthenticationRequest("auth token")) }.thenReturn(
                 Single.just(
                     AuthenticationResponse.AuthenticationSuccess(
                         "test id"
@@ -39,9 +42,16 @@ internal class SyftTest {
         val workerTest = spy(
             Syft("auth token", socketClient, httpClient, schedulers, schedulers)
         )
-        val syftJob = SyftJob(workerTest, schedulers, schedulers, "test model")
+        val syftJob = SyftJob(
+            "model name",
+            "1.0.0",
+            workerTest,
+            PublishProcessor.create<JobStatusMessage>(),
+            schedulers,
+            schedulers
+        )
 
-        workerTest.requestCycle(syftJob)
-        verify(socketClient).authenticate()
+        workerTest.executeCycleRequest(syftJob)
+        verify(socketClient).authenticate(AuthenticationRequest("auth token"))
     }
 }
