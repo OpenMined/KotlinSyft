@@ -7,9 +7,12 @@ import java.util.concurrent.ConcurrentHashMap
 @ExperimentalUnsignedTypes
 sealed class JobStatusMessage {
     class JobCycleRejected(val timeout: String) : JobStatusMessage()
+
     class JobReady(
         val model: SyftModel,
         val plans: ConcurrentHashMap<String, Plan>,
         val clientConfig: ClientConfig?
     ) : JobStatusMessage()
+
+    class JobError(val error: Throwable) : JobStatusMessage()
 }

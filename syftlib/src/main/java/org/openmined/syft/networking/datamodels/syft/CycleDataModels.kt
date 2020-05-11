@@ -20,7 +20,7 @@ sealed class CycleResponseData : NetworkModels() {
     data class CycleAccept(
         @SerialName("model")
         override val modelName: String,
-        override val version: String? = null,
+        override val version: String,
         @SerialName("request_key")
         val requestKey: String,
         val plans: HashMap<String, String>,
@@ -35,9 +35,8 @@ sealed class CycleResponseData : NetworkModels() {
     @Serializable
     data class CycleReject(
         @SerialName("model")
-        //todo making this optional till pygrid makes this compulsory
-        override val modelName: String = "",
-        override val version: String? = null,
+        override val modelName: String,
+        override val version: String,
         val timeout: String
     ) : CycleResponseData()
 }

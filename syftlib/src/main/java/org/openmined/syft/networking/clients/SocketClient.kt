@@ -7,8 +7,10 @@ import io.reactivex.processors.PublishProcessor
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.json.json
+import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.networking.datamodels.NetworkModels
 import org.openmined.syft.networking.datamodels.SocketResponse
+import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
@@ -19,12 +21,11 @@ import org.openmined.syft.networking.datamodels.webRTC.InternalMessageResponse
 import org.openmined.syft.networking.datamodels.webRTC.JoinRoomRequest
 import org.openmined.syft.networking.datamodels.webRTC.JoinRoomResponse
 import org.openmined.syft.networking.requests.MessageTypes
-import org.openmined.syft.networking.requests.Protocol
+import org.openmined.syft.networking.requests.NetworkingProtocol
 import org.openmined.syft.networking.requests.REQUESTS
 import org.openmined.syft.networking.requests.ResponseMessageTypes
 import org.openmined.syft.networking.requests.SocketAPI
 import org.openmined.syft.networking.requests.WebRTCMessageTypes
-import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -40,17 +41,23 @@ class SocketClient(
     //Choosing stable kotlin serialization over default
     private val Json = Json(JsonConfiguration.Stable)
 
-    private val syftWebSocket = SyftWebSocket(Protocol.WSS, baseUrl, timeout)
+    private val syftWebSocket = SyftWebSocket(NetworkingProtocol.WSS, baseUrl, timeout)
 
     @Volatile
     private var socketClientSubscribed = AtomicBoolean(false)
     private val messageProcessor = PublishProcessor.create<NetworkModels>()
     private val compositeDisposable = CompositeDisposable()
 
-    override fun authenticate(): Single<AuthenticationResponse> {
+    override fun authenticate(authRequest: AuthenticationRequest): Single<AuthenticationResponse> {
         initiateSocketIfEmpty()
-        Log.d(TAG, "sending message: " + serializeNetworkModel(REQUESTS.AUTHENTICATION).toString())
-        syftWebSocket.send(serializeNetworkModel(REQUESTS.AUTHENTICATION))
+        Log.d(
+            TAG,
+            "sending message: " + serializeNetworkModel(
+                REQUESTS.AUTHENTICATION,
+                authRequest
+            ).toString()
+        )
+        syftWebSocket.send(serializeNetworkModel(REQUESTS.AUTHENTICATION, authRequest))
         return messageProcessor.onBackpressureLatest()
                 .ofType(AuthenticationResponse::class.java)
                 .firstOrError()
@@ -136,14 +143,12 @@ class SocketClient(
         return Json.parse(SocketResponse.serializer(), socketMessage)
     }
 
-    private fun serializeNetworkModel(types: MessageTypes, data: NetworkModels? = null) = json {
+    private fun serializeNetworkModel(types: MessageTypes, data: NetworkModels) = json {
         TYPE to types.value
-        if (data != null) {
             if (types is ResponseMessageTypes)
                 DATA to types.serialize(data)
             else
             //todo change this appropriately when needed
                 DATA to data.toString()
         }
-    }
 }
