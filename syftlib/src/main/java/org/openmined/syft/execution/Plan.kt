@@ -25,10 +25,11 @@ class Plan(val planId: String) {
     /**
      * Loads a serialized TorchScript module from the specified path on the disk.
      *
-     * @param model The model parameters.
-     * @param trainingBatch The training data.
+     * @param model Model hosting model parameters.
+     * @param trainingBatch Training batch = Pair<IValue,IValue>. Contains the training data along with the labels.
      * @param clientConfig The hyperparamters for the model.
-     * @return The output of passing the training data through the pytorch Module.
+     * @return The output contains the loss, accuracy values as defined while creating plan. But it also
+     *         contains the updated parameters of the model. These parameters are then saved manually by user.
      */
     @ExperimentalStdlibApi
     fun execute(
