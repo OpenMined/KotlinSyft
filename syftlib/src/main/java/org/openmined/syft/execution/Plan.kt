@@ -81,7 +81,7 @@ class Plan(val planId: String) {
     }
 
     /**
-     * Loads a serialized TorchScript module from the specified path on the disk.
+     * Writes the module to the torchscript and returns the absolute path.
      *
      * @param filesDir directory where the .pt file is present, on which the TorchScript model is saved.
      * @param obj Stream containing the contents of the TorchScript module.
