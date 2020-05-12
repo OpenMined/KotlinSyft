@@ -12,12 +12,24 @@ import java.io.FileOutputStream
 
 private const val TAG = "syft.processes.Plan"
 
+/** 
+ * The Plan Class contains functions to load a Pytorch model from a TorchScript and
+ * passing the training data through the forward function of the Pytorch Module.
+ * A Pytorch Module is simply a container that takes in tensors as input and returns 
+ * tensor after doing some computation.
+ */
 @ExperimentalUnsignedTypes
 class Plan(val planId: String) {
     private var pytorchModule: Module? = null
 
-    // The execute function takes in the model parameters, training data and client config as input parameters.
-    // The execute function returns a tensor of output data.
+    /**
+     * Loads a serialized TorchScript module from the specified path on the disk.
+     *
+     * @param model The model parameters.
+     * @param trainingBatch The training data.
+     * @param clientConfig The hyperparamters for the model.
+     * @return The output of passing the training data through the pytorch Module.
+     */
     @ExperimentalStdlibApi
     fun execute(
         model: SyftModel,
@@ -47,12 +59,18 @@ class Plan(val planId: String) {
             Tensor.fromBlob(floatArrayOf(clientConfig.lr), longArrayOf(1))
         )
 
-        // We feed in the training data, output labels, batchSize, learning rate and other parameters to the forward function of the pytorch module.
+        // We feed in the training data to the forward function of the pytorchModule.
         return localModuleState.forward(x, y, batchSize, lr, *params)
     }
 
     // TODO The way a plan is generated should be provided.
     // TODO We should enforce this to  happen in a background thread.
+    /**
+     * Loads a serialized TorchScript module from the specified path on the disk.
+     *
+     * @param filesDir directory where the TorchScript is saved. 
+     * @param torchScriptPlan location where the TorchScript plan is located.
+     */
     fun generateScriptModule(filesDir: String, torchScriptPlan: String) {
         val scriptModule = PlanOuterClass.Plan.parseFrom(
             File(torchScriptPlan).readBytes()
@@ -62,6 +80,13 @@ class Plan(val planId: String) {
         pytorchModule = Module.load(torchscriptLocation)
     }
 
+    /**
+     * Loads a serialized TorchScript module from the specified path on the disk.
+     *
+     * @param filesDir directory where the .pt file is present, on which the TorchScript model is saved.
+     * @param obj Stream containing the contents of the TorchScript module.
+     * @return the absolute path of the file containing the TorchScript model.
+     */
     private fun saveScript(filesDir: String, obj: com.google.protobuf.ByteString): String {
         val file = File(filesDir, "torchscript_${planId}.pt")
         FileOutputStream(file).use {
