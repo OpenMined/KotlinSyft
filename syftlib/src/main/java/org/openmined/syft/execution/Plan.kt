@@ -28,7 +28,7 @@ class Plan(val planId: String) {
      * @param model Model hosting model parameters.
      * @param trainingBatch Training batch = Pair<IValue,IValue>. Contains the training data along with the labels.
      * @param clientConfig The hyperparamters for the model.
-     * @return The output contains the loss, accuracy values as defined while creating plan. But it also
+     * @return The output contains the loss, accuracy values as defined while creating plan. It also
      *         contains the updated parameters of the model. These parameters are then saved manually by user.
      */
     @ExperimentalStdlibApi
@@ -67,7 +67,7 @@ class Plan(val planId: String) {
     // TODO The way a plan is generated should be provided.
     // TODO We should enforce this to  happen in a background thread.
     /**
-     * Loads a serialized TorchScript module from the specified path on the disk.
+     * Loads a TorchScript module from the specified path on the disk.
      *
      * @param filesDir directory where the TorchScript is saved. 
      * @param torchScriptPlan location where the TorchScript plan is located.
@@ -84,8 +84,8 @@ class Plan(val planId: String) {
     /**
      * Writes the module to the torchscript and returns the absolute path.
      *
-     * @param filesDir directory where the .pt file is present, on which the TorchScript model is saved.
-     * @param obj Stream containing the contents of the TorchScript module.
+     * @param filesDir The directory where the torchscript file will be written.
+     * @param obj Protobuf stream containing the contents of the TorchScript module.
      * @return the absolute path of the file containing the TorchScript model.
      */
     private fun saveScript(filesDir: String, obj: com.google.protobuf.ByteString): String {
