@@ -16,6 +16,8 @@ private const val TAG = "syft.processes.Plan"
 class Plan(val planId: String) {
     private var pytorchModule: Module? = null
 
+    // The execute function takes in the model parameters, training data and client config as input parameters.
+    // The execute function returns a tensor of output data.
     @ExperimentalStdlibApi
     fun execute(
         model: SyftModel,
@@ -35,12 +37,17 @@ class Plan(val planId: String) {
         val x = trainingBatch.first
         val y = trainingBatch.second
 
+        // batchSize is the pytorch IValue tensor containing the batchSize specified in the client configs.
         val batchSize = IValue.from(
             Tensor.fromBlob(longArrayOf(clientConfig.batchSize), longArrayOf(1))
         )
+
+        // lr is the pytorch IValue tensor containing the learning rate specificed in the client configs.
         val lr = IValue.from(
             Tensor.fromBlob(floatArrayOf(clientConfig.lr), longArrayOf(1))
         )
+
+        // We feed in the training data, output labels, batchSize, learning rate and other parameters to the forward function of the pytorch module.
         return localModuleState.forward(x, y, batchSize, lr, *params)
     }
 
