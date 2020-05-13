@@ -14,7 +14,7 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.chart
 import kotlinx.android.synthetic.main.activity_main.progressBar
 import kotlinx.android.synthetic.main.activity_main.toolbar
-import org.openmined.syft.demo.BuildConfig
+import org.openmined.syft.demo.BuildConfig.SYFT_BASE_URL
 import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityMainBinding
 import org.openmined.syft.demo.datasource.LocalMNISTDataDataSource
@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
                 DataBindingUtil.setContentView(this, R.layout.activity_main)
         setSupportActionBar(toolbar)
         binding.lifecycleOwner = this
-        binding.viewModel = initiateViewModel(BuildConfig.SYFT_BASE_URL)
+        binding.viewModel = initiateViewModel(SYFT_BASE_URL)
 
         (binding.viewModel as FederatedCycleViewModel).processState.observe(
             this,
