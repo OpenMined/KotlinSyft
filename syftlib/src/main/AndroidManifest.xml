@@ -1,1 +1,7 @@
-<manifest package="org.openmined.syft" />
+<manifest package="org.openmined.syft"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+</manifest>

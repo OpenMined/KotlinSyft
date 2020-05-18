@@ -1,10 +1,7 @@
 package org.openmined.syft.domain
 
-import android.app.ActivityManager
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -22,9 +19,10 @@ class SyftConfiguration private constructor(
     val networkingSchedulers: ProcessSchedulers,
     val computeSchedulers: ProcessSchedulers,
     val filesDir: File,
-//todo add network state here
+    val networkConstraints: List<Int>,
     private val maxConcurrentJobs: Int,
-    private val messagingClient: NetworkingClients
+    private val messagingClient: NetworkingClients,
+    val cacheTimeOut: Long = 100000
 ) {
     companion object {
         fun builder(context: Context, baseUrl: String) = SyftConfigBuilder(context, baseUrl)
@@ -32,14 +30,7 @@ class SyftConfiguration private constructor(
 
     private val socketClient = SocketClient(baseUrl, 10000u, networkingSchedulers)
     private val httpClient = HttpClient(baseUrl)
-    private val batteryStatus: Intent? = context.registerReceiver(
-        null,
-        IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED)
-    )
-    private val networkManager =
-            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    private val activityStatus =
-            context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+
 
     fun getDownloader() = httpClient.apiClient
 
@@ -49,7 +40,6 @@ class SyftConfiguration private constructor(
     }
 
     fun getWebRTCSignallingClient(): SocketAPI = socketClient
-
 
     class SyftConfigBuilder(val context: Context, val baseUrl: String) {
 
@@ -69,16 +59,31 @@ class SyftConfiguration private constructor(
         private var filesDir = context.filesDir
         private var maxConcurrentJobs: Int = 1
         private var messagingClient: NetworkingClients = NetworkingClients.SOCKET
-
-        fun build() = SyftConfiguration(
-            context,
-            baseUrl,
-            networkingSchedulers,
-            computeSchedulers,
-            filesDir,
-            maxConcurrentJobs,
-            messagingClient
+        private val networkConstraints = mutableMapOf(
+            NetworkCapabilities.NET_CAPABILITY_INTERNET to true,
+            NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED to true,
+            NetworkCapabilities.NET_CAPABILITY_NOT_METERED to true
         )
+
+        fun build(): SyftConfiguration {
+            val constraintList = networkConstraints.filterValues { it }.keys.toList()
+            return SyftConfiguration(
+                context,
+                baseUrl,
+                networkingSchedulers,
+                computeSchedulers,
+                filesDir,
+                constraintList,
+                maxConcurrentJobs,
+                messagingClient
+            )
+        }
+
+        fun enableMeteredData(): SyftConfigBuilder {
+            if (networkConstraints.containsKey(NetworkCapabilities.NET_CAPABILITY_NOT_METERED))
+                networkConstraints.remove(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+            return this
+        }
 
         fun setNetworkingScheduler(scheduler: ProcessSchedulers): SyftConfigBuilder {
             this.networkingSchedulers = scheduler

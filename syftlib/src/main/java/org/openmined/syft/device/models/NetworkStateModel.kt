@@ -4,5 +4,6 @@ data class NetworkStateModel(
     var ping: String? = null,
     var downloadSpeed: String? = null,
     var uploadspeed: String? = null,
-    var wifiStatus: Boolean? = null
-)
+    var networkValidity: Boolean = false,
+    override var cacheTimeStamp: Long = 0
+) : DeviceStatus
