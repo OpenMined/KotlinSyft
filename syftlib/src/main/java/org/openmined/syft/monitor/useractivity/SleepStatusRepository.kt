@@ -1,4 +1,4 @@
-package org.openmined.syft.device.repositories
+package org.openmined.syft.monitor.useractivity
 
 import android.app.ActivityManager
 import android.content.Context

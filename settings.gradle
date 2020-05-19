@@ -1,3 +1,2 @@
 include (":demo-app",":syftlib")
 rootProject.name = "KotlinSyft"
-include ':annotations'

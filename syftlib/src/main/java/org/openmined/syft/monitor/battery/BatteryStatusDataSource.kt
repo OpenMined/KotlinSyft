@@ -1,12 +1,11 @@
-package org.openmined.syft.device.repositories
+package org.openmined.syft.monitor.battery
 
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
-import org.openmined.syft.device.models.CHARGE_TYPE
 
-class BatteryStatusRepository(private val context: Context)  {
+class BatteryStatusDataSource(context: Context) {
 
     private val batteryStatus = context.registerReceiver(
         null,

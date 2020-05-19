@@ -5,11 +5,11 @@ import android.util.Log
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.processors.PublishProcessor
-import org.openmined.syft.device.repositories.NetworkStatusRepository
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.JobStatusMessage
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
+import org.openmined.syft.monitor.DeviceMonitor
 import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CycleRequest
@@ -40,15 +40,11 @@ class Syft internal constructor(
                 }
     }
 
+    private val deviceMonitor = DeviceMonitor(syftConfig)
     private val workerJobs = ConcurrentHashMap<SyftJob.JobID, SyftJob>()
     private val jobStatusProcessors =
             ConcurrentHashMap<SyftJob.JobID, PublishProcessor<JobStatusMessage>>()
     private val compositeDisposable = CompositeDisposable()
-    
-    //todo battery state and sleep/wake state will also come.
-    // Eventually Configuration class must handle these states
-    // Config class will give the final decision to worker whether to execute the job or not
-    private val networkStateRepository = NetworkStatusRepository(syftConfig)
 
     @Volatile
     private var workerId: String? = null
@@ -85,11 +81,14 @@ class Syft internal constructor(
     fun executeCycleRequest(job: SyftJob) {
         workerId?.let { id ->
             compositeDisposable.add(
-                syftConfig.getNetworkState(id).flatMap { networkState ->
-                    val ping = networkState.ping
-                    val downloadSpeed = networkState.downloadSpeed
-                    val uploadSpeed = networkState.uploadspeed
-                    requestCycle(id, job, ping, downloadSpeed, uploadSpeed)
+                deviceMonitor.getNetworkStatus(id).flatMap { networkState ->
+                    requestCycle(
+                        id,
+                        job,
+                        networkState.ping,
+                        networkState.downloadSpeed,
+                        networkState.uploadspeed
+                    )
                 }
                         .compose(syftConfig.networkingSchedulers.applySingleSchedulers())
                         .subscribe(
