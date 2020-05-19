@@ -41,7 +41,7 @@ class SyftConfiguration private constructor(
 
     fun getWebRTCSignallingClient(): SocketAPI = socketClient
 
-    class SyftConfigBuilder(val context: Context, val baseUrl: String) {
+    class SyftConfigBuilder(private val context: Context, private val baseUrl: String) {
 
         private var networkingSchedulers: ProcessSchedulers = object : ProcessSchedulers {
             override val computeThreadScheduler: Scheduler
