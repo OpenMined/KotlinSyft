@@ -9,8 +9,9 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.processors.PublishProcessor
 import io.reactivex.schedulers.Schedulers
 import org.junit.jupiter.api.Test
-import org.openmined.syft.execution.JobStatusMessage
+import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.SyftJob
+import org.openmined.syft.monitor.DeviceMonitor
 import org.openmined.syft.networking.clients.HttpClient
 import org.openmined.syft.networking.clients.SocketClient
 import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
@@ -39,16 +40,30 @@ internal class SyftTest {
                 get() = AndroidSchedulers.mainThread()
         }
 
+        val deviceMonitor = mock<DeviceMonitor> {
+            on { getStatusProcessor() }.thenReturn(PublishProcessor.create())
+        }
+
+        val config = SyftConfiguration(
+            mock(),
+            schedulers,
+            schedulers,
+            mock(),
+            listOf(),
+            socketClient,
+            httpClient,
+            1,
+            SyftConfiguration.NetworkingClients.SOCKET
+        )
         val workerTest = spy(
-            Syft("auth token", socketClient, httpClient, schedulers, schedulers)
+            Syft("auth token", config, deviceMonitor)
         )
         val syftJob = SyftJob(
             "model name",
             "1.0.0",
             workerTest,
-            PublishProcessor.create<JobStatusMessage>(),
-            schedulers,
-            schedulers
+            PublishProcessor.create(),
+            config
         )
 
         workerTest.executeCycleRequest(syftJob)

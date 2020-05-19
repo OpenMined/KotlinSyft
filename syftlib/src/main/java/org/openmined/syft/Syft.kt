@@ -23,7 +23,8 @@ private const val TAG = "Syft"
 @ExperimentalUnsignedTypes
 class Syft internal constructor(
     private val authToken: String,
-    private val syftConfig: SyftConfiguration
+    private val syftConfig: SyftConfiguration,
+    private val deviceMonitor: DeviceMonitor
 ) {
     companion object {
         @Volatile
@@ -36,12 +37,12 @@ class Syft internal constructor(
                 INSTANCE ?: synchronized(this) {
                     INSTANCE ?: Syft(
                         authToken,
-                        syftConfiguration
+                        syftConfiguration,
+                        DeviceMonitor(syftConfiguration)
                     ).also { INSTANCE = it }
                 }
     }
 
-    private val deviceMonitor = DeviceMonitor(syftConfig)
     private val workerJobs = ConcurrentHashMap<SyftJob.JobID, SyftJob>()
     private val jobStatusProcessors =
             ConcurrentHashMap<SyftJob.JobID, PublishProcessor<JobStatusMessage>>()

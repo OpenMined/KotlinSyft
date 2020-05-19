@@ -13,13 +13,14 @@ import org.openmined.syft.threading.ProcessSchedulers
 import java.io.File
 
 @ExperimentalUnsignedTypes
-class SyftConfiguration private constructor(
+class SyftConfiguration internal constructor(
     val context: Context,
-    baseUrl: String,
     val networkingSchedulers: ProcessSchedulers,
     val computeSchedulers: ProcessSchedulers,
     val filesDir: File,
     val networkConstraints: List<Int>,
+    private val socketClient: SocketClient,
+    private val httpClient: HttpClient,
     private val maxConcurrentJobs: Int,
     private val messagingClient: NetworkingClients,
     val cacheTimeOut: Long = 100000
@@ -27,10 +28,6 @@ class SyftConfiguration private constructor(
     companion object {
         fun builder(context: Context, baseUrl: String) = SyftConfigBuilder(context, baseUrl)
     }
-
-    private val socketClient = SocketClient(baseUrl, 10000u, networkingSchedulers)
-    private val httpClient = HttpClient(baseUrl)
-
 
     fun getDownloader() = httpClient.apiClient
 
@@ -56,6 +53,8 @@ class SyftConfiguration private constructor(
             override val calleeThreadScheduler: Scheduler
                 get() = AndroidSchedulers.mainThread()
         }
+        private var socketClient = SocketClient(baseUrl, 20000u, networkingSchedulers)
+        private var httpClient = HttpClient(baseUrl)
         private var filesDir = context.filesDir
         private var maxConcurrentJobs: Int = 1
         private var messagingClient: NetworkingClients = NetworkingClients.SOCKET
@@ -69,11 +68,12 @@ class SyftConfiguration private constructor(
             val constraintList = networkConstraints.filterValues { it }.keys.toList()
             return SyftConfiguration(
                 context,
-                baseUrl,
                 networkingSchedulers,
                 computeSchedulers,
                 filesDir,
                 constraintList,
+                socketClient,
+                httpClient,
                 maxConcurrentJobs,
                 messagingClient
             )
