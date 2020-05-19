@@ -10,6 +10,7 @@ import org.openmined.syft.execution.JobStatusMessage
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.monitor.DeviceMonitor
+import org.openmined.syft.monitor.StateChangeMessage
 import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CycleRequest
@@ -45,6 +46,10 @@ class Syft internal constructor(
     private val jobStatusProcessors =
             ConcurrentHashMap<SyftJob.JobID, PublishProcessor<JobStatusMessage>>()
     private val compositeDisposable = CompositeDisposable()
+
+    init {
+        subscribeDeviceMonitor()
+    }
 
     @Volatile
     private var workerId: String? = null
@@ -183,6 +188,24 @@ class Syft internal constructor(
             this.workerId = workerId
         else if (workerJobs.isEmpty())
             this.workerId = workerId
+    }
+
+    private fun subscribeDeviceMonitor() {
+        compositeDisposable.add(
+            deviceMonitor.getStatusProcessor()
+                    .onBackpressureLatest()
+                    .subscribe {
+                        when (it) {
+                            is StateChangeMessage.Charging ->
+                                //todo something
+                                Log.d(TAG, "charging change")
+                            is StateChangeMessage.Network ->
+                                Log.d(TAG, "network state changed")
+                            is StateChangeMessage.Activity ->
+                                Log.d(TAG, "user activity started")
+                        }
+                    }
+        )
     }
 
 }

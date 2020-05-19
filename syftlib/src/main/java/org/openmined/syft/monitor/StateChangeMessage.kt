@@ -1,4 +1,7 @@
 package org.openmined.syft.monitor
 
-class StateChangeMessage {
+sealed class StateChangeMessage {
+    object Charging : StateChangeMessage()
+    object Activity : StateChangeMessage()
+    object Network : StateChangeMessage()
 }
