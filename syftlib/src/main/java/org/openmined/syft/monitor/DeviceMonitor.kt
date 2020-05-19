@@ -20,4 +20,5 @@ class DeviceMonitor(
 
     fun getStatusProcessor() = statusProcessor
 
+    //TODO("add appropriate register/deregister broadcasts here")
 }

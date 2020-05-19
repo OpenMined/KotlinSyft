@@ -4,11 +4,12 @@ import android.content.BroadcastReceiver
 import android.content.Intent
 import android.content.IntentFilter
 import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.monitor.BroadCastListener
 
 @ExperimentalUnsignedTypes
 class BatteryStatusRepository internal constructor(
     private val batteryStatusDataSource: BatteryStatusDataSource
-) {
+) : BroadCastListener{
     companion object {
         fun initialize(
             configuration: SyftConfiguration,
@@ -30,5 +31,13 @@ class BatteryStatusRepository internal constructor(
         batteryStatusDataSource.chargeType(),
         System.currentTimeMillis()
     )
+
+    override fun registerListener() {
+        TODO("Not yet implemented")
+    }
+
+    override fun deregisterListener() {
+        TODO("Not yet implemented")
+    }
 
 }

@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import io.reactivex.Completable
 import io.reactivex.Single
 import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.monitor.BroadCastListener
 
 private const val TAG = "NetworkStateRepository"
 
@@ -14,7 +15,7 @@ class NetworkStatusRepository internal constructor(
     private val networkConstraints: List<Int>,
     private val cacheService: NetworkStatusCache,
     private val realTimeDataService: NetworkStatusRealTimeDataSource
-) {
+) : BroadCastListener{
     companion object {
         fun initialize(
             configuration: SyftConfiguration
@@ -54,6 +55,14 @@ class NetworkStatusRepository internal constructor(
                     cacheService.networkStateCache = networkStatus
                 })
                 .andThen(Single.just(cacheService.networkStateCache))
+    }
+
+    override fun registerListener() {
+        TODO("register network callback here")
+    }
+
+    override fun deregisterListener() {
+        TODO("deregister network callback here")
     }
 
 
