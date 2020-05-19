@@ -87,7 +87,8 @@ class Syft internal constructor(
     fun executeCycleRequest(job: SyftJob) {
         workerId?.let { id ->
             compositeDisposable.add(
-                deviceMonitor.getNetworkStatus(id).flatMap { networkState ->
+                deviceMonitor.getNetworkStatus(id)
+                        .flatMap { networkState ->
                     requestCycle(
                         id,
                         job,

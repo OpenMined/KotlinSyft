@@ -2,7 +2,6 @@ package org.openmined.syft.monitor.network
 
 import android.content.Context
 import android.net.ConnectivityManager
-import io.reactivex.Completable
 import io.reactivex.Single
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.monitor.BroadCastListener
@@ -46,15 +45,15 @@ class NetworkStatusRepository internal constructor(
         return realTimeDataService.updatePing(workerId, networkStatus)
                 .andThen(realTimeDataService.updateDownloadSpeed(workerId, networkStatus))
                 .andThen(realTimeDataService.updateUploadSpeed(workerId, networkStatus))
-                .andThen(Completable.create {
+                .andThen(Single.create {
                     realTimeDataService.updateNetworkValidity(
                         networkConstraints,
                         networkStatus
                     )
                     networkStatus.cacheTimeStamp = System.currentTimeMillis()
                     cacheService.networkStateCache = networkStatus
+                    it.onSuccess(networkStatus)
                 })
-                .andThen(Single.just(cacheService.networkStateCache))
     }
 
     override fun registerListener() {

@@ -12,6 +12,13 @@ class NetworkStatusCache(private val cacheTimeOut: Long) {
             Maybe.empty()
     }
 
-    private fun isCacheValid() =
-            System.currentTimeMillis() - networkStateCache.cacheTimeStamp < cacheTimeOut
+    private fun isCacheValid(): Boolean {
+        val cacheTimeValidity =
+                System.currentTimeMillis() - networkStateCache.cacheTimeStamp < cacheTimeOut
+        val fieldValidity = (networkStateCache.downloadSpeed != null)
+                            && (networkStateCache.ping != null)
+                            && (networkStateCache.uploadspeed != null)
+        return cacheTimeValidity and fieldValidity and networkStateCache.networkValidity
+    }
+
 }
