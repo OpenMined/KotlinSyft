@@ -1,7 +1,6 @@
 package org.openmined.syft.monitor.network
 
 import android.accounts.NetworkErrorException
-import android.content.Context
 import android.net.ConnectivityManager
 import android.util.Log
 import io.reactivex.Completable
@@ -11,10 +10,11 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
-import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.networking.requests.HttpAPI
 import org.openmined.syft.utilities.FileWriter
 import org.openmined.syft.utilities.MB
 import org.openmined.syft.utilities.readNBuffers
+import java.io.File
 import java.util.Random
 
 
@@ -24,11 +24,11 @@ private const val MAX_SPEED_TESTING_BYTES = MB * 8
 private const val TAG = "NetworkStateEvaluator"
 
 @ExperimentalUnsignedTypes
-class NetworkStatusRealTimeDataSource(private val configuration: SyftConfiguration) {
-
-    private val networkManager = configuration.context
-            .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
+class NetworkStatusRealTimeDataSource(
+    private val downloader: HttpAPI,
+    private val filesDir: File,
+    private val networkManager: ConnectivityManager
+) {
     fun updateNetworkValidity(
         constraints: List<Int>,
         networkStatusModel: NetworkStatusModel
@@ -40,7 +40,7 @@ class NetworkStatusRealTimeDataSource(private val configuration: SyftConfigurati
 
     fun updatePing(workerId: String, networkStatusModel: NetworkStatusModel): Completable {
         val start = System.currentTimeMillis()
-        return configuration.getDownloader().checkPing(
+        return downloader.checkPing(
             workerId = workerId,
             random = Random().ints(128).toString()
         )
@@ -60,14 +60,14 @@ class NetworkStatusRealTimeDataSource(private val configuration: SyftConfigurati
         networkStatusModel: NetworkStatusModel
     ): Completable {
         val fileSize = 64
-        val file = FileWriter(configuration.filesDir, "uploadFile")
+        val file = FileWriter(filesDir, "uploadFile")
                 .writeRandomData(fileSize)
         val requestFile = file.asRequestBody("text/plain".toMediaType())
         val body = MultipartBody.Part.createFormData("sample", file.name, requestFile)
         val description = "uploadFile".toRequestBody()
         val start = System.currentTimeMillis() / 1000.0f
 
-        return configuration.getDownloader().uploadSpeedTest(
+        return downloader.uploadSpeedTest(
             workerId, Random().ints(128).toString(),
             description,
             body
@@ -91,7 +91,7 @@ class NetworkStatusRealTimeDataSource(private val configuration: SyftConfigurati
     }
 
     fun updateDownloadSpeed(workerId: String, networkStatusModel: NetworkStatusModel) =
-            configuration.getDownloader()
+            downloader
                     .downloadSpeedTest(workerId, Random().ints(128).toString())
                     .flatMap { response ->
                         evaluateDownloadSpeed(response.body())

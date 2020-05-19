@@ -10,11 +10,9 @@ class DeviceMonitor(
     syftConfig: SyftConfiguration
 ) {
 
-    private val networkStatusRepository =
-            NetworkStatusRepository(syftConfig)
-    private val batteryStatusRepository = BatteryStatusRepository(syftConfig.context)
+    private val networkStatusRepository = NetworkStatusRepository.initialize(syftConfig)
+    private val batteryStatusRepository = BatteryStatusRepository.initialize(syftConfig)
     private val statusProcessor = PublishProcessor.create<StateChangeMessage>()
-
 
     fun getNetworkStatus(workerId: String) = networkStatusRepository.getNetworkStatus(workerId)
 
