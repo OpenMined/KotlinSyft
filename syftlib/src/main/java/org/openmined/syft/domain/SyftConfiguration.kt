@@ -40,7 +40,7 @@ class SyftConfiguration internal constructor(
 
     class SyftConfigBuilder(private val context: Context, private val baseUrl: String) {
 
-        private var networkingSchedulers: ProcessSchedulers = object : ProcessSchedulers {
+        private var networkingSchedulers: ProcessSchedulers =object : ProcessSchedulers {
             override val computeThreadScheduler: Scheduler
                 get() = Schedulers.io()
             override val calleeThreadScheduler: Scheduler
@@ -49,9 +49,9 @@ class SyftConfiguration internal constructor(
 
         private var computeSchedulers: ProcessSchedulers = object : ProcessSchedulers {
             override val computeThreadScheduler: Scheduler
-                get() = Schedulers.io()
+                get() = Schedulers.computation()
             override val calleeThreadScheduler: Scheduler
-                get() = AndroidSchedulers.mainThread()
+                get() = Schedulers.single()
         }
         private var socketClient = SocketClient(baseUrl, 20000u, networkingSchedulers)
         private var httpClient = HttpClient(baseUrl)
