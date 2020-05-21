@@ -5,20 +5,16 @@ import android.util.Log
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.processors.PublishProcessor
-import org.openmined.syft.device.repositories.NetworkStateRepository
+import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.JobStatusMessage
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
-import org.openmined.syft.networking.clients.HttpClient
-import org.openmined.syft.networking.clients.SocketClient
+import org.openmined.syft.monitor.DeviceMonitor
+import org.openmined.syft.monitor.StateChangeMessage
 import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
-import org.openmined.syft.networking.requests.CommunicationAPI
-import org.openmined.syft.networking.requests.HttpAPI
-import org.openmined.syft.networking.requests.SocketAPI
-import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.ConcurrentHashMap
 
 
@@ -27,32 +23,22 @@ private const val TAG = "Syft"
 @ExperimentalUnsignedTypes
 class Syft internal constructor(
     private val authToken: String,
-    private var socketClient: SocketClient,
-    private var httpClient: HttpClient,
-    //todo this will be removed by syft configuration class
-    private val networkingSchedulers: ProcessSchedulers,
-    //todo change this to read from syft configuration
-    private val computeSchedulers: ProcessSchedulers
-
+    private val syftConfig: SyftConfiguration,
+    private val deviceMonitor: DeviceMonitor
 ) {
     companion object {
         @Volatile
         private var INSTANCE: Syft? = null
 
         fun getInstance(
-            baseUrl: String,
             authToken: String,
-            networkingSchedulers: ProcessSchedulers,
-            //todo this will be removed by syft configuration class
-            computeSchedulers: ProcessSchedulers
+            syftConfiguration: SyftConfiguration
         ): Syft =
                 INSTANCE ?: synchronized(this) {
                     INSTANCE ?: Syft(
                         authToken,
-                        SocketClient(baseUrl, 2000u, networkingSchedulers),
-                        HttpClient(baseUrl),
-                        networkingSchedulers,
-                        computeSchedulers
+                        syftConfiguration,
+                        DeviceMonitor(syftConfiguration)
                     ).also { INSTANCE = it }
                 }
     }
@@ -61,11 +47,10 @@ class Syft internal constructor(
     private val jobStatusProcessors =
             ConcurrentHashMap<SyftJob.JobID, PublishProcessor<JobStatusMessage>>()
     private val compositeDisposable = CompositeDisposable()
-    
-    //todo battery state and sleep/wake state will also come.
-    // Eventually Configuration class must handle these states
-    // Config class will give the final decision to worker whether to execute the job or not
-    private val networkStateRepository = NetworkStateRepository(getDownloader())
+
+    init {
+        subscribeDeviceMonitor()
+    }
 
     @Volatile
     private var workerId: String? = null
@@ -80,8 +65,7 @@ class Syft internal constructor(
             version,
             this,
             publishProcessor,
-            computeSchedulers,
-            networkingSchedulers
+            syftConfig
         )
         jobStatusProcessors[job.jobId] = publishProcessor
         workerJobs[job.jobId] = job
@@ -93,24 +77,9 @@ class Syft internal constructor(
             override fun onError(throwable: Throwable) {
                 workerJobs.remove(job.jobId)
             }
-        }, networkingSchedulers)
+        }, syftConfig.networkingSchedulers)
 
         return job
-    }
-
-
-    fun getDownloader(): HttpAPI = httpClient.apiClient
-
-    //todo decide this based on configuration
-    fun getSignallingClient(): CommunicationAPI = socketClient
-    fun getWebRTCSignallingClient(): SocketAPI = socketClient
-
-    fun setHttpClient(httpClient: HttpClient) {
-        this.httpClient = httpClient
-    }
-
-    fun setSocketClient(socketClient: SocketClient) {
-        this.socketClient = socketClient
     }
 
     fun getSyftWorkerId() = workerId
@@ -118,13 +87,17 @@ class Syft internal constructor(
     fun executeCycleRequest(job: SyftJob) {
         workerId?.let { id ->
             compositeDisposable.add(
-                networkStateRepository.getNetworkState(id).flatMap { networkState ->
-                    val ping = networkState.ping
-                    val downloadSpeed = networkState.downloadSpeed
-                    val uploadSpeed = networkState.uploadspeed
-                    requestCycle(id, job, ping, downloadSpeed, uploadSpeed)
+                deviceMonitor.getNetworkStatus(id)
+                        .flatMap { networkState ->
+                    requestCycle(
+                        id,
+                        job,
+                        networkState.ping,
+                        networkState.downloadSpeed,
+                        networkState.uploadspeed
+                    )
                 }
-                        .compose(networkingSchedulers.applySingleSchedulers())
+                        .compose(syftConfig.networkingSchedulers.applySingleSchedulers())
                         .subscribe(
                             { response: CycleResponseData ->
                                 when (response) {
@@ -155,7 +128,7 @@ class Syft internal constructor(
                 Single.error(NetworkErrorException("unable to verify download speed"))
             uploadSpeed == null ->
                 Single.error(NetworkErrorException("unable to verify upload speed"))
-            else -> getSignallingClient().getCycle(
+            else -> syftConfig.getSignallingClient().getCycle(
                 CycleRequest(
                     id, job.jobId.modelName,
                     job.jobId.version,
@@ -185,13 +158,16 @@ class Syft internal constructor(
             )
         )
         job.setJobArguments(responseData)
-        job.downloadData()
+        workerId?.let {
+            job.downloadData(it)
+        } ?: throw IllegalStateException("workerId is not initialised")
+
     }
 
     private fun executeAuthentication(job: SyftJob) {
         compositeDisposable.add(
-            socketClient.authenticate(AuthenticationRequest(authToken))
-                    .compose(networkingSchedulers.applySingleSchedulers())
+            syftConfig.getSignallingClient().authenticate(AuthenticationRequest(authToken))
+                    .compose(syftConfig.networkingSchedulers.applySingleSchedulers())
                     .subscribe({ t: AuthenticationResponse ->
                         when (t) {
                             is AuthenticationResponse.AuthenticationSuccess -> {
@@ -214,6 +190,24 @@ class Syft internal constructor(
             this.workerId = workerId
         else if (workerJobs.isEmpty())
             this.workerId = workerId
+    }
+
+    private fun subscribeDeviceMonitor() {
+        compositeDisposable.add(
+            deviceMonitor.getStatusProcessor()
+                    .onBackpressureLatest()
+                    .subscribe {
+                        when (it) {
+                            is StateChangeMessage.Charging ->
+                                //todo something
+                                Log.d(TAG, "charging change")
+                            is StateChangeMessage.Network ->
+                                Log.d(TAG, "network state changed")
+                            is StateChangeMessage.Activity ->
+                                Log.d(TAG, "user activity started")
+                        }
+                    }
+        )
     }
 
 }

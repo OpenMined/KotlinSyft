@@ -1,6 +1,7 @@
-package org.openmined.syft.device.repositories
+package org.openmined.syft.monitor.network
 
 import android.accounts.NetworkErrorException
+import android.net.ConnectivityManager
 import android.util.Log
 import io.reactivex.Completable
 import io.reactivex.Single
@@ -9,31 +10,35 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
-import org.openmined.syft.device.models.NetworkStateModel
 import org.openmined.syft.networking.requests.HttpAPI
 import org.openmined.syft.utilities.FileWriter
 import org.openmined.syft.utilities.MB
 import org.openmined.syft.utilities.readNBuffers
+import java.io.File
 import java.util.Random
 
-private const val TAG = "NetworkStateRepository"
 
 private const val SPEED_BUFFER_WINDOW = 20
 private const val SPEED_MULTIPLICATION_FACTOR = 10
 private const val MAX_SPEED_TESTING_BYTES = MB * 8
+private const val TAG = "NetworkStateEvaluator"
 
-//todo this downloader will actually be coming from configuration class later
-class NetworkStateRepository(private val downloader: HttpAPI) {
-
-    fun getNetworkState(workerId: String): Single<NetworkStateModel> {
-        val networkState = NetworkStateModel()
-        return updatePing(workerId, networkState)
-                .andThen(updateDownloadSpeed(workerId, networkState))
-                .andThen(updateUploadSpeed(workerId, networkState))
-                .andThen(Single.just(networkState))
+@ExperimentalUnsignedTypes
+class NetworkStatusRealTimeDataSource(
+    private val downloader: HttpAPI,
+    private val filesDir: File,
+    private val networkManager: ConnectivityManager
+) {
+    fun updateNetworkValidity(
+        constraints: List<Int>,
+        networkStatusModel: NetworkStatusModel
+    ) {
+        networkManager.getNetworkCapabilities(networkManager.activeNetwork)?.let { capabilities ->
+            networkStatusModel.networkValidity = constraints.all { capabilities.hasCapability(it) }
+        } ?: throw Exception("Unknown network. Cannot detect network properties")
     }
 
-    private fun updatePing(workerId: String, networkStateModel: NetworkStateModel): Completable {
+    fun updatePing(workerId: String, networkStatusModel: NetworkStatusModel): Completable {
         val start = System.currentTimeMillis()
         return downloader.checkPing(
             workerId = workerId,
@@ -41,8 +46,8 @@ class NetworkStateRepository(private val downloader: HttpAPI) {
         )
                 .flatMapCompletable { response ->
                     if (response.code() == 200 && response.body()?.error == null) {
-                        networkStateModel.ping = (System.currentTimeMillis() - start).toString()
-                        Log.d(TAG, "Ping is ${networkStateModel.ping} ms")
+                        networkStatusModel.ping = (System.currentTimeMillis() - start).toString()
+                        Log.d(TAG, "Ping is ${networkStatusModel.ping} ms")
                         Completable.complete()
                     } else
                         Completable.error(NetworkErrorException("unable to get ping"))
@@ -50,14 +55,49 @@ class NetworkStateRepository(private val downloader: HttpAPI) {
                 }
     }
 
-    private fun updateDownloadSpeed(workerId: String, networkStateModel: NetworkStateModel) =
+    fun updateUploadSpeed(
+        workerId: String,
+        networkStatusModel: NetworkStatusModel
+    ): Completable {
+        val fileSize = 64
+        val file = FileWriter(filesDir, "uploadFile")
+                .writeRandomData(fileSize)
+        val requestFile = file.asRequestBody("text/plain".toMediaType())
+        val body = MultipartBody.Part.createFormData("sample", file.name, requestFile)
+        val description = "uploadFile".toRequestBody()
+        val start = System.currentTimeMillis() / 1000.0f
+
+        return downloader.uploadSpeedTest(
+            workerId, Random().ints(128).toString(),
+            description,
+            body
+        )
+                .flatMapCompletable { response ->
+                    if (response.body()?.error == null && response.code() == 200) {
+                        var speed = fileSize * 1024 / (System.currentTimeMillis() / 1000.0f - start)
+                        if (speed > 100000)
+                        //capping infinity
+                            speed = 100000.0f
+                        networkStatusModel.uploadspeed = speed.toString()
+                        Log.d(TAG, "Upload Speed is ${networkStatusModel.uploadspeed} KBps")
+                        file.delete()
+                        Completable.complete()
+
+                    } else {
+                        file.delete()
+                        Completable.error(NetworkErrorException("unable to verify upload speed"))
+                    }
+                }
+    }
+
+    fun updateDownloadSpeed(workerId: String, networkStatusModel: NetworkStatusModel) =
             downloader
                     .downloadSpeedTest(workerId, Random().ints(128).toString())
                     .flatMap { response ->
                         evaluateDownloadSpeed(response.body())
                     }.flatMapCompletable { speed ->
-                        networkStateModel.downloadSpeed = speed.toString()
-                        Log.d(TAG, "Download Speed is ${networkStateModel.downloadSpeed} KBps")
+                        networkStatusModel.downloadSpeed = speed.toString()
+                        Log.d(TAG, "Download Speed is ${networkStatusModel.downloadSpeed} KBps")
                         Completable.complete()
                     }
 
@@ -95,46 +135,13 @@ class NetworkStateRepository(private val downloader: HttpAPI) {
                     begin += 1
                     start = System.currentTimeMillis()
                 }
-                emitter.onSuccess(avgSpeedWindow.sum() / Integer.min(begin, SPEED_BUFFER_WINDOW))
+                emitter.onSuccess(
+                    avgSpeedWindow.sum() / Integer.min(
+                        begin,
+                        SPEED_BUFFER_WINDOW
+                    )
+                )
             }
         }
     }
-
-
-    private fun updateUploadSpeed(
-        workerId: String,
-        networkStateModel: NetworkStateModel
-    ): Completable {
-        val fileSize = 64
-        //todo change hardcoding of dest dir
-        val file = FileWriter("/data/data/org.openmined.syft.demo/files", "uploadFile")
-                .writeRandomData(fileSize)
-        val requestFile = file.asRequestBody("text/plain".toMediaType())
-        val body = MultipartBody.Part.createFormData("sample", file.name, requestFile)
-        val description = "uploadFile".toRequestBody()
-        val start = System.currentTimeMillis() / 1000.0f
-
-        return downloader.uploadSpeedTest(
-            workerId, Random().ints(128).toString(),
-            description,
-            body
-        )
-                .flatMapCompletable { response ->
-                    if (response.body()?.error == null && response.code() == 200) {
-                        var speed = fileSize * 1024 / (System.currentTimeMillis() / 1000.0f - start)
-                        if (speed > 100000)
-                        //capping infinity
-                            speed = 100000.0f
-                        networkStateModel.uploadspeed = speed.toString()
-                        Log.d(TAG, "Upload Speed is ${networkStateModel.uploadspeed} KBps")
-                        file.delete()
-                        Completable.complete()
-
-                    } else {
-                        file.delete()
-                        Completable.error(NetworkErrorException("unable to verify upload speed"))
-                    }
-                }
-    }
-
 }

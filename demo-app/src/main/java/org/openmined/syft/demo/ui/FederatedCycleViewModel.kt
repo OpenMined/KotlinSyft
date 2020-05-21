@@ -4,12 +4,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import org.openmined.syft.Syft
 import org.openmined.syft.demo.domain.MNISTDataRepository
-import org.openmined.syft.domain.LocalConfiguration
+import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.Plan
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
-import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.ConcurrentHashMap
 
 private const val TAG = "FederatedCycleViewModel"
@@ -17,17 +16,11 @@ private const val TAG = "FederatedCycleViewModel"
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class FederatedCycleViewModel(
-    baseUrl: String,
     authToken: String,
-    private val mnistDataRepository: MNISTDataRepository,
-    networkSchedulers: ProcessSchedulers,
-    computeSchedulers: ProcessSchedulers,
-    private val localConfiguration: LocalConfiguration
+    configuration: SyftConfiguration,
+    private val mnistDataRepository: MNISTDataRepository
 ) : ViewModel() {
-    private val syftWorker = Syft.getInstance(
-        baseUrl, authToken,
-        networkSchedulers, computeSchedulers
-    )
+    private val syftWorker = Syft.getInstance(authToken, configuration)
     private val mnistJob = syftWorker.newJob("mnist", "1.0.0")
 
     val logger
