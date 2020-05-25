@@ -33,15 +33,16 @@ private const val TAG = "SocketClient"
 
 @ExperimentalUnsignedTypes
 class SocketClient(
-    baseUrl: String,
+    private val syftWebSocket: SyftWebSocket,
     private val timeout: UInt = 20000u,
     private val schedulers: ProcessSchedulers
 ) : SocketAPI {
 
+    constructor(baseUrl: String, timeout: UInt, schedulers: ProcessSchedulers) :
+            this(SyftWebSocket(NetworkingProtocol.WSS, baseUrl, timeout), timeout, schedulers)
+
     //Choosing stable kotlin serialization over default
     private val Json = Json(JsonConfiguration.Stable)
-
-    private val syftWebSocket = SyftWebSocket(NetworkingProtocol.WSS, baseUrl, timeout)
 
     @Volatile
     private var socketClientSubscribed = AtomicBoolean(false)
@@ -111,9 +112,7 @@ class SocketClient(
                 .first(null)
     }
 
-    private fun initiateSocketIfEmpty() {
-        if (socketClientSubscribed.get())
-            return
+    fun initiateNewWebSocket() {
         compositeDisposable.add(syftWebSocket.start()
                 .map {
                     when (it) {
@@ -132,7 +131,18 @@ class SocketClient(
                 }
                 .subscribeOn(schedulers.computeThreadScheduler)
                 .observeOn(schedulers.calleeThreadScheduler)
-                .subscribe { socketClientSubscribed.set(true) })
+                .doOnEach {
+                    if (!socketClientSubscribed.get())
+                        socketClientSubscribed.set(true)
+                }
+                .subscribe()
+        )
+    }
+
+    private fun initiateSocketIfEmpty() {
+        if (socketClientSubscribed.get())
+            return
+        initiateNewWebSocket()
     }
 
     private fun emitMessage(response: SocketResponse) {
