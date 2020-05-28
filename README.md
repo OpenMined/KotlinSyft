@@ -2,7 +2,6 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
-
 ![Tests](https://img.shields.io/github/workflow/status/OpenMined/KotlinSyft/tests)
 ![Coverage](https://img.shields.io/codecov/c/github/OpenMined/KotlinSyft/dev)
 ![build](https://github.com/OpenMined/KotlinSyft/workflows/Android%20CI/badge.svg)
