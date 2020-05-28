@@ -5,15 +5,6 @@
   "imageSize": 100,
   "commit": false,
   "contributors": [
-    {
-      "login": "cereallarceny",
-      "name": "Patrick Cason",
-      "avatar_url": "https://avatars1.githubusercontent.com/u/1297930?v=4",
-      "profile": "https://www.patrickcason.com",
-      "contributions": [
-        "doc"
-        ]
-    },
     {      
       "login": "vkkhare",
       "name": "varun khare",
@@ -31,6 +22,24 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "codeboy5",
+      "name": "Saksham Rastogi",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/40931412?v=4",
+      "profile": "https://github.com/codeboy5",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "cereallarceny",
+      "name": "Patrick Cason",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/1297930?v=4",
+      "profile": "https://www.patrickcason.com",
+      "contributions": [
+        "doc"
+        ]
     }
   ],
   "contributorsPerLine": 7,
