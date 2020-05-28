@@ -1,4 +1,7 @@
 ![KotlinSyft-logo](project_resources/pysyft_android.png)
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ![Tests](https://img.shields.io/github/workflow/status/OpenMined/KotlinSyft/Tests)
 ![Coverage](https://img.shields.io/codecov/c/github/OpenMined/KotlinSyft)
@@ -174,5 +177,17 @@ Read the [contribution guide](https://github.com/OpenMined/.github/blob/master/C
 ## Contributors
 These people were integral part of the efforts to bring KotlinSyft to fruition and in its active development. 
 
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://www.patrickcason.com"><img src="https://avatars1.githubusercontent.com/u/1297930?v=4" width="100px;" alt=""/><br /><sub><b>Patrick Cason</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/commits?author=cereallarceny" title="Documentation">📖</a></td>
+  </tr>
+</table>
+
+<!-- markdownlint-enable -->
+<!-- prettier-ignore-end -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->
 ## License
 [Apache License 2.0](https://choosealicense.com/licenses/apache-2.0/)
