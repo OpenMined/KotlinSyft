@@ -35,6 +35,7 @@ object Versions {
     const val netflixPublishing = "14.0.0"
     const val netflixRelease = "13.0.0"
     const val netflixBintray = "3.5.4"
+    const val jacocoVersion = "0.8.2"
 
     // Test
     const val junit = "1.1.1"
@@ -57,6 +58,7 @@ object ProjectDependencies {
                                      Versions.netflixRelease
     const val netflixBintrayPlugin = "com.netflix.nebula:nebula-bintray-plugin:" +
                                      Versions.netflixBintray
+    const val jacoco = "org.jacoco:org.jacoco.core:" + Versions.jacocoVersion
 }
 
 object CommonDependencies {

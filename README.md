@@ -1,8 +1,8 @@
 ![KotlinSyft-logo](project_resources/pysyft_android.png)
 
-![Tests](https://img.shields.io/github/workflow/status/OpenMined/KotlinSyft/Tests)
+![Tests](https://img.shields.io/github/workflow/status/OpenMined/KotlinSyft/tests)
 ![Coverage](https://img.shields.io/codecov/c/github/OpenMined/KotlinSyft)
-![Android CI](https://github.com/OpenMined/KotlinSyft/workflows/Android%20CI/badge.svg)
+![build](https://github.com/OpenMined/KotlinSyft/workflows/Android%20CI/badge.svg)
 ![License](https://img.shields.io/github/license/OpenMined/KotlinSyft)
 ![OpenCollective](https://img.shields.io/opencollective/all/openmined)
 
