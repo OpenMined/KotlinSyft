@@ -22,13 +22,23 @@ jobs:
       with:
         java-version: 1.8
     - name: Gradle Cache
-      uses: actions/cache@v1.1.2
+      uses: actions/cache@v2
       with:
         path: .gradle/caches
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
         restore-keys: |
-          ${{ runner.os }}-gradle-
+          ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+    - name: Create ndk cache dir
+      run: sudo mkdir -p /usr/local/lib/android/sdk/ndk
+    - name: NDK Cache
+      id: ndk-cache
+      uses: actions/cache@v2
+      with:
+        path: /usr/local/lib/android/sdk/ndk
+        key: Linux-ndkcache
+        restore-keys: Linux-ndkcache
     - name: Install NDK
+      if: steps.ndk-cache.outputs.cache-hit != 'true'
       run: echo "y" | sudo ${ANDROID_HOME}/tools/bin/sdkmanager --install "ndk;20.0.5594570" --sdk_root=${ANDROID_SDK_ROOT}
     - name: Build with Gradle
       run: ./gradlew build
