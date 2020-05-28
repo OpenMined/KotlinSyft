@@ -5,7 +5,7 @@
   "imageSize": 100,
   "commit": false,
   "contributors": [
-    {      
+    {
       "login": "vkkhare",
       "name": "varun khare",
       "avatar_url": "https://avatars1.githubusercontent.com/u/18126069?v=4",
@@ -29,7 +29,8 @@
       "avatar_url": "https://avatars3.githubusercontent.com/u/40258150?v=4",
       "profile": "http://ravikantsingh.com",
       "contributions": [
-        "code"
+        "code",
+        "doc"
       ]
     },
     {
@@ -48,7 +49,7 @@
       "profile": "https://www.patrickcason.com",
       "contributions": [
         "doc"
-        ]
+      ]
     }
   ],
   "contributorsPerLine": 7,
