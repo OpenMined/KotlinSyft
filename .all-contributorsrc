@@ -5,7 +5,16 @@
   "imageSize": 100,
   "commit": false,
   "contributors": [
-  {      
+    {
+      "login": "cereallarceny",
+      "name": "Patrick Cason",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/1297930?v=4",
+      "profile": "https://www.patrickcason.com",
+      "contributions": [
+        "doc"
+        ]
+    },
+    {      
       "login": "vkkhare",
       "name": "varun khare",
       "avatar_url": "https://avatars1.githubusercontent.com/u/18126069?v=4",
@@ -13,7 +22,7 @@
       "contributions": [
         "code"
       ]
-  },
+    },
     {
       "login": "mccorby",
       "name": "Jose A. Corbacho",
