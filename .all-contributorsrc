@@ -1,0 +1,24 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "IamRavikantSingh",
+      "name": "Ravikant Singh",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/40258150?v=4",
+      "profile": "http://ravikantsingh.com",
+      "contributions": [
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "KotlinSyft",
+  "projectOwner": "OpenMined",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
