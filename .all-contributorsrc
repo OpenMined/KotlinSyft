@@ -5,6 +5,24 @@
   "imageSize": 100,
   "commit": false,
   "contributors": [
+    {      
+      "login": "vkkhare",
+      "name": "varun khare",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/18126069?v=4",
+      "profile": "http://vkkhare.github.io",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "mccorby",
+      "name": "Jose A. Corbacho",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/4661075?v=4",
+      "profile": "https://github.com/mccorby",
+      "contributions": [
+        "code"
+      ]
+    },
     {
       "login": "IamRavikantSingh",
       "name": "Ravikant Singh",
@@ -13,6 +31,24 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "codeboy5",
+      "name": "Saksham Rastogi",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/40931412?v=4",
+      "profile": "https://github.com/codeboy5",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "cereallarceny",
+      "name": "Patrick Cason",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/1297930?v=4",
+      "profile": "https://www.patrickcason.com",
+      "contributions": [
+        "doc"
+        ]
     }
   ],
   "contributorsPerLine": 7,
