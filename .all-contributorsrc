@@ -5,11 +5,20 @@
   "imageSize": 100,
   "commit": false,
   "contributors": [
-    {
+  {      
       "login": "vkkhare",
       "name": "varun khare",
       "avatar_url": "https://avatars1.githubusercontent.com/u/18126069?v=4",
       "profile": "http://vkkhare.github.io",
+      "contributions": [
+        "code"
+      ]
+  },
+    {
+      "login": "mccorby",
+      "name": "Jose A. Corbacho",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/4661075?v=4",
+      "profile": "https://github.com/mccorby",
       "contributions": [
         "code"
       ]
