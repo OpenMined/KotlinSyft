@@ -182,6 +182,7 @@ These people were integral part of the efforts to bring KotlinSyft to fruition a
 <!-- markdownlint-disable -->
 <table>
   <tr>
+    <td align="center"><a href="http://vkkhare.github.io"><img src="https://avatars1.githubusercontent.com/u/18126069?v=4" width="100px;" alt=""/><br /><sub><b>varun khare</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/commits?author=vkkhare" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/mccorby"><img src="https://avatars2.githubusercontent.com/u/4661075?v=4" width="100px;" alt=""/><br /><sub><b>Jose A. Corbacho</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/commits?author=mccorby" title="Code">💻</a></td>
   </tr>
 </table>
