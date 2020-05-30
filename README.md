@@ -1,12 +1,12 @@
 ![KotlinSyft-logo](project_resources/pysyft_android.png)
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
 ![Tests](<https://img.shields.io/github/workflow/status/OpenMined/KotlinSyft/Testing Workflow?label=tests>)
 ![Coverage](https://img.shields.io/codecov/c/github/OpenMined/KotlinSyft/dev)
 ![build](https://github.com/OpenMined/KotlinSyft/workflows/Android%20CI/badge.svg)
 ![License](https://img.shields.io/github/license/OpenMined/KotlinSyft)
 ![OpenCollective](https://img.shields.io/opencollective/all/openmined)
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # KotlinSyft
 KotlinSyft makes it easy for you to **train and inference PySyft models on Android devices**. This allows you to utilize training data located directly on the device itself, bypassing the need to send a user's data to a central server. This is known as [federated learning](https://ai.googleblog.com/2017/04/federated-learning-collaborative.html).

@@ -29,7 +29,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
     - name: Create ndk cache dir
-      run: sudo mkdir -p /usr/local/lib/android/sdk/ndk
+      run: |
+        sudo mkdir -p /usr/local/lib/android/sdk/ndk
+        sudo chown -R $USER /usr/local/lib/android/sdk/ndk
     - name: NDK Cache
       id: ndk-cache
       uses: actions/cache@v2
