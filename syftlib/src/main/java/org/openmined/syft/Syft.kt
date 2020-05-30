@@ -102,31 +102,34 @@ class Syft internal constructor(
                                 }
                             },
                             { errorMsg: Throwable ->
-                                jobStatusProcessors[job.jobId]?.offer(
-                                    JobStatusMessage.JobError(errorMsg)
-                                )
+                                jobStatusProcessors[job.jobId]?.onError(errorMsg)
                             })
             )
         } ?: executeAuthentication(job)
     }
 
+    fun dispose() {
+        compositeDisposable.clear()
+        workerJobs.forEach { (_, job) -> job.dispose() }
+    }
+
     fun returnJobErrorIfStateInvalid(job: SyftJob): Boolean {
         when {
             !deviceMonitor.isNetworkStateValid() -> {
-                jobStatusProcessors[job.jobId]?.offer(
-                    JobStatusMessage.JobError(IllegalStateException("network connection broken"))
+                jobStatusProcessors[job.jobId]?.onError(
+                    IllegalStateException("network connection broken")
                 )
                 return true
             }
             !deviceMonitor.isActivityStateValid() -> {
-                jobStatusProcessors[job.jobId]?.offer(
-                    JobStatusMessage.JobError(IllegalStateException("user activity detected"))
+                jobStatusProcessors[job.jobId]?.onError(
+                    IllegalStateException("user activity detected")
                 )
                 return true
             }
             !deviceMonitor.isBatteryStateValid() -> {
-                jobStatusProcessors[job.jobId]?.offer(
-                    JobStatusMessage.JobError(IllegalStateException("Battery Low"))
+                jobStatusProcessors[job.jobId]?.onError(
+                    IllegalStateException("user activity detected")
                 )
                 return true
             }
@@ -202,7 +205,7 @@ class Syft internal constructor(
                                 Log.d(TAG, t.errorMessage)
                         }
                     }, {
-                        jobStatusProcessors[job.jobId]?.offer(JobStatusMessage.JobError(it))
+                        jobStatusProcessors[job.jobId]?.onError(it)
                     })
         )
     }

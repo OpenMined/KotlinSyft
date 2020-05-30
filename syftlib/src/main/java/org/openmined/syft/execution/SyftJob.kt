@@ -78,7 +78,7 @@ class SyftJob(
         Log.d(TAG, "setting Request Key")
         requestKey = responseData.requestKey
         clientConfig = responseData.clientConfig
-        responseData.plans.forEach { (_, planId) -> plans[planId] = Plan(planId) }
+        responseData.plans.forEach { (_, planId) -> plans[planId] = Plan(this, planId) }
         responseData.protocols.forEach { (_, protocolId) ->
             protocols[protocolId] = Protocol(protocolId)
         }
@@ -132,7 +132,6 @@ class SyftJob(
         } ?: throw IllegalStateException("request Key has not been set")
     }
 
-
     /**
      * report the results back to PyGrid
      */
@@ -154,6 +153,20 @@ class SyftJob(
                         .subscribe { reportResponse: ReportResponse ->
                             Log.i(TAG, reportResponse.status)
                         })
+    }
+
+
+    fun returnErrorIfStateInvalid(): Boolean {
+        if (worker.returnJobErrorIfStateInvalid(this)) {
+            dispose()
+            //todo save model to a file here
+            return true
+        }
+        return false
+    }
+
+    fun dispose() {
+        compositeDisposable.clear()
     }
 
     private fun getDownloadables(workerId: String, request: String): List<Single<String>> {
@@ -214,20 +227,20 @@ class SyftJob(
         plan: Plan
     ): Single<String> {
         return config.getDownloader().downloadPlan(
-                workerId,
-                requestKey,
-                plan.planId,
-                "torchscript"
-            )
-                    .flatMap { response ->
-                        FileWriter(destinationDir, plan.planId + ".pb")
-                                .writeFromNetwork(response.body())
-                    }.flatMap { filepath ->
-                        Single.create<String> { emitter ->
-                            plan.generateScriptModule(destinationDir, filepath)
-                            emitter.onSuccess(filepath)
-                        }
+            workerId,
+            requestKey,
+            plan.planId,
+            "torchscript"
+        )
+                .flatMap { response ->
+                    FileWriter(destinationDir, plan.planId + ".pb")
+                            .writeFromNetwork(response.body())
+                }.flatMap { filepath ->
+                    Single.create<String> { emitter ->
+                        plan.generateScriptModule(destinationDir, filepath)
+                        emitter.onSuccess(filepath)
                     }
+                }
                 .compose(config.networkingSchedulers.applySingleSchedulers())
 
     }
@@ -239,12 +252,12 @@ class SyftJob(
         protocolId: String
     ): Single<String> {
         return config.getDownloader().downloadProtocol(
-                workerId, requestKey, protocolId
-            )
-                    .flatMap { response ->
-                        FileWriter(destinationDir, "$protocolId.pb")
-                                .writeFromNetwork(response.body())
-                    }
+            workerId, requestKey, protocolId
+        )
+                .flatMap { response ->
+                    FileWriter(destinationDir, "$protocolId.pb")
+                            .writeFromNetwork(response.body())
+                }
                 .compose(config.networkingSchedulers.applySingleSchedulers())
     }
 
@@ -263,5 +276,4 @@ class SyftJob(
     enum class CycleStatus {
         APPLY, REJECT, ACCEPTED
     }
-
 }

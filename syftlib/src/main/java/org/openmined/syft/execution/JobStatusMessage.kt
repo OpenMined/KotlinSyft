@@ -13,6 +13,4 @@ sealed class JobStatusMessage {
         val plans: ConcurrentHashMap<String, Plan>,
         val clientConfig: ClientConfig?
     ) : JobStatusMessage()
-
-    class JobError(val error: Throwable) : JobStatusMessage()
 }

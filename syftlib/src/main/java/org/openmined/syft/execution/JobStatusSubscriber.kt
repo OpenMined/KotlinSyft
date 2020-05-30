@@ -2,6 +2,7 @@ package org.openmined.syft.execution
 
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
+import java.io.InvalidObjectException
 import java.util.concurrent.ConcurrentHashMap
 
 @ExperimentalUnsignedTypes
@@ -24,10 +25,9 @@ open class JobStatusSubscriber {
                         jobStatusMessage.clientConfig
                     )
                 else
-                    onError(IllegalStateException("Client config not available yet"))
+                    onError(InvalidObjectException("Client config not available yet"))
             }
             is JobStatusMessage.JobCycleRejected -> onRejected(jobStatusMessage.timeout)
-            is JobStatusMessage.JobError -> onError(jobStatusMessage.error)
             //add all the other messages as and when needed
         }
     }
