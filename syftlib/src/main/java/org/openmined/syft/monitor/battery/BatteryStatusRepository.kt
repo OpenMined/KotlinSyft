@@ -3,8 +3,10 @@ package org.openmined.syft.monitor.battery
 import android.content.BroadcastReceiver
 import android.content.Intent
 import android.content.IntentFilter
+import io.reactivex.Flowable
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.monitor.BroadCastListener
+import org.openmined.syft.monitor.StateChangeMessage
 
 @ExperimentalUnsignedTypes
 class BatteryStatusRepository internal constructor(
@@ -32,11 +34,11 @@ class BatteryStatusRepository internal constructor(
         System.currentTimeMillis()
     )
 
-    override fun registerListener() {
+    override fun subscribeStateChange(): Flowable<StateChangeMessage> {
         TODO("Not yet implemented")
     }
 
-    override fun deregisterListener() {
+    override fun unsubscribeStateChange() {
         TODO("Not yet implemented")
     }
 

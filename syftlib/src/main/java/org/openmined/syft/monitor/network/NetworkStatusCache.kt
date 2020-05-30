@@ -12,6 +12,10 @@ class NetworkStatusCache(private val cacheTimeOut: Long) {
             Maybe.empty()
     }
 
+    fun setCacheInvalid() {
+        networkStateCache.networkValidity = false
+    }
+
     private fun isCacheValid(): Boolean {
         val cacheTimeValidity =
                 System.currentTimeMillis() - networkStateCache.cacheTimeStamp < cacheTimeOut

@@ -91,7 +91,6 @@ class SyftJob(
         jobStatusProcessor.offer(JobStatusMessage.JobCycleRejected(responseData.timeout))
     }
 
-    //todo before downloading check for wifi connection again
     fun downloadData(workerId: String) {
         if (trainingParamsStatus.get() != DownloadStatus.NOT_STARTED) {
             Log.d(TAG, "download already running")
@@ -140,6 +139,7 @@ class SyftJob(
     fun report(diff: State) {
         val requestKey = requestKey
         val workerId = worker.getSyftWorkerId()
+        if (worker.returnJobErrorIfStateInvalid(this)) return
         if (requestKey != null && workerId != null)
             compositeDisposable.add(
                 config.getSignallingClient()

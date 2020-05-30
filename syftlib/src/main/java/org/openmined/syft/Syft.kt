@@ -10,7 +10,6 @@ import org.openmined.syft.execution.JobStatusMessage
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.monitor.DeviceMonitor
-import org.openmined.syft.monitor.StateChangeMessage
 import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CycleRequest
@@ -48,10 +47,6 @@ class Syft internal constructor(
             ConcurrentHashMap<SyftJob.JobID, PublishProcessor<JobStatusMessage>>()
     private val compositeDisposable = CompositeDisposable()
 
-    init {
-        subscribeDeviceMonitor()
-    }
-
     @Volatile
     private var workerId: String? = null
 
@@ -85,18 +80,19 @@ class Syft internal constructor(
     fun getSyftWorkerId() = workerId
 
     fun executeCycleRequest(job: SyftJob) {
+        if (returnJobErrorIfStateInvalid(job)) return
         workerId?.let { id ->
             compositeDisposable.add(
                 deviceMonitor.getNetworkStatus(id)
                         .flatMap { networkState ->
-                    requestCycle(
-                        id,
-                        job,
-                        networkState.ping,
-                        networkState.downloadSpeed,
-                        networkState.uploadspeed
-                    )
-                }
+                            requestCycle(
+                                id,
+                                job,
+                                networkState.ping,
+                                networkState.downloadSpeed,
+                                networkState.uploadspeed
+                            )
+                        }
                         .compose(syftConfig.networkingSchedulers.applySingleSchedulers())
                         .subscribe(
                             { response: CycleResponseData ->
@@ -112,6 +108,31 @@ class Syft internal constructor(
                             })
             )
         } ?: executeAuthentication(job)
+    }
+
+    fun returnJobErrorIfStateInvalid(job: SyftJob): Boolean {
+        when {
+            !deviceMonitor.isNetworkStateValid() -> {
+                jobStatusProcessors[job.jobId]?.offer(
+                    JobStatusMessage.JobError(IllegalStateException("network connection broken"))
+                )
+                return true
+            }
+            !deviceMonitor.isActivityStateValid() -> {
+                jobStatusProcessors[job.jobId]?.offer(
+                    JobStatusMessage.JobError(IllegalStateException("user activity detected"))
+                )
+                return true
+            }
+            !deviceMonitor.isBatteryStateValid() -> {
+                jobStatusProcessors[job.jobId]?.offer(
+                    JobStatusMessage.JobError(IllegalStateException("Battery Low"))
+                )
+                return true
+            }
+            else ->
+                return false
+        }
     }
 
     private fun requestCycle(
@@ -158,6 +179,8 @@ class Syft internal constructor(
             )
         )
         job.setJobArguments(responseData)
+        if (returnJobErrorIfStateInvalid(job))
+            return
         workerId?.let {
             job.downloadData(it)
         } ?: throw IllegalStateException("workerId is not initialised")
@@ -190,23 +213,6 @@ class Syft internal constructor(
             this.workerId = workerId
         else if (workerJobs.isEmpty())
             this.workerId = workerId
-    }
-
-    private fun subscribeDeviceMonitor() {
-        compositeDisposable.add(
-            deviceMonitor.getStatusProcessor()
-                    .subscribe {
-                        when (it) {
-                            is StateChangeMessage.Charging ->
-                                //todo something
-                                Log.d(TAG, "charging change")
-                            is StateChangeMessage.NetworkStatus ->
-                                Log.d(TAG, "network state changed")
-                            is StateChangeMessage.Activity ->
-                                Log.d(TAG, "user activity started")
-                        }
-                    }
-        )
     }
 
 }

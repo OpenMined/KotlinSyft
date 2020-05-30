@@ -1,5 +1,6 @@
 package org.openmined.syft
 
+import android.net.NetworkCapabilities
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.spy
 import com.nhaarman.mockitokotlin2.verify
@@ -41,7 +42,6 @@ internal class SyftTest {
         }
 
         val deviceMonitor = mock<DeviceMonitor> {
-            on { getStatusProcessor() }.thenReturn(PublishProcessor.create())
         }
 
         val config = SyftConfiguration(
@@ -50,6 +50,7 @@ internal class SyftTest {
             schedulers,
             mock(),
             listOf(),
+            NetworkCapabilities.TRANSPORT_WIFI,
             socketClient,
             httpClient,
             1,
