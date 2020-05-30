@@ -19,6 +19,7 @@ class SyftConfiguration internal constructor(
     val computeSchedulers: ProcessSchedulers,
     val filesDir: File,
     val networkConstraints: List<Int>,
+    val transportMedium: Int,
     private val socketClient: SocketClient,
     private val httpClient: HttpClient,
     private val maxConcurrentJobs: Int,
@@ -63,6 +64,7 @@ class SyftConfiguration internal constructor(
             NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED to true,
             NetworkCapabilities.NET_CAPABILITY_NOT_METERED to true
         )
+        private var networkTransportMedium = NetworkCapabilities.TRANSPORT_WIFI
 
         fun build(): SyftConfiguration {
             val constraintList = networkConstraints.filterValues { it }.keys.toList()
@@ -72,11 +74,17 @@ class SyftConfiguration internal constructor(
                 computeSchedulers,
                 filesDir,
                 constraintList,
+                networkTransportMedium,
                 socketClient,
                 httpClient,
                 maxConcurrentJobs,
                 messagingClient
             )
+        }
+
+        fun enableCellularData(): SyftConfigBuilder {
+            networkTransportMedium = NetworkCapabilities.TRANSPORT_CELLULAR
+            return this
         }
 
         fun enableMeteredData(): SyftConfigBuilder {

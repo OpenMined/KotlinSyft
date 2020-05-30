@@ -195,13 +195,12 @@ class Syft internal constructor(
     private fun subscribeDeviceMonitor() {
         compositeDisposable.add(
             deviceMonitor.getStatusProcessor()
-                    .onBackpressureLatest()
                     .subscribe {
                         when (it) {
                             is StateChangeMessage.Charging ->
                                 //todo something
                                 Log.d(TAG, "charging change")
-                            is StateChangeMessage.Network ->
+                            is StateChangeMessage.NetworkStatus ->
                                 Log.d(TAG, "network state changed")
                             is StateChangeMessage.Activity ->
                                 Log.d(TAG, "user activity started")

@@ -50,8 +50,6 @@ class SyftJob(
      * create a worker job
      */
     fun start(subscriber: JobStatusSubscriber = JobStatusSubscriber()) {
-        //todo check for connection if doesn't exist establish one
-        //todo before calling this function syft should have checked the bandwidth etc requirements
         if (cycleStatus.get() == CycleStatus.REJECT) {
             Log.d(TAG, "job awaiting timer completion to resend the Cycle Request")
             return
