@@ -42,6 +42,9 @@ internal class SyftTest {
         }
 
         val deviceMonitor = mock<DeviceMonitor> {
+            on { isActivityStateValid() }.thenReturn(true)
+            on { isNetworkStateValid()}.thenReturn(true)
+            on { isBatteryStateValid() }.thenReturn(true)
         }
 
         val config = SyftConfiguration(
@@ -51,6 +54,7 @@ internal class SyftTest {
             mock(),
             listOf(),
             NetworkCapabilities.TRANSPORT_WIFI,
+            0L,
             socketClient,
             httpClient,
             1,
@@ -63,7 +67,6 @@ internal class SyftTest {
             "model name",
             "1.0.0",
             workerTest,
-            PublishProcessor.create(),
             config
         )
 
