@@ -37,7 +37,7 @@ class Syft internal constructor(
                     INSTANCE ?: Syft(
                         authToken,
                         syftConfiguration,
-                        DeviceMonitor(syftConfiguration)
+                        DeviceMonitor.construct(syftConfiguration)
                     ).also { INSTANCE = it }
                 }
     }

@@ -13,11 +13,19 @@ private const val TAG = "device monitor"
 
 @ExperimentalUnsignedTypes
 class DeviceMonitor(
-    syftConfig: SyftConfiguration
+    private val networkStatusRepository: NetworkStatusRepository,
+    private val batteryStatusRepository: BatteryStatusRepository
 ) : Disposable {
 
-    private val networkStatusRepository = NetworkStatusRepository.initialize(syftConfig)
-    private val batteryStatusRepository = BatteryStatusRepository.initialize(syftConfig)
+    companion object {
+        fun construct(syftConfig: SyftConfiguration): DeviceMonitor {
+            return DeviceMonitor(
+                NetworkStatusRepository.initialize(syftConfig),
+                BatteryStatusRepository.initialize(syftConfig)
+            )
+        }
+    }
+
 
     private val isDisposed = AtomicBoolean(false)
 
