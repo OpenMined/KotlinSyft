@@ -4,9 +4,8 @@ import android.accounts.NetworkErrorException
 import android.util.Log
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.processors.PublishProcessor
+import io.reactivex.disposables.Disposable
 import org.openmined.syft.domain.SyftConfiguration
-import org.openmined.syft.execution.JobStatusMessage
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.monitor.DeviceMonitor
@@ -15,6 +14,7 @@ import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 
 private const val TAG = "Syft"
@@ -24,7 +24,7 @@ class Syft internal constructor(
     private val authToken: String,
     private val syftConfig: SyftConfiguration,
     private val deviceMonitor: DeviceMonitor
-) {
+) : Disposable {
     companion object {
         @Volatile
         private var INSTANCE: Syft? = null
@@ -43,9 +43,8 @@ class Syft internal constructor(
     }
 
     private val workerJobs = ConcurrentHashMap<SyftJob.JobID, SyftJob>()
-    private val jobStatusProcessors =
-            ConcurrentHashMap<SyftJob.JobID, PublishProcessor<JobStatusMessage>>()
     private val compositeDisposable = CompositeDisposable()
+    private val isDisposed = AtomicBoolean(false)
 
     @Volatile
     private var workerId: String? = null
@@ -54,15 +53,12 @@ class Syft internal constructor(
         model: String,
         version: String? = null
     ): SyftJob {
-        val publishProcessor = PublishProcessor.create<JobStatusMessage>()
         val job = SyftJob(
             model,
             version,
             this,
-            publishProcessor,
             syftConfig
         )
-        jobStatusProcessors[job.jobId] = publishProcessor
         workerJobs[job.jobId] = job
         job.subscribe(object : JobStatusSubscriber() {
             override fun onComplete() {
@@ -70,6 +66,7 @@ class Syft internal constructor(
             }
 
             override fun onError(throwable: Throwable) {
+                Log.e(TAG, throwable.message.toString())
                 workerJobs.remove(job.jobId)
             }
         }, syftConfig.networkingSchedulers)
@@ -102,13 +99,17 @@ class Syft internal constructor(
                                 }
                             },
                             { errorMsg: Throwable ->
-                                jobStatusProcessors[job.jobId]?.onError(errorMsg)
+                                job.throwError(errorMsg)
                             })
             )
         } ?: executeAuthentication(job)
     }
 
-    fun dispose() {
+    override fun isDisposed() = isDisposed.get()
+
+    override fun dispose() {
+        deviceMonitor.dispose()
+        disposeSocketClient()
         compositeDisposable.clear()
         workerJobs.forEach { (_, job) -> job.dispose() }
     }
@@ -116,21 +117,17 @@ class Syft internal constructor(
     fun returnJobErrorIfStateInvalid(job: SyftJob): Boolean {
         when {
             !deviceMonitor.isNetworkStateValid() -> {
-                jobStatusProcessors[job.jobId]?.onError(
-                    IllegalStateException("network connection broken")
-                )
+                job.throwError(IllegalStateException("network connection broken"))
+                disposeSocketClient()
                 return true
             }
             !deviceMonitor.isActivityStateValid() -> {
-                jobStatusProcessors[job.jobId]?.onError(
-                    IllegalStateException("user activity detected")
-                )
+                job.throwError(IllegalStateException("user activity detected"))
                 return true
             }
             !deviceMonitor.isBatteryStateValid() -> {
-                jobStatusProcessors[job.jobId]?.onError(
-                    IllegalStateException("user activity detected")
-                )
+                job.throwError(IllegalStateException("user activity detected"))
+                disposeSocketClient()
                 return true
             }
             else ->
@@ -205,7 +202,7 @@ class Syft internal constructor(
                                 Log.d(TAG, t.errorMessage)
                         }
                     }, {
-                        jobStatusProcessors[job.jobId]?.onError(it)
+                        job.throwError(it)
                     })
         )
     }
@@ -216,6 +213,10 @@ class Syft internal constructor(
             this.workerId = workerId
         else if (workerJobs.isEmpty())
             this.workerId = workerId
+    }
+
+    private fun disposeSocketClient() {
+        syftConfig.getWebRTCSignallingClient().dispose()
     }
 
 }

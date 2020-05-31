@@ -89,7 +89,7 @@ class FederatedCycleViewModel(
                     result.add(outputResult[1].toTensor().dataAsFloatArray.last())
                 } ?: run {
                     postLog("the model returned empty array due to invalid device state")
-                    return
+                    Thread.sleep(100000)
                 }
                 postState(ProcessState.Hidden)
                 postData(result)

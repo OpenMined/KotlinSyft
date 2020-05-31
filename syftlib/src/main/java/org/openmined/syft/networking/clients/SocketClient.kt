@@ -26,6 +26,7 @@ import org.openmined.syft.networking.requests.REQUESTS
 import org.openmined.syft.networking.requests.ResponseMessageTypes
 import org.openmined.syft.networking.requests.SocketAPI
 import org.openmined.syft.networking.requests.WebRTCMessageTypes
+import org.openmined.syft.threading.Disposable
 import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -36,7 +37,7 @@ class SocketClient(
     private val syftWebSocket: SyftWebSocket,
     private val timeout: UInt = 20000u,
     private val schedulers: ProcessSchedulers
-) : SocketAPI {
+) : SocketAPI, Disposable {
 
     constructor(baseUrl: String, timeout: UInt, schedulers: ProcessSchedulers) :
             this(SyftWebSocket(NetworkingProtocol.WSS, baseUrl, timeout), timeout, schedulers)
@@ -50,7 +51,7 @@ class SocketClient(
     private val compositeDisposable = CompositeDisposable()
 
     override fun authenticate(authRequest: AuthenticationRequest): Single<AuthenticationResponse> {
-        initiateSocketIfEmpty()
+        connectWebSocket()
         Log.d(
             TAG,
             "sending message: " + serializeNetworkModel(
@@ -65,6 +66,7 @@ class SocketClient(
     }
 
     override fun getCycle(cycleRequest: CycleRequest): Single<CycleResponseData> {
+        connectWebSocket()
         Log.d(
             TAG,
             "sending message: " + serializeNetworkModel(REQUESTS.CYCLE_REQUEST, cycleRequest)
@@ -85,6 +87,7 @@ class SocketClient(
 
     //todo handle backpressure and first or error
     override fun report(reportRequest: ReportRequest): Single<ReportResponse> {
+        connectWebSocket()
         syftWebSocket.send(serializeNetworkModel(REQUESTS.REPORT, reportRequest))
         return messageProcessor.onBackpressureDrop()
                 .ofType(ReportResponse::class.java)
@@ -93,6 +96,7 @@ class SocketClient(
 
     //todo handle backpressure and first or error
     override fun joinRoom(joinRoomRequest: JoinRoomRequest): Single<JoinRoomResponse> {
+        connectWebSocket()
         syftWebSocket.send(
             serializeNetworkModel(
                 WebRTCMessageTypes.WEBRTC_JOIN_ROOM,
@@ -106,6 +110,7 @@ class SocketClient(
 
     //todo handle backpressure and first or error
     override fun sendInternalMessage(internalMessageRequest: InternalMessageRequest): Single<InternalMessageResponse> {
+        connectWebSocket()
         syftWebSocket.send(serializeNetworkModel(REQUESTS.WEBRTC_INTERNAL, internalMessageRequest))
         return messageProcessor.onBackpressureBuffer()
                 .ofType(InternalMessageResponse::class.java)
@@ -139,7 +144,13 @@ class SocketClient(
         )
     }
 
-    private fun initiateSocketIfEmpty() {
+    override fun dispose() {
+        syftWebSocket.close()
+        compositeDisposable.clear()
+        socketClientSubscribed.set(false)
+    }
+
+    private fun connectWebSocket() {
         if (socketClientSubscribed.get())
             return
         initiateNewWebSocket()

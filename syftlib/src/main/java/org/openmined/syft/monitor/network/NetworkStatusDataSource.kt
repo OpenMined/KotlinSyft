@@ -78,12 +78,9 @@ class NetworkStatusRealTimeDataSource internal constructor(
         statusProcessor.onComplete()
     }
 
-    fun updateNetworkValidity(
-        constraints: List<Int>,
-        networkStatusModel: NetworkStatusModel
-    ) {
+    fun getNetworkValidity(constraints: List<Int>): Boolean {
         networkManager.getNetworkCapabilities(networkManager.activeNetwork)?.let { capabilities ->
-            networkStatusModel.networkValidity = constraints.all { capabilities.hasCapability(it) }
+            return constraints.all { capabilities.hasCapability(it) }
         } ?: throw Exception("Unknown network. Cannot detect network properties")
     }
 

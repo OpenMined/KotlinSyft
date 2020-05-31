@@ -33,7 +33,7 @@ class SyftWebSocket(
     private val statusPublishProcessor: PublishProcessor<NetworkMessage> =
             PublishProcessor.create<NetworkMessage>()
 
-    private lateinit var webSocket: WebSocket
+    private var webSocket: WebSocket? = null
 
     fun start(): Flowable<NetworkMessage> {
         connect()
@@ -43,9 +43,9 @@ class SyftWebSocket(
     /**
      * Send the data over the Socket connection to PyGrid
      */
-    fun send(message: JsonObject) = webSocket.send(message.toString())
+    fun send(message: JsonObject) = webSocket?.send(message.toString()) ?: false
 
-    fun close() = webSocket.close(SOCKET_CLOSE_CLIENT, "Socket closed by client")
+    fun close() = webSocket?.close(SOCKET_CLOSE_CLIENT, "Socket closed by client") ?: false
 
 
     private fun connect() {

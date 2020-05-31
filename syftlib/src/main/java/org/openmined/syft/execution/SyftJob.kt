@@ -3,6 +3,7 @@ package org.openmined.syft.execution
 import android.util.Log
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.Syft
 import org.openmined.syft.domain.SyftConfiguration
@@ -15,6 +16,7 @@ import org.openmined.syft.proto.SyftModel
 import org.openmined.syft.threading.ProcessSchedulers
 import org.openmined.syft.utilities.FileWriter
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 private const val TAG = "SyftJob"
@@ -30,12 +32,12 @@ class SyftJob(
     modelName: String,
     version: String? = null,
     private val worker: Syft,
-    private val jobStatusProcessor: PublishProcessor<JobStatusMessage>,
     private val config: SyftConfiguration
-) {
+) : Disposable {
 
     val jobId = JobID(modelName, version)
-
+    private val jobStatusProcessor = PublishProcessor.create<JobStatusMessage>()
+    private val isDisposed = AtomicBoolean(false)
     private var cycleStatus = AtomicReference(CycleStatus.APPLY)
     private var trainingParamsStatus = AtomicReference(DownloadStatus.NOT_STARTED)
     private var requestKey: String? = null
@@ -44,7 +46,8 @@ class SyftJob(
     private val plans = ConcurrentHashMap<String, Plan>()
     private val protocols = ConcurrentHashMap<String, Protocol>()
     private val model = SyftModel(modelName, version)
-    private val compositeDisposable = CompositeDisposable()
+    private val networkDisposable = CompositeDisposable()
+    private val statusDisposable = CompositeDisposable()
 
     /**
      * create a worker job
@@ -54,15 +57,20 @@ class SyftJob(
             Log.d(TAG, "job awaiting timer completion to resend the Cycle Request")
             return
         }
-        worker.executeCycleRequest(this)
+        if (isDisposed.get()) {
+            Log.e(TAG, "cannot start a disposed job")
+            subscriber.onError(IllegalThreadStateException("Job has already been disposed"))
+            return
+        }
         subscribe(subscriber, config.computeSchedulers)
+        worker.executeCycleRequest(this)
     }
 
     fun subscribe(
         subscriber: JobStatusSubscriber,
         schedulers: ProcessSchedulers
     ) {
-        compositeDisposable.add(
+        statusDisposable.add(
             jobStatusProcessor.onBackpressureBuffer()
                     .compose(schedulers.applyFlowableSchedulers())
                     .subscribe(
@@ -101,33 +109,34 @@ class SyftJob(
 
         requestKey?.let { request ->
 
-            compositeDisposable.add(Single.zip(
-                getDownloadables(
-                    workerId,
-                    request
-                )
-            ) { successMessages ->
-                successMessages.joinToString(
-                    ",",
-                    prefix = "files ",
-                    postfix = " downloaded successfully"
-                )
-            }
-                    .compose(config.networkingSchedulers.applySingleSchedulers())
-                    .subscribe(
-                        { successMsg: String ->
-                            Log.d(TAG, successMsg)
-                            trainingParamsStatus.set(DownloadStatus.COMPLETE)
-                            jobStatusProcessor.offer(
-                                JobStatusMessage.JobReady(
-                                    model,
-                                    plans,
-                                    clientConfig
-                                )
-                            )
-                        },
-                        { e -> jobStatusProcessor.onError(e) }
+            networkDisposable.add(
+                Single.zip(
+                    getDownloadables(
+                        workerId,
+                        request
                     )
+                ) { successMessages ->
+                    successMessages.joinToString(
+                        ",",
+                        prefix = "files ",
+                        postfix = " downloaded successfully"
+                    )
+                }
+                        .compose(config.networkingSchedulers.applySingleSchedulers())
+                        .subscribe(
+                            { successMsg: String ->
+                                Log.d(TAG, successMsg)
+                                trainingParamsStatus.set(DownloadStatus.COMPLETE)
+                                jobStatusProcessor.offer(
+                                    JobStatusMessage.JobReady(
+                                        model,
+                                        plans,
+                                        clientConfig
+                                    )
+                                )
+                            },
+                            { e -> jobStatusProcessor.onError(e) }
+                        )
             )
         } ?: throw IllegalStateException("request Key has not been set")
     }
@@ -140,7 +149,7 @@ class SyftJob(
         val workerId = worker.getSyftWorkerId()
         if (worker.returnJobErrorIfStateInvalid(this)) return
         if (requestKey != null && workerId != null)
-            compositeDisposable.add(
+            networkDisposable.add(
                 config.getSignallingClient()
                         .report(
                             ReportRequest(
@@ -158,15 +167,24 @@ class SyftJob(
 
     fun returnErrorIfStateInvalid(): Boolean {
         if (worker.returnJobErrorIfStateInvalid(this)) {
-            dispose()
             //todo save model to a file here
             return true
         }
         return false
     }
 
-    fun dispose() {
-        compositeDisposable.clear()
+    fun throwError(throwable: Throwable) {
+        jobStatusProcessor.onError(throwable)
+        networkDisposable.clear()
+        isDisposed.set(true)
+    }
+
+    override fun isDisposed() = isDisposed.get()
+
+    override fun dispose() {
+        jobStatusProcessor.onComplete()
+        networkDisposable.clear()
+        isDisposed.set(true)
     }
 
     private fun getDownloadables(workerId: String, request: String): List<Single<String>> {

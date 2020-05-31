@@ -142,7 +142,11 @@ docker-compose up
 ```bash
 virtualenv -p python3 venv
 source venv/bin/activate
-pip install syft==0.2.5, jupyter==1.0.0, notebook==5.7.8
+pip install syft==0.2.5
+pip install jupyter==1.0.0
+pip install  notebook==5.7.8
+git clone https://github.com/OpenMined/PySyft
+git checkout tags/v0.2.5 -b v0.2.5
 ```
 - Host Jupyter Notebook 
 ```bash

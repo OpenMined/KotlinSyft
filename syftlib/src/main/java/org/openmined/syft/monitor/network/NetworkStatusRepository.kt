@@ -36,6 +36,9 @@ class NetworkStatusRepository internal constructor(
                 .switchIfEmpty(getNetworkStatusUncached(workerId))
     }
 
+    fun getNetworkValidity() = realTimeDataService.getNetworkValidity(networkConstraints)
+
+
     override fun subscribeStateChange(): Flowable<StateChangeMessage> =
             realTimeDataService.subscribeStateChange()
 
@@ -49,9 +52,8 @@ class NetworkStatusRepository internal constructor(
                 .andThen(realTimeDataService.updateDownloadSpeed(workerId, networkStatus))
                 .andThen(realTimeDataService.updateUploadSpeed(workerId, networkStatus))
                 .andThen(Single.create {
-                    realTimeDataService.updateNetworkValidity(
-                        networkConstraints,
-                        networkStatus
+                    networkStatus.networkValidity = realTimeDataService.getNetworkValidity(
+                        networkConstraints
                     )
                     networkStatus.cacheTimeStamp = System.currentTimeMillis()
                     cacheService.networkStateCache = networkStatus
