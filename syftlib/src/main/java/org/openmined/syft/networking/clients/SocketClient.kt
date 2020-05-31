@@ -3,6 +3,7 @@ package org.openmined.syft.networking.clients
 import android.util.Log
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
@@ -26,7 +27,6 @@ import org.openmined.syft.networking.requests.REQUESTS
 import org.openmined.syft.networking.requests.ResponseMessageTypes
 import org.openmined.syft.networking.requests.SocketAPI
 import org.openmined.syft.networking.requests.WebRTCMessageTypes
-import org.openmined.syft.threading.Disposable
 import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -143,6 +143,8 @@ class SocketClient(
                 .subscribe()
         )
     }
+
+    override fun isDisposed() = socketClientSubscribed.get()
 
     override fun dispose() {
         syftWebSocket.close()
