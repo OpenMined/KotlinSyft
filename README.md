@@ -97,7 +97,8 @@ You can use KotlinSyft as a front-end or as a background service. The following 
                     model.updateModel(updatedParams.map { it.toTensor() })
                     // get the required loss, accuracy, etc values just like you do in Pytorch Android
                     val accuracy = outputResult[1].toTensor().dataAsFloatArray.last()
-                } ?: handleEmptyOutput() // This means the plan wasn't built properly 
+                } ?: handleEmptyOutput() // this will happen when plan execution fails. 
+                // Most probably due to device state not fulfilling syft config constraints 
             }
         }
 

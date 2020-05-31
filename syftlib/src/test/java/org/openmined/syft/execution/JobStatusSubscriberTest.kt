@@ -11,15 +11,7 @@ import java.util.concurrent.ConcurrentHashMap
 @ExperimentalUnsignedTypes
 internal class JobStatusSubscriberTest {
     private val subscriber = spy<JobStatusSubscriber>()
-
-    @Test
-    fun `given a error message verify status subscriber calls onError`() {
-        val throwable = Exception("test")
-        val msg = JobStatusMessage.JobError(throwable)
-        subscriber.onJobStatusMessage(msg)
-        verify(subscriber).onError(throwable)
-    }
-
+    
     @Test
     fun `given a job ready message verify status subscriber calls onReady`() {
         val model = mock<SyftModel>()

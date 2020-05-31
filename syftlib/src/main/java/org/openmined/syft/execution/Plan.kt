@@ -42,6 +42,7 @@ class Plan(val job: SyftJob, val planId: String) {
         clientConfig: ClientConfig
     ): IValue? {
         if (job.returnErrorIfStateInvalid())
+        //todo decide how we want to handle this. Throw an error or quietly skip execution
             return null
 
         val localModuleState = pyTorchModule
