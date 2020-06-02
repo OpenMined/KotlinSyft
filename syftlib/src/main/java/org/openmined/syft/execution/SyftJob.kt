@@ -3,6 +3,7 @@ package org.openmined.syft.execution
 import android.util.Log
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.Syft
 import org.openmined.syft.domain.SyftConfiguration
@@ -15,6 +16,7 @@ import org.openmined.syft.proto.SyftModel
 import org.openmined.syft.threading.ProcessSchedulers
 import org.openmined.syft.utilities.FileWriter
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 private const val TAG = "SyftJob"
@@ -30,12 +32,12 @@ class SyftJob(
     modelName: String,
     version: String? = null,
     private val worker: Syft,
-    private val jobStatusProcessor: PublishProcessor<JobStatusMessage>,
     private val config: SyftConfiguration
-) {
+) : Disposable {
 
     val jobId = JobID(modelName, version)
-
+    private val jobStatusProcessor = PublishProcessor.create<JobStatusMessage>()
+    private val isDisposed = AtomicBoolean(false)
     private var cycleStatus = AtomicReference(CycleStatus.APPLY)
     private var trainingParamsStatus = AtomicReference(DownloadStatus.NOT_STARTED)
     private var requestKey: String? = null
@@ -44,27 +46,31 @@ class SyftJob(
     private val plans = ConcurrentHashMap<String, Plan>()
     private val protocols = ConcurrentHashMap<String, Protocol>()
     private val model = SyftModel(modelName, version)
-    private val compositeDisposable = CompositeDisposable()
+    private val networkDisposable = CompositeDisposable()
+    private val statusDisposable = CompositeDisposable()
 
     /**
      * create a worker job
      */
     fun start(subscriber: JobStatusSubscriber = JobStatusSubscriber()) {
-        //todo check for connection if doesn't exist establish one
-        //todo before calling this function syft should have checked the bandwidth etc requirements
         if (cycleStatus.get() == CycleStatus.REJECT) {
             Log.d(TAG, "job awaiting timer completion to resend the Cycle Request")
             return
         }
-        worker.executeCycleRequest(this)
+        if (isDisposed.get()) {
+            Log.e(TAG, "cannot start a disposed job")
+            subscriber.onError(IllegalThreadStateException("Job has already been disposed"))
+            return
+        }
         subscribe(subscriber, config.computeSchedulers)
+        worker.executeCycleRequest(this)
     }
 
     fun subscribe(
         subscriber: JobStatusSubscriber,
         schedulers: ProcessSchedulers
     ) {
-        compositeDisposable.add(
+        statusDisposable.add(
             jobStatusProcessor.onBackpressureBuffer()
                     .compose(schedulers.applyFlowableSchedulers())
                     .subscribe(
@@ -80,7 +86,7 @@ class SyftJob(
         Log.d(TAG, "setting Request Key")
         requestKey = responseData.requestKey
         clientConfig = responseData.clientConfig
-        responseData.plans.forEach { (_, planId) -> plans[planId] = Plan(planId) }
+        responseData.plans.forEach { (_, planId) -> plans[planId] = Plan(this, planId) }
         responseData.protocols.forEach { (_, protocolId) ->
             protocols[protocolId] = Protocol(protocolId)
         }
@@ -93,7 +99,6 @@ class SyftJob(
         jobStatusProcessor.offer(JobStatusMessage.JobCycleRejected(responseData.timeout))
     }
 
-    //todo before downloading check for wifi connection again
     fun downloadData(workerId: String) {
         if (trainingParamsStatus.get() != DownloadStatus.NOT_STARTED) {
             Log.d(TAG, "download already running")
@@ -104,37 +109,37 @@ class SyftJob(
 
         requestKey?.let { request ->
 
-            compositeDisposable.add(Single.zip(
-                getDownloadables(
-                    workerId,
-                    request
-                )
-            ) { successMessages ->
-                successMessages.joinToString(
-                    ",",
-                    prefix = "files ",
-                    postfix = " downloaded successfully"
-                )
-            }
-                    .compose(config.networkingSchedulers.applySingleSchedulers())
-                    .subscribe(
-                        { successMsg: String ->
-                            Log.d(TAG, successMsg)
-                            trainingParamsStatus.set(DownloadStatus.COMPLETE)
-                            jobStatusProcessor.offer(
-                                JobStatusMessage.JobReady(
-                                    model,
-                                    plans,
-                                    clientConfig
-                                )
-                            )
-                        },
-                        { e -> jobStatusProcessor.onError(e) }
+            networkDisposable.add(
+                Single.zip(
+                    getDownloadables(
+                        workerId,
+                        request
                     )
+                ) { successMessages ->
+                    successMessages.joinToString(
+                        ",",
+                        prefix = "files ",
+                        postfix = " downloaded successfully"
+                    )
+                }
+                        .compose(config.networkingSchedulers.applySingleSchedulers())
+                        .subscribe(
+                            { successMsg: String ->
+                                Log.d(TAG, successMsg)
+                                trainingParamsStatus.set(DownloadStatus.COMPLETE)
+                                jobStatusProcessor.offer(
+                                    JobStatusMessage.JobReady(
+                                        model,
+                                        plans,
+                                        clientConfig
+                                    )
+                                )
+                            },
+                            { e -> jobStatusProcessor.onError(e) }
+                        )
             )
         } ?: throw IllegalStateException("request Key has not been set")
     }
-
 
     /**
      * report the results back to PyGrid
@@ -142,8 +147,9 @@ class SyftJob(
     fun report(diff: State) {
         val requestKey = requestKey
         val workerId = worker.getSyftWorkerId()
+        if (worker.returnJobErrorIfStateInvalid(this)) return
         if (requestKey != null && workerId != null)
-            compositeDisposable.add(
+            networkDisposable.add(
                 config.getSignallingClient()
                         .report(
                             ReportRequest(
@@ -156,6 +162,29 @@ class SyftJob(
                         .subscribe { reportResponse: ReportResponse ->
                             Log.i(TAG, reportResponse.status)
                         })
+    }
+
+
+    fun returnErrorIfStateInvalid(): Boolean {
+        if (worker.returnJobErrorIfStateInvalid(this)) {
+            //todo save model to a file here
+            return true
+        }
+        return false
+    }
+
+    fun throwError(throwable: Throwable) {
+        jobStatusProcessor.onError(throwable)
+        networkDisposable.clear()
+        isDisposed.set(true)
+    }
+
+    override fun isDisposed() = isDisposed.get()
+
+    override fun dispose() {
+        jobStatusProcessor.onComplete()
+        networkDisposable.clear()
+        isDisposed.set(true)
     }
 
     private fun getDownloadables(workerId: String, request: String): List<Single<String>> {
@@ -216,20 +245,20 @@ class SyftJob(
         plan: Plan
     ): Single<String> {
         return config.getDownloader().downloadPlan(
-                workerId,
-                requestKey,
-                plan.planId,
-                "torchscript"
-            )
-                    .flatMap { response ->
-                        FileWriter(destinationDir, plan.planId + ".pb")
-                                .writeFromNetwork(response.body())
-                    }.flatMap { filepath ->
-                        Single.create<String> { emitter ->
-                            plan.generateScriptModule(destinationDir, filepath)
-                            emitter.onSuccess(filepath)
-                        }
+            workerId,
+            requestKey,
+            plan.planId,
+            "torchscript"
+        )
+                .flatMap { response ->
+                    FileWriter(destinationDir, plan.planId + ".pb")
+                            .writeFromNetwork(response.body())
+                }.flatMap { filepath ->
+                    Single.create<String> { emitter ->
+                        plan.generateScriptModule(destinationDir, filepath)
+                        emitter.onSuccess(filepath)
                     }
+                }
                 .compose(config.networkingSchedulers.applySingleSchedulers())
 
     }
@@ -241,12 +270,12 @@ class SyftJob(
         protocolId: String
     ): Single<String> {
         return config.getDownloader().downloadProtocol(
-                workerId, requestKey, protocolId
-            )
-                    .flatMap { response ->
-                        FileWriter(destinationDir, "$protocolId.pb")
-                                .writeFromNetwork(response.body())
-                    }
+            workerId, requestKey, protocolId
+        )
+                .flatMap { response ->
+                    FileWriter(destinationDir, "$protocolId.pb")
+                            .writeFromNetwork(response.body())
+                }
                 .compose(config.networkingSchedulers.applySingleSchedulers())
     }
 
@@ -265,5 +294,4 @@ class SyftJob(
     enum class CycleStatus {
         APPLY, REJECT, ACCEPTED
     }
-
 }

@@ -4,18 +4,17 @@ import android.accounts.NetworkErrorException
 import android.util.Log
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.processors.PublishProcessor
+import io.reactivex.disposables.Disposable
 import org.openmined.syft.domain.SyftConfiguration
-import org.openmined.syft.execution.JobStatusMessage
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.monitor.DeviceMonitor
-import org.openmined.syft.monitor.StateChangeMessage
 import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 
 private const val TAG = "Syft"
@@ -25,7 +24,7 @@ class Syft internal constructor(
     private val authToken: String,
     private val syftConfig: SyftConfiguration,
     private val deviceMonitor: DeviceMonitor
-) {
+) : Disposable {
     companion object {
         @Volatile
         private var INSTANCE: Syft? = null
@@ -38,19 +37,14 @@ class Syft internal constructor(
                     INSTANCE ?: Syft(
                         authToken,
                         syftConfiguration,
-                        DeviceMonitor(syftConfiguration)
+                        DeviceMonitor.construct(syftConfiguration)
                     ).also { INSTANCE = it }
                 }
     }
 
     private val workerJobs = ConcurrentHashMap<SyftJob.JobID, SyftJob>()
-    private val jobStatusProcessors =
-            ConcurrentHashMap<SyftJob.JobID, PublishProcessor<JobStatusMessage>>()
     private val compositeDisposable = CompositeDisposable()
-
-    init {
-        subscribeDeviceMonitor()
-    }
+    private val isDisposed = AtomicBoolean(false)
 
     @Volatile
     private var workerId: String? = null
@@ -59,15 +53,12 @@ class Syft internal constructor(
         model: String,
         version: String? = null
     ): SyftJob {
-        val publishProcessor = PublishProcessor.create<JobStatusMessage>()
         val job = SyftJob(
             model,
             version,
             this,
-            publishProcessor,
             syftConfig
         )
-        jobStatusProcessors[job.jobId] = publishProcessor
         workerJobs[job.jobId] = job
         job.subscribe(object : JobStatusSubscriber() {
             override fun onComplete() {
@@ -75,6 +66,7 @@ class Syft internal constructor(
             }
 
             override fun onError(throwable: Throwable) {
+                Log.e(TAG, throwable.message.toString())
                 workerJobs.remove(job.jobId)
             }
         }, syftConfig.networkingSchedulers)
@@ -85,18 +77,19 @@ class Syft internal constructor(
     fun getSyftWorkerId() = workerId
 
     fun executeCycleRequest(job: SyftJob) {
+        if (returnJobErrorIfStateInvalid(job)) return
         workerId?.let { id ->
             compositeDisposable.add(
                 deviceMonitor.getNetworkStatus(id)
                         .flatMap { networkState ->
-                    requestCycle(
-                        id,
-                        job,
-                        networkState.ping,
-                        networkState.downloadSpeed,
-                        networkState.uploadspeed
-                    )
-                }
+                            requestCycle(
+                                id,
+                                job,
+                                networkState.ping,
+                                networkState.downloadSpeed,
+                                networkState.uploadspeed
+                            )
+                        }
                         .compose(syftConfig.networkingSchedulers.applySingleSchedulers())
                         .subscribe(
                             { response: CycleResponseData ->
@@ -106,12 +99,40 @@ class Syft internal constructor(
                                 }
                             },
                             { errorMsg: Throwable ->
-                                jobStatusProcessors[job.jobId]?.offer(
-                                    JobStatusMessage.JobError(errorMsg)
-                                )
+                                job.throwError(errorMsg)
                             })
             )
         } ?: executeAuthentication(job)
+    }
+
+    override fun isDisposed() = isDisposed.get()
+
+    override fun dispose() {
+        deviceMonitor.dispose()
+        disposeSocketClient()
+        compositeDisposable.clear()
+        workerJobs.forEach { (_, job) -> job.dispose() }
+    }
+
+    fun returnJobErrorIfStateInvalid(job: SyftJob): Boolean {
+        when {
+            !deviceMonitor.isNetworkStateValid() -> {
+                job.throwError(IllegalStateException("network connection broken"))
+                disposeSocketClient()
+                return true
+            }
+            !deviceMonitor.isActivityStateValid() -> {
+                job.throwError(IllegalStateException("user activity detected"))
+                return true
+            }
+            !deviceMonitor.isBatteryStateValid() -> {
+                job.throwError(IllegalStateException("user activity detected"))
+                disposeSocketClient()
+                return true
+            }
+            else ->
+                return false
+        }
     }
 
     private fun requestCycle(
@@ -158,6 +179,8 @@ class Syft internal constructor(
             )
         )
         job.setJobArguments(responseData)
+        if (returnJobErrorIfStateInvalid(job))
+            return
         workerId?.let {
             job.downloadData(it)
         } ?: throw IllegalStateException("workerId is not initialised")
@@ -179,7 +202,7 @@ class Syft internal constructor(
                                 Log.d(TAG, t.errorMessage)
                         }
                     }, {
-                        jobStatusProcessors[job.jobId]?.offer(JobStatusMessage.JobError(it))
+                        job.throwError(it)
                     })
         )
     }
@@ -192,22 +215,8 @@ class Syft internal constructor(
             this.workerId = workerId
     }
 
-    private fun subscribeDeviceMonitor() {
-        compositeDisposable.add(
-            deviceMonitor.getStatusProcessor()
-                    .onBackpressureLatest()
-                    .subscribe {
-                        when (it) {
-                            is StateChangeMessage.Charging ->
-                                //todo something
-                                Log.d(TAG, "charging change")
-                            is StateChangeMessage.Network ->
-                                Log.d(TAG, "network state changed")
-                            is StateChangeMessage.Activity ->
-                                Log.d(TAG, "user activity started")
-                        }
-                    }
-        )
+    private fun disposeSocketClient() {
+        syftConfig.getWebRTCSignallingClient().dispose()
     }
 
 }

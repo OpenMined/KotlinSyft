@@ -13,21 +13,13 @@ internal class JobStatusSubscriberTest {
     private val subscriber = spy<JobStatusSubscriber>()
 
     @Test
-    fun `given a error message verify status subscriber calls onError`() {
-        val throwable = Exception("test")
-        val msg = JobStatusMessage.JobError(throwable)
-        subscriber.onJobStatusMessage(msg)
-        verify(subscriber).onError(throwable)
-    }
-
-    @Test
     fun `given a job ready message verify status subscriber calls onReady`() {
         val model = mock<SyftModel>()
         val clientConfig = mock<ClientConfig>()
-        val plans = ConcurrentHashMap<String,Plan>()
-        val msg = JobStatusMessage.JobReady(model, plans , clientConfig)
+        val plans = ConcurrentHashMap<String, Plan>()
+        val msg = JobStatusMessage.JobReady(model, plans, clientConfig)
         subscriber.onJobStatusMessage(msg)
-        verify(subscriber).onReady(model, plans , clientConfig)
+        verify(subscriber).onReady(model, plans, clientConfig)
     }
 
     @Test

@@ -8,7 +8,6 @@ import io.reactivex.schedulers.Schedulers
 import org.openmined.syft.networking.clients.HttpClient
 import org.openmined.syft.networking.clients.SocketClient
 import org.openmined.syft.networking.requests.CommunicationAPI
-import org.openmined.syft.networking.requests.SocketAPI
 import org.openmined.syft.threading.ProcessSchedulers
 import java.io.File
 
@@ -19,11 +18,12 @@ class SyftConfiguration internal constructor(
     val computeSchedulers: ProcessSchedulers,
     val filesDir: File,
     val networkConstraints: List<Int>,
+    val transportMedium: Int,
+    val cacheTimeOut: Long,
     private val socketClient: SocketClient,
     private val httpClient: HttpClient,
     private val maxConcurrentJobs: Int,
-    private val messagingClient: NetworkingClients,
-    val cacheTimeOut: Long = 100000
+    private val messagingClient: NetworkingClients
 ) {
     companion object {
         fun builder(context: Context, baseUrl: String) = SyftConfigBuilder(context, baseUrl)
@@ -36,7 +36,7 @@ class SyftConfiguration internal constructor(
         NetworkingClients.SOCKET -> socketClient
     }
 
-    fun getWebRTCSignallingClient(): SocketAPI = socketClient
+    fun getWebRTCSignallingClient(): SocketClient = socketClient
 
     class SyftConfigBuilder(private val context: Context, private val baseUrl: String) {
 
@@ -58,11 +58,14 @@ class SyftConfiguration internal constructor(
         private var filesDir = context.filesDir
         private var maxConcurrentJobs: Int = 1
         private var messagingClient: NetworkingClients = NetworkingClients.SOCKET
+        private var cacheTimeOut: Long = 100000
+
         private val networkConstraints = mutableMapOf(
             NetworkCapabilities.NET_CAPABILITY_INTERNET to true,
             NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED to true,
             NetworkCapabilities.NET_CAPABILITY_NOT_METERED to true
         )
+        private var networkTransportMedium = NetworkCapabilities.TRANSPORT_WIFI
 
         fun build(): SyftConfiguration {
             val constraintList = networkConstraints.filterValues { it }.keys.toList()
@@ -72,6 +75,8 @@ class SyftConfiguration internal constructor(
                 computeSchedulers,
                 filesDir,
                 constraintList,
+                networkTransportMedium,
+                cacheTimeOut,
                 socketClient,
                 httpClient,
                 maxConcurrentJobs,
@@ -79,9 +84,19 @@ class SyftConfiguration internal constructor(
             )
         }
 
+        fun enableCellularData(): SyftConfigBuilder {
+            networkTransportMedium = NetworkCapabilities.TRANSPORT_CELLULAR
+            return this
+        }
+
         fun enableMeteredData(): SyftConfigBuilder {
             if (networkConstraints.containsKey(NetworkCapabilities.NET_CAPABILITY_NOT_METERED))
                 networkConstraints.remove(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+            return this
+        }
+
+        fun setCacheTimeout(timeout: Long): SyftConfigBuilder {
+            this.cacheTimeOut = timeout
             return this
         }
 

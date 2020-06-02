@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initiateViewModel(baseUrl: String): FederatedCycleViewModel {
 
-        val config = SyftConfiguration.builder(this, baseUrl).build()
+        val config = SyftConfiguration.builder(this, baseUrl).setCacheTimeout(0L).build()
         val localMNISTDataDataSource = LocalMNISTDataDataSource(resources)
         val dataRepository = MNISTDataRepository(localMNISTDataDataSource)
         return MainViewModelFactory(

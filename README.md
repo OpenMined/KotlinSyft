@@ -97,7 +97,11 @@ You can use KotlinSyft as a front-end or as a background service. The following 
                     model.updateModel(updatedParams.map { it.toTensor() })
                     // get the required loss, accuracy, etc values just like you do in Pytorch Android
                     val accuracy = outputResult[1].toTensor().dataAsFloatArray.last()
-                } ?: handleEmptyOutput() // This means the plan wasn't built properly 
+                } ?: return // this will happen when plan execution fails. 
+                // Most probably due to device state not fulfilling syft config constraints 
+                // You should not handle any error here and simply return to close the subscriber. 
+                // Failing to return from onReady will crash the application.
+                // All error handling must be done with `onError` Listener
             }
         }
 
@@ -141,7 +145,11 @@ docker-compose up
 ```bash
 virtualenv -p python3 venv
 source venv/bin/activate
-pip install syft==0.2.5, jupyter==1.0.0, notebook==5.7.8
+pip install syft==0.2.5
+pip install jupyter==1.0.0
+pip install  notebook==5.7.8
+git clone https://github.com/OpenMined/PySyft
+git checkout tags/v0.2.5 -b v0.2.5
 ```
 - Host Jupyter Notebook 
 ```bash

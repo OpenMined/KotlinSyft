@@ -1,12 +1,12 @@
 package org.openmined.syft
 
+import android.net.NetworkCapabilities
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.spy
 import com.nhaarman.mockitokotlin2.verify
 import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.processors.PublishProcessor
 import io.reactivex.schedulers.Schedulers
 import org.junit.jupiter.api.Test
 import org.openmined.syft.domain.SyftConfiguration
@@ -41,7 +41,9 @@ internal class SyftTest {
         }
 
         val deviceMonitor = mock<DeviceMonitor> {
-            on { getStatusProcessor() }.thenReturn(PublishProcessor.create())
+            on { isActivityStateValid() }.thenReturn(true)
+            on { isNetworkStateValid() }.thenReturn(true)
+            on { isBatteryStateValid() }.thenReturn(true)
         }
 
         val config = SyftConfiguration(
@@ -50,6 +52,8 @@ internal class SyftTest {
             schedulers,
             mock(),
             listOf(),
+            NetworkCapabilities.TRANSPORT_WIFI,
+            0L,
             socketClient,
             httpClient,
             1,
@@ -62,7 +66,6 @@ internal class SyftTest {
             "model name",
             "1.0.0",
             workerTest,
-            PublishProcessor.create(),
             config
         )
 

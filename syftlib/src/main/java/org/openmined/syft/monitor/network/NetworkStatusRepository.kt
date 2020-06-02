@@ -1,10 +1,10 @@
 package org.openmined.syft.monitor.network
 
-import android.content.Context
-import android.net.ConnectivityManager
+import io.reactivex.Flowable
 import io.reactivex.Single
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.monitor.BroadCastListener
+import org.openmined.syft.monitor.StateChangeMessage
 
 private const val TAG = "NetworkStateRepository"
 
@@ -15,18 +15,14 @@ class NetworkStatusRepository internal constructor(
     private val cacheService: NetworkStatusCache,
     private val realTimeDataService: NetworkStatusRealTimeDataSource
 ) : BroadCastListener{
+
     companion object {
         fun initialize(
             configuration: SyftConfiguration
         ): NetworkStatusRepository {
             val cacheService = NetworkStatusCache(configuration.cacheTimeOut)
-            val networkManager = configuration.context
-                    .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            val realTimeDataService = NetworkStatusRealTimeDataSource(
-                configuration.getDownloader(),
-                configuration.filesDir,
-                networkManager
-            )
+            val realTimeDataService = NetworkStatusRealTimeDataSource.initialize(configuration)
+
             return NetworkStatusRepository(
                 configuration.networkConstraints,
                 cacheService,
@@ -40,29 +36,29 @@ class NetworkStatusRepository internal constructor(
                 .switchIfEmpty(getNetworkStatusUncached(workerId))
     }
 
+    fun getNetworkValidity() = realTimeDataService.getNetworkValidity(networkConstraints)
+
+
+    override fun subscribeStateChange(): Flowable<StateChangeMessage> =
+            realTimeDataService.subscribeStateChange()
+
+    override fun unsubscribeStateChange() {
+        realTimeDataService.unsubscribeStateChange()
+    }
+
     private fun getNetworkStatusUncached(workerId: String): Single<NetworkStatusModel> {
         val networkStatus = NetworkStatusModel()
         return realTimeDataService.updatePing(workerId, networkStatus)
                 .andThen(realTimeDataService.updateDownloadSpeed(workerId, networkStatus))
                 .andThen(realTimeDataService.updateUploadSpeed(workerId, networkStatus))
                 .andThen(Single.create {
-                    realTimeDataService.updateNetworkValidity(
-                        networkConstraints,
-                        networkStatus
+                    networkStatus.networkValidity = realTimeDataService.getNetworkValidity(
+                        networkConstraints
                     )
                     networkStatus.cacheTimeStamp = System.currentTimeMillis()
                     cacheService.networkStateCache = networkStatus
                     it.onSuccess(networkStatus)
                 })
     }
-
-    override fun registerListener() {
-        TODO("register network callback here")
-    }
-
-    override fun deregisterListener() {
-        TODO("deregister network callback here")
-    }
-
 
 }

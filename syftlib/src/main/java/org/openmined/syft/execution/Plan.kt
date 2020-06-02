@@ -12,32 +12,40 @@ import java.io.File
 
 private const val TAG = "syft.processes.Plan"
 
-/** 
- * The Plan Class contains functions to load a Pytorch model from a TorchScript and
- * passing the training data through the forward function of the Pytorch Module.
- * A Pytorch Module is simply a container that takes in tensors as input and returns 
+/**
+ * The Plan Class contains functions to load a PyTorch model from a TorchScript and
+ * to run training through the forward function of the PyTorch Module.
+ * A PyTorch Module is simply a container that takes in tensors as input and returns
  * tensor after doing some computation.
+ * @property planId is the unique id allotted to the plan by PyGrid
+ * @property job is the job hosting this plan
  */
 @ExperimentalUnsignedTypes
-class Plan(val planId: String) {
-    private var pytorchModule: Module? = null
+class Plan(val job: SyftJob, val planId: String) {
+    private var pyTorchModule: Module? = null
 
     /**
      * Loads a serialized TorchScript module from the specified path on the disk.
      *
      * @param model Model hosting model parameters.
-     * @param trainingBatch Training batch = Pair<IValue,IValue>. Contains the training data along with the labels.
-     * @param clientConfig The hyperparamters for the model.
+     * @param trainingBatch Contains the training data at first position and the labels at second.
+     * @param clientConfig The hyper parameters for the model.
      * @return The output contains the loss, accuracy values as defined while creating plan. It also
      *         contains the updated parameters of the model. These parameters are then saved manually by user.
+     * @throws IllegalStateException if the device state does not fulfill the constraints set for running the job
      */
+    @Throws(IllegalStateException::class)
     @ExperimentalStdlibApi
     fun execute(
         model: SyftModel,
         trainingBatch: Pair<IValue, IValue>,
         clientConfig: ClientConfig
     ): IValue? {
-        val localModuleState = pytorchModule
+        if (job.returnErrorIfStateInvalid())
+        //todo decide how we want to handle this. Throw an error or quietly skip execution
+            return null
+
+        val localModuleState = pyTorchModule
         if (localModuleState == null) {
             Log.e(TAG, "pytorch module not initialized yet")
             return null
@@ -76,7 +84,7 @@ class Plan(val planId: String) {
         )
         val torchscriptLocation = saveScript(filesDir, scriptModule.torchscript)
         Log.d(TAG, "TorchScript saved at $torchscriptLocation")
-        pytorchModule = Module.load(torchscriptLocation)
+        pyTorchModule = Module.load(torchscriptLocation)
     }
 
     /**

@@ -1,15 +1,23 @@
 package org.openmined.syft.monitor.network
 
 import android.accounts.NetworkErrorException
+import android.content.Context
 import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkRequest
 import android.util.Log
 import io.reactivex.Completable
+import io.reactivex.Flowable
 import io.reactivex.Single
+import io.reactivex.processors.PublishProcessor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
+import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.monitor.BroadCastListener
+import org.openmined.syft.monitor.StateChangeMessage
 import org.openmined.syft.networking.requests.HttpAPI
 import org.openmined.syft.utilities.FileWriter
 import org.openmined.syft.utilities.MB
@@ -24,17 +32,55 @@ private const val MAX_SPEED_TESTING_BYTES = MB * 8
 private const val TAG = "NetworkStateEvaluator"
 
 @ExperimentalUnsignedTypes
-class NetworkStatusRealTimeDataSource(
+class NetworkStatusRealTimeDataSource internal constructor(
     private val downloader: HttpAPI,
     private val filesDir: File,
-    private val networkManager: ConnectivityManager
-) {
-    fun updateNetworkValidity(
-        constraints: List<Int>,
-        networkStatusModel: NetworkStatusModel
-    ) {
+    private val networkRequest: NetworkRequest,
+    private val networkManager: ConnectivityManager,
+    private val statusProcessor: PublishProcessor<StateChangeMessage> = PublishProcessor.create()
+) : BroadCastListener {
+
+    companion object {
+        fun initialize(configuration: SyftConfiguration): NetworkStatusRealTimeDataSource {
+            val networkManager = configuration.context
+                    .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val networkRequestBuilder = NetworkRequest.Builder()
+                    .addTransportType(configuration.transportMedium)
+            configuration.networkConstraints.forEach { networkRequestBuilder.addCapability(it) }
+            val networkRequest = networkRequestBuilder.build()
+
+            return NetworkStatusRealTimeDataSource(
+                configuration.getDownloader(),
+                configuration.filesDir,
+                networkRequest,
+                networkManager
+            )
+        }
+    }
+
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onLost(network: Network) {
+            statusProcessor.offer(StateChangeMessage.NetworkStatus(false))
+        }
+
+        override fun onAvailable(network: Network?) {
+            statusProcessor.offer(StateChangeMessage.NetworkStatus(true))
+        }
+    }
+
+    override fun subscribeStateChange(): Flowable<StateChangeMessage> {
+        networkManager.registerNetworkCallback(networkRequest, networkCallback)
+        return statusProcessor.onBackpressureLatest()
+    }
+
+    override fun unsubscribeStateChange() {
+        networkManager.unregisterNetworkCallback(networkCallback)
+        statusProcessor.onComplete()
+    }
+
+    fun getNetworkValidity(constraints: List<Int>): Boolean {
         networkManager.getNetworkCapabilities(networkManager.activeNetwork)?.let { capabilities ->
-            networkStatusModel.networkValidity = constraints.all { capabilities.hasCapability(it) }
+            return constraints.all { capabilities.hasCapability(it) }
         } ?: throw Exception("Unknown network. Cannot detect network properties")
     }
 
@@ -144,4 +190,5 @@ class NetworkStatusRealTimeDataSource(
             }
         }
     }
+
 }

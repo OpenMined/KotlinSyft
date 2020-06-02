@@ -72,7 +72,6 @@ class FederatedCycleViewModel(
 
         plans.values.first().let { plan ->
             val result = mutableListOf<Float>()
-
             repeat(clientConfig.maxUpdates) { step ->
                 postEpoch(step + 1)
                 val batchData = mnistDataRepository.loadDataBatch(clientConfig.batchSize.toInt())
@@ -88,7 +87,10 @@ class FederatedCycleViewModel(
                             outputResult.slice(beginIndex until outputResult.size - 1)
                     model.updateModel(updatedParams.map { it.toTensor() })
                     result.add(outputResult[1].toTensor().dataAsFloatArray.last())
-                } ?: postLog("the model returned empty array")
+                } ?: run {
+                    postLog("the model returned empty array due to invalid device state")
+                    return
+                }
                 postState(ProcessState.Hidden)
                 postData(result)
 
