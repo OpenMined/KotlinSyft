@@ -25,6 +25,8 @@ import retrofit2.http.Streaming
 
 interface HttpAPI : CommunicationAPI {
 
+    // HttpAPI is a interface which helps in calling correct federated related http endpoints.
+    // and used for creating http service. See org.openmined.syft.networking.clients.HttpClient
     @GET("federated/speed-test")
     fun checkPing(
         @Query("is_ping") isPing: Int = 1,
@@ -73,12 +75,27 @@ interface HttpAPI : CommunicationAPI {
         @Query("model_id") modelId: String
     ): Single<Response<ResponseBody>>
 
+    /**
+     * Calls `federated/authenticate` for authentication.
+     *
+     * @param authRequest Contains auth-token.
+     */
     @GET(AUTH_TYPE)
     override fun authenticate(authRequest: AuthenticationRequest): Single<AuthenticationResponse>
 
+    /**
+     * Calls `federated/cycle-request` for cycle details.
+     *
+     * @param cycleRequest Contains worker and model details
+     */
     @POST(CYCLE_TYPE)
     override fun getCycle(@Body cycleRequest: CycleRequest): Single<CycleResponseData>
 
+    /**
+     * Calls `federated/report` for updating Reports.
+     *
+     * @param reportRequest Contains worker-id and request-key
+     */
     @POST(REPORT_TYPE)
     override fun report(@Body reportRequest: ReportRequest): Single<ReportResponse>
 }
