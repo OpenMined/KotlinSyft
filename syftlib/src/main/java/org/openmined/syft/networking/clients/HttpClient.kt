@@ -8,6 +8,12 @@ import org.openmined.syft.networking.requests.NetworkingProtocol
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 
+/**
+ * Creates a retrofit api client for PyGrid endpoints.
+ *
+ * @property baseUrl url of the server hosting the pyGrid instance.
+ * @see org.openmined.syft.networking.requests.HttpAPI for endpoint description.
+ */
 class HttpClient(baseUrl: String) {
     val apiClient: HttpAPI = Retrofit.Builder()
             .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
