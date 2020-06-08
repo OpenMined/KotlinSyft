@@ -2,11 +2,13 @@ package org.openmined.syft.demo.login
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
+import com.google.android.material.tabs.TabLayout
 import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityLoginBinding
 import org.openmined.syft.demo.federated.ui.MnistActivity

@@ -58,6 +58,7 @@ class MnistActivity : AppCompatActivity() {
     override fun onBackPressed() {
         super.onBackPressed()
         viewModel.disposeTraining()
+        finish()
     }
 
     private fun onProcessData(it: ProcessData?) {

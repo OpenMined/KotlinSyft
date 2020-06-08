@@ -113,6 +113,7 @@ class Syft internal constructor(
         disposeSocketClient()
         compositeDisposable.clear()
         workerJobs.forEach { (_, job) -> job.dispose() }
+        INSTANCE = null
     }
 
     fun returnJobErrorIfStateInvalid(job: SyftJob): Boolean {
