@@ -1,9 +1,9 @@
-package org.openmined.syft.demo.ui
+package org.openmined.syft.demo.federated.ui
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import org.openmined.syft.Syft
-import org.openmined.syft.demo.domain.MNISTDataRepository
+import org.openmined.syft.demo.federated.domain.MNISTDataRepository
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.Plan
@@ -15,7 +15,7 @@ private const val TAG = "FederatedCycleViewModel"
 
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
-class FederatedCycleViewModel(
+class MnistViewModel(
     authToken: String,
     configuration: SyftConfiguration,
     private val mnistDataRepository: MNISTDataRepository
@@ -33,15 +33,15 @@ class FederatedCycleViewModel(
 
     val processState
         get() = _processState
-    private val _processState = MutableLiveData<ProcessState>()
+    private val _processState = MutableLiveData<ContentState>()
 
     val processData
         get() = _processData
     private val _processData = MutableLiveData<ProcessData>()
 
     fun startCycle() {
-        postLog("MNIST job started")
-        postState(ProcessState.Loading)
+        postLog("MNIST job started \n\nChecking for download and upload speeds")
+        postState(ContentState.Loading)
         val jobStatusSubscriber = object : JobStatusSubscriber() {
 
             override fun onReady(
@@ -49,7 +49,7 @@ class FederatedCycleViewModel(
                 plans: ConcurrentHashMap<String, Plan>,
                 clientConfig: ClientConfig
             ) {
-                postLog("Model ${model.modelName} received.\nStarting training process")
+                postLog("Model ${model.modelName} received.\n\nStarting training process")
                 trainingProcess(model, plans, clientConfig)
             }
 
@@ -62,6 +62,10 @@ class FederatedCycleViewModel(
             }
         }
         mnistJob.start(jobStatusSubscriber)
+    }
+
+    fun disposeTraining(){
+        syftWorker.dispose()
     }
 
     private fun trainingProcess(
@@ -91,7 +95,7 @@ class FederatedCycleViewModel(
                     postLog("the model returned empty array due to invalid device state")
                     return
                 }
-                postState(ProcessState.Hidden)
+                postState(ContentState.Training)
                 postData(result)
 
             }
@@ -101,12 +105,16 @@ class FederatedCycleViewModel(
 
     }
 
-    private fun postState(state: ProcessState) {
+    private fun postState(state: ContentState) {
         _processState.postValue(state)
     }
 
     private fun postData(result: List<Float>) {
-        _processData.postValue(ProcessData(result))
+        _processData.postValue(
+            ProcessData(
+                result
+            )
+        )
     }
 
     private fun postEpoch(epoch: Int) {
@@ -114,6 +122,6 @@ class FederatedCycleViewModel(
     }
 
     private fun postLog(message: String) {
-        _logger.postValue("${_logger.value ?: ""}\n$message")
+        _logger.postValue("${_logger.value ?: ""}\n\n$message")
     }
 }

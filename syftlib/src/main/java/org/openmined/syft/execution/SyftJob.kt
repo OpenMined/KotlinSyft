@@ -185,6 +185,7 @@ class SyftJob(
         jobStatusProcessor.onComplete()
         networkDisposable.clear()
         isDisposed.set(true)
+        Log.d(TAG,"job $jobId disposed")
     }
 
     private fun getDownloadables(workerId: String, request: String): List<Single<String>> {

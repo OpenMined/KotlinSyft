@@ -1,8 +1,8 @@
-package org.openmined.syft.demo.datasource
+package org.openmined.syft.demo.federated.datasource
 
 import android.content.res.Resources
 import org.openmined.syft.demo.R
-import org.openmined.syft.demo.domain.Batch
+import org.openmined.syft.demo.federated.domain.Batch
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.lang.Exception
