@@ -14,14 +14,19 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".ui.MainActivity"
-            android:label="@string/title_activity_main"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:name=".login.LoginActivity"
+            android:label="Login"
+            android:theme="@style/FullscreenTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".federated.ui.MnistActivity"
+            android:label="MNIST Trainer"
+            android:theme="@style/AppTheme.NoActionBar" />
     </application>
 
 </manifest>

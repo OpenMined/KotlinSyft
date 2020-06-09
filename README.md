@@ -1,4 +1,6 @@
 ![KotlinSyft-logo](project_resources/pysyft_android.png)
+
+
 ![Tests](<https://img.shields.io/github/workflow/status/OpenMined/KotlinSyft/Testing Workflow?label=tests>)
 ![Coverage](https://img.shields.io/codecov/c/github/OpenMined/KotlinSyft/dev)
 ![build](https://github.com/OpenMined/KotlinSyft/workflows/Android%20CI/badge.svg)
@@ -15,7 +17,7 @@ KotlinSyft makes it easy for you to **train and inference PySyft models on Andro
 - :bust_in_silhouette: Allows all data to stay on the user's device
 - :back: Support for delegation to background task scheduler
 - :key: Support for **JWT authentication** to protect models from Sybil attacks
-- :+1: Host of **inbuilt best practices** to prevent apps from over using device resources. 
+- :+1: A set of **inbuilt best practices** to prevent apps from over using device resources. 
     - :electric_plug: **Charge detection** to allow background training only when device is connected to charger
     - :zzz: **Sleep and wake detection** so that the app does not occupy resource when user starts using the device
     - :money_with_wings: **Wifi and metered network detection** to ensure the model updates do not use all the available data quota 
@@ -161,11 +163,7 @@ jupyter notebook
 - Run the notebook `Host Plan`. Now PyGrid is setup and the model is hosted over it.
 - The android app connects to your PC's localhost via router (easier approach)
 - Get the IP address of your computer by running `ip address show | grep "inet " | grep -v 127.0.0.1` if using Linux/Mac. For windows there are different steps. Alternatively, if you want to run the demo app in the emulator, use `10.0.2.2` as the IP address.
-- Create a file `local_config.properties` under the folder `demo-app` and add the following line:
-
-```
-syft.base_url="<IP_address_from_step_16>:5000"
-```
+- Use this IP address in your login screen to supply the PyGrid server url
 
 ### Training Dataset
 The demo app has a smaller randomly sampled subset of MNIST Training Data. You can replace the `demo-app/src/main/res/raw/mnist_train.csv` with the 100MB file from [here](https://drive.google.com/file/d/1oHegwSc9pDFQDZe0FeKW51-SQsTz4i3W/view?usp=sharing)

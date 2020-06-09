@@ -96,5 +96,6 @@ class DeviceMonitor(
         compositeDisposable.clear()
         networkStatusRepository.unsubscribeStateChange()
         isDisposed.set(true)
+        Log.d(TAG,"disposed device monitor")
     }
 }

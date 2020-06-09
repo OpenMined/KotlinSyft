@@ -150,6 +150,7 @@ class SocketClient(
         syftWebSocket.close()
         compositeDisposable.clear()
         socketClientSubscribed.set(false)
+        Log.d(TAG,"Socket Client Disposed")
     }
 
     private fun connectWebSocket() {
