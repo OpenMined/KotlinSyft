@@ -19,6 +19,7 @@ KotlinSyft makes it easy for you to **train and inference PySyft models on Andro
 - :key: Support for **JWT authentication** to protect models from Sybil attacks
 - :+1: A set of **inbuilt best practices** to prevent apps from over using device resources. 
     - :electric_plug: **Charge detection** to allow background training only when device is connected to charger
+    - :zzz: **Sleep and wake detection** so that the app does not occupy resource when user starts using the device
     - :money_with_wings: **Wifi and metered network detection** to ensure the model updates do not use all the available data quota 
     - :no_bell: All of these smart defaults are easily are **overridable**
 - :mortar_board: Support for both reactive and callback patterns so you have your freedom of choice (_in progress_)
