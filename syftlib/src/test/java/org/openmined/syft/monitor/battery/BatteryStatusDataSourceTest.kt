@@ -88,7 +88,6 @@ class BatteryStatusDataSourceTest {
             on { registerReceiver(eq(null), any()) }
                     .thenReturn(null)
         }
-        val flowable = mock<Flowable<StateChangeMessage>>()
         val statusProcessor = mock<PublishProcessor<StateChangeMessage>>()
         val batteryStatusDataSource = BatteryStatusDataSource(contextMock, false, statusProcessor)
         batteryStatusDataSource.unsubscribeStateChange()

@@ -11,10 +11,6 @@ jacoco {
 
 check.finalizedBy "jacocoTestReport"
 
-tasks.withType(Test) {
-    useJUnitPlatform()
-}
-
 task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {
 
     reports {
@@ -42,7 +38,7 @@ android {
         targetSdkVersion Versions.targetSdk
         versionCode Versions.appVersionCode
         versionName Versions.appVersionName
-
+        javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
     }

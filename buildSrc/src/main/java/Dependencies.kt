@@ -42,7 +42,6 @@ object Versions {
     const val testRunner = "1.0.2"
     const val espresso = "3.2.0"
     const val mockitoCore = "3.2.4"
-    const val mockitoJupiter = "3.2.4"
     const val mockitoKotlin = "2.2.0"
     const val junit = "4.12"
     const val adxCore = "1.1.0"
