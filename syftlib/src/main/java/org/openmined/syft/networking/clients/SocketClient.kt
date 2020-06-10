@@ -32,6 +32,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 private const val TAG = "SocketClient"
 
+/**
+ * Used to communicate and exchange data throw web socket with PyGrid
+ * @param syftWebSocket Create web socket connection
+ * @param timeout Timeout period
+ * @param schedulers Manage multi-threading operations
+ * */
 @ExperimentalUnsignedTypes
 class SocketClient(
     private val syftWebSocket: SyftWebSocket,
@@ -45,11 +51,19 @@ class SocketClient(
     //Choosing stable kotlin serialization over default
     private val Json = Json(JsonConfiguration.Stable)
 
+    // Check to manage resource usage
     @Volatile
     private var socketClientSubscribed = AtomicBoolean(false)
+
+    // Emit socket messages to subscribers
     private val messageProcessor = PublishProcessor.create<NetworkModels>()
+
+    // Manage and clear Disposables
     private val compositeDisposable = CompositeDisposable()
 
+    /**
+     * Authenticate socket connection with PyGrid
+     * */
     override fun authenticate(authRequest: AuthenticationRequest): Single<AuthenticationResponse> {
         connectWebSocket()
         Log.d(
@@ -65,6 +79,9 @@ class SocketClient(
                 .firstOrError()
     }
 
+    /**
+     * Request or get current active federated learning cycle
+     * */
     override fun getCycle(cycleRequest: CycleRequest): Single<CycleResponseData> {
         connectWebSocket()
         Log.d(
@@ -86,6 +103,9 @@ class SocketClient(
     }
 
     //todo handle backpressure and first or error
+    /**
+     * Report model state to PyGrid after the cycle completes
+     * */
     override fun report(reportRequest: ReportRequest): Single<ReportResponse> {
         connectWebSocket()
         syftWebSocket.send(serializeNetworkModel(REQUESTS.REPORT, reportRequest))
@@ -95,6 +115,9 @@ class SocketClient(
     }
 
     //todo handle backpressure and first or error
+    /**
+     * Used by WebRTC to request PyGrid joining a FL cycle
+     * */
     override fun joinRoom(joinRoomRequest: JoinRoomRequest): Single<JoinRoomResponse> {
         connectWebSocket()
         syftWebSocket.send(
@@ -109,6 +132,9 @@ class SocketClient(
     }
 
     //todo handle backpressure and first or error
+    /**
+     * Used by WebRTC connection to send message via PyGrid
+     * */
     override fun sendInternalMessage(internalMessageRequest: InternalMessageRequest): Single<InternalMessageResponse> {
         connectWebSocket()
         syftWebSocket.send(serializeNetworkModel(REQUESTS.WEBRTC_INTERNAL, internalMessageRequest))
@@ -117,6 +143,9 @@ class SocketClient(
                 .first(null)
     }
 
+    /**
+     * Listen and handle socket events
+     * */
     fun initiateNewWebSocket() {
         compositeDisposable.add(syftWebSocket.start()
                 .map {
@@ -144,8 +173,10 @@ class SocketClient(
         )
     }
 
+    // Check socket status to free resources
     override fun isDisposed() = socketClientSubscribed.get()
 
+    // Free resources
     override fun dispose() {
         syftWebSocket.close()
         compositeDisposable.clear()
@@ -153,20 +184,32 @@ class SocketClient(
         Log.d(TAG,"Socket Client Disposed")
     }
 
+    /**
+     * Prevent initializing new socket connection if any exists
+     * */
     private fun connectWebSocket() {
         if (socketClientSubscribed.get())
             return
         initiateNewWebSocket()
     }
 
+    /**
+     * Emit message to the subscribers
+     * */
     private fun emitMessage(response: SocketResponse) {
         messageProcessor.offer(response.data)
     }
 
+    /**
+     * Parse incoming message
+     * */
     private fun deserializeSocket(socketMessage: String): SocketResponse {
         return Json.parse(SocketResponse.serializer(), socketMessage)
     }
 
+    /**
+     * Serialize message to be send to PyGrid
+     * */
     private fun serializeNetworkModel(types: MessageTypes, data: NetworkModels) = json {
         TYPE to types.value
             if (types is ResponseMessageTypes)
