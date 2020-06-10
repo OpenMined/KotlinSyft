@@ -17,6 +17,7 @@ class SyftConfiguration internal constructor(
     val networkingSchedulers: ProcessSchedulers,
     val computeSchedulers: ProcessSchedulers,
     val filesDir: File,
+    val batteryCheckEnabled: Boolean,
     val networkConstraints: List<Int>,
     val transportMedium: Int,
     val cacheTimeOut: Long,
@@ -56,6 +57,7 @@ class SyftConfiguration internal constructor(
         private var socketClient = SocketClient(baseUrl, 20000u, networkingSchedulers)
         private var httpClient = HttpClient(baseUrl)
         private var filesDir = context.filesDir
+        private var batteryCheckEnabled = true
         private var maxConcurrentJobs: Int = 1
         private var messagingClient: NetworkingClients = NetworkingClients.SOCKET
         private var cacheTimeOut: Long = 100000
@@ -74,6 +76,7 @@ class SyftConfiguration internal constructor(
                 networkingSchedulers,
                 computeSchedulers,
                 filesDir,
+                batteryCheckEnabled,
                 constraintList,
                 networkTransportMedium,
                 cacheTimeOut,
@@ -83,6 +86,17 @@ class SyftConfiguration internal constructor(
                 messagingClient
             )
         }
+
+        fun disableBatteryCheck(): SyftConfigBuilder {
+            batteryCheckEnabled = false
+            return this
+        }
+
+        fun enableBatteryCheck(): SyftConfigBuilder {
+            batteryCheckEnabled = true
+            return this
+        }
+
 
         fun enableCellularData(): SyftConfigBuilder {
             networkTransportMedium = NetworkCapabilities.TRANSPORT_CELLULAR

@@ -11,10 +11,6 @@ jacoco {
 
 check.finalizedBy "jacocoTestReport"
 
-tasks.withType(Test) {
-    useJUnitPlatform()
-}
-
 task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {
 
     reports {
@@ -42,7 +38,7 @@ android {
         targetSdkVersion Versions.targetSdk
         versionCode Versions.appVersionCode
         versionName Versions.appVersionName
-
+        javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
     }
@@ -63,6 +59,7 @@ android {
 
     testOptions {
         unitTests.returnDefaultValues = true
+        unitTests.includeAndroidResources = true
         unitTests.all {
             jacoco {
                 jacoco.includeNoLocationClasses = true
@@ -100,11 +97,14 @@ dependencies {
     implementation SyftlibDependencies.pytorchAndroid
     implementation SyftlibDependencies.torchVisionAndroid
 
-    debugImplementation SyftlibDependencies.mockitoJupiter
-
-    androidTestImplementation CommonDependencies.testExtJunit
+    androidTestImplementation CommonDependencies.adxExtJunit
+    androidTestImplementation CommonDependencies.adxTest
+    androidTestImplementation CommonDependencies.adxRunner
+    androidTestImplementation CommonDependencies.adxExtTruth
     androidTestImplementation CommonDependencies.espresso
-    testImplementation SyftlibDependencies.junitJupiter
-    testImplementation SyftlibDependencies.mockitoCore
-    testImplementation SyftlibDependencies.mockitoKotlin
+
+    testImplementation CommonDependencies.robolectric
+    testImplementation CommonDependencies.junit
+    testImplementation CommonDependencies.mockitoCore
+    testImplementation CommonDependencies.mockitoKotlin
 }

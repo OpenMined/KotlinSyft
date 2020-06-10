@@ -3,7 +3,7 @@ package org.openmined.syft.execution
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.spy
 import com.nhaarman.mockitokotlin2.verify
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
 import java.util.concurrent.ConcurrentHashMap
