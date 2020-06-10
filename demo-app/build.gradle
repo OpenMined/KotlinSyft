@@ -56,6 +56,6 @@ dependencies {
     implementation SyftlibDependencies.pytorchAndroid
     implementation SyftlibDependencies.torchVisionAndroid
 
-    androidTestImplementation CommonDependencies.testExtJunit
+    androidTestImplementation CommonDependencies.adxExtJunit
     androidTestImplementation CommonDependencies.espresso
 }

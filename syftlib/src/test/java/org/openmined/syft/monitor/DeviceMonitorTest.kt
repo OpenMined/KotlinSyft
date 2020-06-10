@@ -6,7 +6,7 @@ import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import io.reactivex.Single
 import io.reactivex.processors.PublishProcessor
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import org.openmined.syft.monitor.battery.BatteryStatusModel
 import org.openmined.syft.monitor.battery.BatteryStatusRepository
 import org.openmined.syft.monitor.network.NetworkStatusModel

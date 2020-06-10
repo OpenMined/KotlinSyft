@@ -8,7 +8,7 @@ import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.monitor.DeviceMonitor

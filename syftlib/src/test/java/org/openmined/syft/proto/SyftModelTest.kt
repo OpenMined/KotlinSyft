@@ -1,6 +1,6 @@
 package org.openmined.syft.proto
 
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 @ExperimentalUnsignedTypes
 internal class SyftModelTest {
