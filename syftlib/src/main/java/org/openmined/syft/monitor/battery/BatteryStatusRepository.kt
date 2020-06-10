@@ -13,6 +13,8 @@ class BatteryStatusRepository internal constructor(
         }
     }
 
+    fun getBatteryValidity() = batteryStatusDataSource.getBatteryValidity()
+
     fun getBatteryState() = BatteryStatusModel(
         batteryStatusDataSource.checkIfCharging(),
         batteryStatusDataSource.getBatteryLevel(),

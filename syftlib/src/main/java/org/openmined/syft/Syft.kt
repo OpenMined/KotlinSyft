@@ -77,7 +77,12 @@ class Syft internal constructor(
     fun getSyftWorkerId() = workerId
 
     fun executeCycleRequest(job: SyftJob) {
-        if (returnJobErrorIfStateInvalid(job)) return
+        if (jobErrorIfDeviceActive(job) ||
+            jobErrorIfBatteryInvalid(job) ||
+            jobErrorIfNetworkInvalid(job)
+        )
+            return
+
         workerId?.let { id ->
             compositeDisposable.add(
                 deviceMonitor.getNetworkStatus(id)
@@ -108,7 +113,7 @@ class Syft internal constructor(
     override fun isDisposed() = isDisposed.get()
 
     override fun dispose() {
-        Log.d(TAG,"disposing syft worker")
+        Log.d(TAG, "disposing syft worker")
         deviceMonitor.dispose()
         disposeSocketClient()
         compositeDisposable.clear()
@@ -116,25 +121,29 @@ class Syft internal constructor(
         INSTANCE = null
     }
 
-    fun returnJobErrorIfStateInvalid(job: SyftJob): Boolean {
-        when {
-            !deviceMonitor.isNetworkStateValid() -> {
-                job.throwError(IllegalStateException("network connection broken"))
-                disposeSocketClient()
-                return true
-            }
-            !deviceMonitor.isActivityStateValid() -> {
-                job.throwError(IllegalStateException("user activity detected"))
-                return true
-            }
-            !deviceMonitor.isBatteryStateValid() -> {
-                job.throwError(IllegalStateException("user activity detected"))
-                disposeSocketClient()
-                return true
-            }
-            else ->
-                return false
+    fun jobErrorIfNetworkInvalid(job: SyftJob): Boolean {
+        if (!deviceMonitor.isNetworkStateValid()) {
+            job.throwError(IllegalStateException("network constraints failed"))
+            disposeSocketClient()
+            return true
         }
+        return false
+    }
+
+    fun jobErrorIfBatteryInvalid(job: SyftJob): Boolean {
+        if (!deviceMonitor.isBatteryStateValid()) {
+            job.throwError(IllegalStateException("Battery constraints failed"))
+            return true
+        }
+        return false
+    }
+
+    fun jobErrorIfDeviceActive(job: SyftJob): Boolean {
+        if (!deviceMonitor.isActivityStateValid()) {
+            job.throwError(IllegalStateException("User activity constraints failed"))
+            return true
+        }
+        return false
     }
 
     private fun requestCycle(
@@ -181,8 +190,12 @@ class Syft internal constructor(
             )
         )
         job.setJobArguments(responseData)
-        if (returnJobErrorIfStateInvalid(job))
+        if (jobErrorIfDeviceActive(job) ||
+            jobErrorIfBatteryInvalid(job) ||
+            jobErrorIfNetworkInvalid(job)
+        )
             return
+
         workerId?.let {
             job.downloadData(it)
         } ?: throw IllegalStateException("workerId is not initialised")

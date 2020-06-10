@@ -14,12 +14,13 @@ import org.openmined.syft.monitor.StateChangeMessage
 @ExperimentalUnsignedTypes
 class BatteryStatusDataSource(
     private val context: Context,
+    private val batteryCheckEnabled: Boolean, // this may eventually have a list of battery constraints
     private val statusProcessor: PublishProcessor<StateChangeMessage> = PublishProcessor.create()
 ) : BroadCastListener {
 
     companion object {
         fun initialize(configuration: SyftConfiguration): BatteryStatusDataSource {
-            return BatteryStatusDataSource(configuration.context)
+            return BatteryStatusDataSource(configuration.context, configuration.batteryCheckEnabled)
         }
     }
 
@@ -29,6 +30,7 @@ class BatteryStatusDataSource(
 
     private val broadcastReceiver: BatteryChangeReceiver = BatteryChangeReceiver()
 
+    fun getBatteryValidity() = if (batteryCheckEnabled) checkIfCharging() else true
 
     fun getBatteryLevel(): Float? {
         return batteryStatusIntent?.let { intent ->
@@ -45,15 +47,21 @@ class BatteryStatusDataSource(
     }
 
     override fun subscribeStateChange(): Flowable<StateChangeMessage> {
-        context.registerReceiver(
-            broadcastReceiver,
-            IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        )
+        if (batteryCheckEnabled) {
+            val intentFilter = IntentFilter()
+            intentFilter.addAction(Intent.ACTION_POWER_CONNECTED)
+            intentFilter.addAction(Intent.ACTION_POWER_DISCONNECTED)
+            context.registerReceiver(
+                broadcastReceiver,
+                intentFilter
+            )
+        }
         return statusProcessor.onBackpressureLatest()
     }
 
     override fun unsubscribeStateChange() {
-        context.unregisterReceiver(broadcastReceiver)
+        if (batteryCheckEnabled)
+            context.unregisterReceiver(broadcastReceiver)
         statusProcessor.onComplete()
     }
 

@@ -5,7 +5,6 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.monitor.battery.BatteryStatusRepository
-import org.openmined.syft.monitor.battery.CHARGE_TYPE
 import org.openmined.syft.monitor.network.NetworkStatusRepository
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -32,6 +31,10 @@ class DeviceMonitor(
     private val networkValidity = AtomicBoolean(true)
     private val batteryValidity = AtomicBoolean(true)
     private val userValidity = AtomicBoolean(true)
+
+    private val statusListener = networkStatusRepository.subscribeStateChange()
+            .mergeWith(batteryStatusRepository.subscribeStateChange())
+
     private val compositeDisposable = CompositeDisposable()
 
     init {
@@ -60,33 +63,27 @@ class DeviceMonitor(
     fun getBatteryStatus() = batteryStatusRepository.getBatteryState()
 
     private fun subscribe() {
-        compositeDisposable.add(networkStatusRepository.subscribeStateChange()
-                //todo add other processors here when written
-                .subscribe {
-                    when (it) {
-                        is StateChangeMessage.Charging ->
-                            if (it.chargingState == CHARGE_TYPE.AC)
-                                Log.d(TAG, "charging to plug")
-                            else
-                                Log.d(TAG, "Charging with USB")
-
-                        is StateChangeMessage.NetworkStatus ->
-                            if (it.connected) {
-                                networkValidity.set(true)
-                                Log.d(TAG, "connected to the required network")
-                            } else {
-                                networkValidity.set(false)
-                                Log.d(TAG, "disconnected to valid network")
+        compositeDisposable.add(
+            statusListener
+                    .subscribe {
+                        when (it) {
+                            is StateChangeMessage.Charging -> {
+                                batteryValidity.set(it.charging)
+                                Log.d(TAG, "device charging ${it.charging}")
+                            }
+                            is StateChangeMessage.NetworkStatus -> {
+                                networkValidity.set(it.connected)
+                                Log.d(TAG, "connected to valid network ${it.connected}")
                             }
 
-                        is StateChangeMessage.Activity ->
-                            Log.d(TAG, "user activity started")
+                            is StateChangeMessage.Activity ->
+                                Log.d(TAG, "user activity started")
+                        }
                     }
-                }
         )
 
         networkValidity.set(networkStatusRepository.getNetworkValidity())
-        //todo set battery validity here as well
+        batteryValidity.set(batteryStatusRepository.getBatteryValidity())
         isDisposed.set(false)
     }
 
@@ -95,6 +92,7 @@ class DeviceMonitor(
     override fun dispose() {
         compositeDisposable.clear()
         networkStatusRepository.unsubscribeStateChange()
+        batteryStatusRepository.unsubscribeStateChange()
         isDisposed.set(true)
         Log.d(TAG,"disposed device monitor")
     }
