@@ -51,6 +51,7 @@ internal class SyftTest {
             schedulers,
             schedulers,
             mock(),
+            true,
             listOf(),
             NetworkCapabilities.TRANSPORT_WIFI,
             0L,

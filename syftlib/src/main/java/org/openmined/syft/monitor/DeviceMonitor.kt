@@ -32,9 +32,6 @@ class DeviceMonitor(
     private val batteryValidity = AtomicBoolean(true)
     private val userValidity = AtomicBoolean(true)
 
-    private val statusListener = networkStatusRepository.subscribeStateChange()
-            .mergeWith(batteryStatusRepository.subscribeStateChange())
-
     private val compositeDisposable = CompositeDisposable()
 
     init {
@@ -63,6 +60,9 @@ class DeviceMonitor(
     fun getBatteryStatus() = batteryStatusRepository.getBatteryState()
 
     private fun subscribe() {
+        val statusListener = networkStatusRepository.subscribeStateChange()
+                .mergeWith(batteryStatusRepository.subscribeStateChange())
+
         compositeDisposable.add(
             statusListener
                     .subscribe {
