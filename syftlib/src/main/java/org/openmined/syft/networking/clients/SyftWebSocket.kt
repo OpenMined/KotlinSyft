@@ -19,9 +19,9 @@ private const val SOCKET_CLOSE_CLIENT = 1000
 
 /**
  * SyftWebSocket initialize and configure Web Socket connection
- * @property protocol {@link org.openmined.syft.networking.requests.NetworkingProtocol NetworkingProtocol} to be used
- * @property address Address to connect
- * @property keepAliveTimeout Timeout period
+ * @param protocol {@link org.openmined.syft.networking.requests.NetworkingProtocol NetworkingProtocol} to be used
+ * @param address Address to connect
+ * @param keepAliveTimeout Timeout period
  * */
 @ExperimentalUnsignedTypes
 class SyftWebSocket(
