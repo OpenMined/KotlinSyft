@@ -6,10 +6,9 @@ import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import io.reactivex.Single
 import io.reactivex.processors.PublishProcessor
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import org.openmined.syft.monitor.battery.BatteryStatusModel
 import org.openmined.syft.monitor.battery.BatteryStatusRepository
-import org.openmined.syft.monitor.battery.CHARGE_TYPE
 import org.openmined.syft.monitor.network.NetworkStatusModel
 import org.openmined.syft.monitor.network.NetworkStatusRepository
 
@@ -24,11 +23,11 @@ internal class DeviceMonitorTest {
         )
     }
     private val batteryStatusRepository = mock<BatteryStatusRepository> {
+        on { subscribeStateChange() }.thenReturn(processor.onBackpressureLatest())
         on { getBatteryState() }.thenReturn(
             BatteryStatusModel(
                 true,
                 80.0f,
-                CHARGE_TYPE.AC,
                 0
             )
         )
@@ -38,6 +37,7 @@ internal class DeviceMonitorTest {
     fun `device monitor automatically subscribes to statusProcessor on initialization`() {
         DeviceMonitor(networkStatusRepository, batteryStatusRepository)
         verify(networkStatusRepository).subscribeStateChange()
+        verify(batteryStatusRepository).subscribeStateChange()
     }
 
     @Test
@@ -66,6 +66,7 @@ internal class DeviceMonitorTest {
         val deviceMonitor = DeviceMonitor(networkStatusRepository, batteryStatusRepository)
         deviceMonitor.dispose()
         verify(networkStatusRepository).unsubscribeStateChange()
+        verify(batteryStatusRepository).unsubscribeStateChange()
     }
 
     @Test
@@ -73,6 +74,8 @@ internal class DeviceMonitorTest {
         val deviceMonitor = DeviceMonitor(networkStatusRepository, batteryStatusRepository)
         deviceMonitor.isNetworkStateValid()
         verify(networkStatusRepository, times(1)).subscribeStateChange()
+        deviceMonitor.isBatteryStateValid()
+        verify(batteryStatusRepository, times(1)).subscribeStateChange()
     }
 
     @Test
@@ -87,7 +90,7 @@ internal class DeviceMonitorTest {
     fun `device monitor does not subscribe if already listening to battery`() {
         val deviceMonitor = DeviceMonitor(networkStatusRepository, batteryStatusRepository)
         deviceMonitor.isBatteryStateValid()
-        verify(networkStatusRepository, times(1)).subscribeStateChange()
+        verify(batteryStatusRepository, times(1)).subscribeStateChange()
     }
 
     @Test
@@ -95,7 +98,7 @@ internal class DeviceMonitorTest {
         val deviceMonitor = DeviceMonitor(networkStatusRepository, batteryStatusRepository)
         deviceMonitor.dispose()
         deviceMonitor.isBatteryStateValid()
-        verify(networkStatusRepository, times(2)).subscribeStateChange()
+        verify(batteryStatusRepository, times(2)).subscribeStateChange()
     }
 
     @Test

@@ -38,13 +38,16 @@ object Versions {
     const val jacocoVersion = "0.8.2"
 
     // Test
-    const val junit = "1.1.1"
+    const val extJunit = "1.1.1"
     const val testRunner = "1.0.2"
     const val espresso = "3.2.0"
     const val mockitoCore = "3.2.4"
-    const val mockitoJupiter = "3.2.4"
     const val mockitoKotlin = "2.2.0"
-    const val junitJupiter = "5.6.0"
+    const val junit = "4.12"
+    const val adxCore = "1.1.0"
+    const val adxRunner = "1.1.1"
+    const val adxExtTruth = "1.1.0"
+    const val robolectric = "4.3"
 
 }
 
@@ -68,9 +71,18 @@ object CommonDependencies {
     const val kotlinSerializationFactory = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:${Versions.kotlinConverter}"
     const val rxJava = "io.reactivex.rxjava2:rxjava:${Versions.rxJava}"
     const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"
-    const val espresso = "androidx.test.espresso:espresso-core:${Versions.espresso}"
-    const val testExtJunit = "androidx.test.ext:junit:${Versions.junit}"
     const val constraintLayout = "androidx.constraintlayout:constraintlayout:${Versions.constraintLayout}"
+
+    const val espresso = "androidx.test.espresso:espresso-core:${Versions.espresso}"
+    const val adxTest = "androidx.test:core:${Versions.adxCore}"
+    const val adxExtJunit = "androidx.test.ext:junit:${Versions.extJunit}"
+    const val adxRunner = "androidx.test:runner:${Versions.adxRunner}"
+    const val adxExtTruth = "androidx.test.ext:truth:${Versions.adxExtTruth}"
+    const val mockitoKotlin = "com.nhaarman.mockitokotlin2:mockito-kotlin:${Versions.mockitoKotlin}"
+    const val junit = "junit:junit:${Versions.junit}"
+    const val robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
+    const val mockitoCore = "org.mockito:mockito-core:${Versions.mockitoCore}"
+
 }
 
 object DemoAppDependencies {
@@ -80,15 +92,11 @@ object DemoAppDependencies {
 }
 
 object SyftlibDependencies {
-    const val mockitoCore = "org.mockito:mockito-core:${Versions.mockitoCore}"
     const val kotlinJDK = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}"
     const val webrtc = "org.webrtc:google-webrtc:${Versions.webrtc}"
     const val okhttp = "com.squareup.okhttp3:okhttp:${Versions.okhttp}"
-    const val mockitoJupiter = "org.mockito:mockito-junit-jupiter:${Versions.mockitoJupiter}"
-    const val mockitoKotlin = "com.nhaarman.mockitokotlin2:mockito-kotlin:${Versions.mockitoKotlin}"
     const val syftProto = "org.openmined.kotlinsyft:syft-proto-jvm:${Versions.syftProto}"
     const val protobuf = "com.google.protobuf:protobuf-java:${Versions.protobuf}"
-    const val junitJupiter = "org.junit.jupiter:junit-jupiter:${Versions.junitJupiter}"
     const val retrofit = "com.squareup.retrofit2:retrofit:${Versions.retrofit}"
     const val retrofitAdapter = "com.squareup.retrofit2:adapter-rxjava2:${Versions.retrofit}"
     const val pytorchAndroid = "org.pytorch:pytorch_android:${Versions.pytorchAndroid}"
