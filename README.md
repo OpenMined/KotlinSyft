@@ -57,7 +57,7 @@ You can use KotlinSyft as a front-end or as a background service. The following 
     val config = SyftConfiguration.builder(this, "www.mypygrid-url.com").build()
     
     // Initiate Syft worker to handle all your jobs
-    val worker = Syft.getInstance(authToken, configuration)
+    val syftWorker = Syft.getInstance(authToken, configuration)
     
     // Create a new Job
     val newJob = syftWorker.newJob("mnist", "1.0.0")
