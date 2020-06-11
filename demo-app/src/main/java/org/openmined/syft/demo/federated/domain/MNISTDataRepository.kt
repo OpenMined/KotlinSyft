@@ -1,6 +1,6 @@
-package org.openmined.syft.demo.domain
+package org.openmined.syft.demo.federated.domain
 
-import org.openmined.syft.demo.datasource.LocalMNISTDataDataSource
+import org.openmined.syft.demo.federated.datasource.LocalMNISTDataDataSource
 import org.pytorch.IValue
 import org.pytorch.Tensor
 

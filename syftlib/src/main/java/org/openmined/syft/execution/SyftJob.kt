@@ -147,7 +147,10 @@ class SyftJob(
     fun report(diff: State) {
         val requestKey = requestKey
         val workerId = worker.getSyftWorkerId()
-        if (worker.returnJobErrorIfStateInvalid(this)) return
+        if (throwErrorIfNetworkInvalid() ||
+            throwErrorIfDeviceActive() ||
+            throwErrorIfBatteryInvalid()
+        ) return
         if (requestKey != null && workerId != null)
             networkDisposable.add(
                 config.getSignallingClient()
@@ -164,9 +167,24 @@ class SyftJob(
                         })
     }
 
+    fun throwErrorIfNetworkInvalid(): Boolean {
+        if (worker.jobErrorIfNetworkInvalid(this)) {
+            //todo save model to a file here
+            return true
+        }
+        return false
+    }
 
-    fun returnErrorIfStateInvalid(): Boolean {
-        if (worker.returnJobErrorIfStateInvalid(this)) {
+    fun throwErrorIfBatteryInvalid(): Boolean {
+        if (worker.jobErrorIfBatteryInvalid(this)) {
+            //todo save model to a file here
+            return true
+        }
+        return false
+    }
+
+    fun throwErrorIfDeviceActive(): Boolean {
+        if (worker.jobErrorIfDeviceActive(this)) {
             //todo save model to a file here
             return true
         }
@@ -185,6 +203,7 @@ class SyftJob(
         jobStatusProcessor.onComplete()
         networkDisposable.clear()
         isDisposed.set(true)
+        Log.d(TAG,"job $jobId disposed")
     }
 
     private fun getDownloadables(workerId: String, request: String): List<Single<String>> {

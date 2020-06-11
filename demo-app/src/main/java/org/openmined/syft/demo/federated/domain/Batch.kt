@@ -1,4 +1,4 @@
-package org.openmined.syft.demo.domain
+package org.openmined.syft.demo.federated.domain
 
 data class Batch(val flattenedArray: FloatArray, val shape: LongArray) {
     override fun equals(other: Any?): Boolean {

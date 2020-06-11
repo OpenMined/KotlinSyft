@@ -15,8 +15,6 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         Properties properties = new Properties()
-        properties.load(project.rootProject.file('demo-app/local_config.properties').newDataInputStream())
-        buildConfigField 'String', 'SYFT_BASE_URL', properties.getProperty('syft.base_url')
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -39,15 +37,17 @@ android {
 }
 
 dependencies {
-    implementation DemoAppDependencies.kotlinJDK
     implementation CommonDependencies.appCompat
     implementation CommonDependencies.constraintLayout
-    implementation DemoAppDependencies.materialAndroid
     implementation CommonDependencies.coreKtx
     implementation CommonDependencies.kotlinSerialization
     implementation CommonDependencies.rxJava
     implementation CommonDependencies.rxAndroid
+
     implementation DemoAppDependencies.mpAndroidChart
+    implementation DemoAppDependencies.materialAndroid
+    implementation DemoAppDependencies.kotlinJDK
+
 
     // TODO During the first stages of the project, include the library here. Later on we should use the library from the repository
     implementation project(path: ':syftlib')
@@ -55,6 +55,7 @@ dependencies {
 
     implementation SyftlibDependencies.pytorchAndroid
     implementation SyftlibDependencies.torchVisionAndroid
-    androidTestImplementation CommonDependencies.testExtJunit
+
+    androidTestImplementation CommonDependencies.adxExtJunit
     androidTestImplementation CommonDependencies.espresso
 }
