@@ -7,7 +7,7 @@
 ![License](https://img.shields.io/github/license/OpenMined/KotlinSyft)
 ![OpenCollective](https://img.shields.io/opencollective/all/openmined)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # KotlinSyft
@@ -193,6 +193,7 @@ These people were integral part of the efforts to bring KotlinSyft to fruition a
     <td align="center"><a href="https://github.com/codeboy5"><img src="https://avatars0.githubusercontent.com/u/40931412?v=4" width="100px;" alt=""/><br /><sub><b>Saksham Rastogi</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/commits?author=codeboy5" title="Documentation">📖</a></td>
     <td align="center"><a href="https://www.patrickcason.com"><img src="https://avatars1.githubusercontent.com/u/1297930?v=4" width="100px;" alt=""/><br /><sub><b>Patrick Cason</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/commits?author=cereallarceny" title="Documentation">📖</a> <a href="#business-cereallarceny" title="Business development">💼</a></td>
     <td align="center"><a href="http://galalen.github.io"><img src="https://avatars0.githubusercontent.com/u/16897043?v=4" width="100px;" alt=""/><br /><sub><b>Mohammed Galalen</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/commits?author=galalen" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/erksch"><img src="https://avatars2.githubusercontent.com/u/19290349?v=4" width="100px;" alt=""/><br /><sub><b>Erik Ziegler</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/issues?q=author%3Aerksch" title="Bug reports">🐛</a></td>
   </tr>
 </table>
 
