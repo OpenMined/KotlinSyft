@@ -34,9 +34,9 @@ private const val TAG = "SocketClient"
 
 /**
  * Used to communicate and exchange data throw web socket with PyGrid
- * @param syftWebSocket Create web socket connection
- * @param timeout Timeout period
- * @param schedulers Manage multi-threading operations
+ * @property syftWebSocket Create web socket connection
+ * @property timeout Timeout period
+ * @property schedulers Manage multi-threading operations
  * */
 @ExperimentalUnsignedTypes
 class SocketClient(
@@ -63,6 +63,7 @@ class SocketClient(
 
     /**
      * Authenticate socket connection with PyGrid
+     * @see {@link org.openmined.syft.networking.datamodels.syft.AuthenticationRequest AuthenticationRequest}
      * */
     override fun authenticate(authRequest: AuthenticationRequest): Single<AuthenticationResponse> {
         connectWebSocket()
@@ -81,6 +82,7 @@ class SocketClient(
 
     /**
      * Request or get current active federated learning cycle
+     * @see {@link org.openmined.syft.networking.datamodels.syft.CycleRequest CycleRequest}
      * */
     override fun getCycle(cycleRequest: CycleRequest): Single<CycleResponseData> {
         connectWebSocket()
@@ -208,7 +210,7 @@ class SocketClient(
     }
 
     /**
-     * Serialize message to be send to PyGrid
+     * Serialize message to be sent to PyGrid
      * */
     private fun serializeNetworkModel(types: MessageTypes, data: NetworkModels) = json {
         TYPE to types.value
