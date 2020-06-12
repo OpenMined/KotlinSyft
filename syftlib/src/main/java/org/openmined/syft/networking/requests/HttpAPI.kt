@@ -80,7 +80,7 @@ interface HttpAPI : CommunicationAPI {
      *
      * @param workerId Id of syft worker handling this job.
      * @param requestKey A unique key required for authorised communication with PyGrid server.
-     * It ensures that only allowed workers can receive Plan data from server.
+     * It ensures that only workers accepted for a cycle can receive Plan data from server.
      * @param planId Id of the Plan to be downloaded.
      * @param op_type Format in which Plan operations are defined, Can be torchScript.
      */
@@ -98,7 +98,7 @@ interface HttpAPI : CommunicationAPI {
      *
      * @param workerId Id of syft worker handling this job.
      * @param requestKey A unique key required for authorised communication with PyGrid server.
-     * It ensures that only allowed workers can receive Protocol data from server.
+     * It ensures that only workers accepted for a cycle can receive Protocol data from server.
      * @param protocolId Id of the Protocol to be downloaded.
      */
     //    @Streaming
@@ -114,7 +114,7 @@ interface HttpAPI : CommunicationAPI {
      *
      * @param workerId Id of syft worker handling this job.
      * @param requestKey A unique key required for authorised communication with PyGrid server.
-     * It ensures that only allowed workers can receive Model data from server.
+     * It ensures that only workers accepted for a cycle can receive Model data from server.
      * @param modelId Id of the model to be downloaded.
      */
     //    @Streaming
@@ -128,8 +128,7 @@ interface HttpAPI : CommunicationAPI {
     /**
      * Calls **federated/authenticate** for authentication.
      *
-     * @param authRequest Contains JWT auth-token. Support for JWT authentication to protect models
-     * from Sybil attacks
+     * @param authRequest Contains JWT auth-token. JWT authentication protects the model from sybil attacks.
      */
     @GET(AUTH_TYPE)
     override fun authenticate(authRequest: AuthenticationRequest): Single<AuthenticationResponse>
