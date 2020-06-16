@@ -1,4 +1,4 @@
-package org.openmined.syft.networking.clients
+package org.openmined.syft.unit.networking.clients
 
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.stub
@@ -10,6 +10,11 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.schedulers.TestScheduler
 import kotlinx.serialization.json.json
 import org.junit.Test
+import org.openmined.syft.networking.clients.DATA
+import org.openmined.syft.networking.clients.NetworkMessage
+import org.openmined.syft.networking.clients.SocketClient
+import org.openmined.syft.networking.clients.SyftWebSocket
+import org.openmined.syft.networking.clients.TYPE
 import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CYCLE_ACCEPT
@@ -24,7 +29,7 @@ import java.util.concurrent.TimeUnit
  * The serialization and deserialization of socket messages is also verified by default
  */
 @ExperimentalUnsignedTypes
-internal class SocketClientTest {
+internal class SocketClientMockTest {
     private val schedulers = object : ProcessSchedulers {
         override val computeThreadScheduler: Scheduler
             get() = Schedulers.trampoline()
@@ -38,7 +43,11 @@ internal class SocketClientTest {
 
     }
     private val testScheduler = TestScheduler()
-    private val socketClient = SocketClient(webSocket, schedulers = schedulers)
+    private val socketClient =
+            SocketClient(
+                webSocket,
+                schedulers = schedulers
+            )
 
 
     @Test
@@ -78,7 +87,11 @@ internal class SocketClientTest {
                 .test()
         verify(webSocket).send(serializedAuthRequest)
         testScheduler.advanceTimeBy(1L, TimeUnit.SECONDS)
-        processor.offer(NetworkMessage.MessageReceived(authenticationResponse.toString()))
+        processor.offer(
+            NetworkMessage.MessageReceived(
+                authenticationResponse.toString()
+            )
+        )
         testScheduler.advanceTimeBy(1L, TimeUnit.SECONDS)
         testAuthenticate.assertValue(AuthenticationResponse.AuthenticationSuccess("test_id"))
         testAuthenticate.dispose()
@@ -137,7 +150,11 @@ internal class SocketClientTest {
                 .test()
         verify(webSocket).send(serializedRequest)
         testScheduler.advanceTimeBy(500, TimeUnit.MILLISECONDS)
-        processor.offer(NetworkMessage.MessageReceived(socketResponse.toString()))
+        processor.offer(
+            NetworkMessage.MessageReceived(
+                socketResponse.toString()
+            )
+        )
         testScheduler.advanceTimeBy(500, TimeUnit.MILLISECONDS)
         testCycle.assertValue(cycleResponse)
         testCycle.dispose()

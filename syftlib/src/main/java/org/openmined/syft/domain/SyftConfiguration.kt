@@ -55,7 +55,7 @@ class SyftConfiguration internal constructor(
                 get() = Schedulers.single()
         }
         private var socketClient = SocketClient(baseUrl, 20000u, networkingSchedulers)
-        private var httpClient = HttpClient(baseUrl)
+        private var httpClient = HttpClient.initialize(baseUrl)
         private var filesDir = context.filesDir
         private var batteryCheckEnabled = true
         private var maxConcurrentJobs: Int = 1

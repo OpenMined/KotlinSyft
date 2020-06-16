@@ -1,4 +1,4 @@
-package org.openmined.syft
+package org.openmined.syft.unit
 
 import android.net.NetworkCapabilities
 import com.nhaarman.mockitokotlin2.mock
@@ -9,6 +9,7 @@ import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.junit.Test
+import org.openmined.syft.Syft
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.monitor.DeviceMonitor

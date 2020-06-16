@@ -1,4 +1,4 @@
-package org.openmined.syft.monitor.battery
+package org.openmined.syft.unit.monitor.battery
 
 import android.content.Context
 import android.content.Intent
@@ -12,6 +12,7 @@ import io.reactivex.schedulers.TestScheduler
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.openmined.syft.monitor.StateChangeMessage
+import org.openmined.syft.monitor.battery.BatteryStatusDataSource
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.shadow.api.Shadow
 import java.util.concurrent.TimeUnit
@@ -29,7 +30,11 @@ class RobolectricBatteryDataSource {
             on { registerReceiver(eq(null), any()) }
                     .thenReturn(intent)
         }
-        val batteryStatusDataSource = BatteryStatusDataSource(contextMock, true)
+        val batteryStatusDataSource =
+                BatteryStatusDataSource(
+                    contextMock,
+                    true
+                )
         assert(batteryStatusDataSource.getBatteryLevel() == 25.0f)
     }
 
@@ -41,7 +46,11 @@ class RobolectricBatteryDataSource {
             on { registerReceiver(eq(null), any()) }
                     .thenReturn(intent)
         }
-        val batteryStatusDataSource = BatteryStatusDataSource(contextMock, true)
+        val batteryStatusDataSource =
+                BatteryStatusDataSource(
+                    contextMock,
+                    true
+                )
         assert(batteryStatusDataSource.checkIfCharging())
     }
 
@@ -54,7 +63,11 @@ class RobolectricBatteryDataSource {
             on { registerReceiver(eq(null), any()) }
                     .thenReturn(intent)
         }
-        val batteryStatusDataSource = BatteryStatusDataSource(contextMock, true)
+        val batteryStatusDataSource =
+                BatteryStatusDataSource(
+                    contextMock,
+                    true
+                )
         assert(!batteryStatusDataSource.checkIfCharging())
     }
 
@@ -69,7 +82,12 @@ class RobolectricBatteryDataSource {
             on { registerReceiver(notNull(), any()) }
                     .thenReturn(null)
         }
-        private val batterySource = BatteryStatusDataSource(contextMock, true, statusProcessor)
+        private val batterySource =
+                BatteryStatusDataSource(
+                    contextMock,
+                    true,
+                    statusProcessor
+                )
         private val batteryChangeReceiver = batterySource.BatteryChangeReceiver()
 
         @Test

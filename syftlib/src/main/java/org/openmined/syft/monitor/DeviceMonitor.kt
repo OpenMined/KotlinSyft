@@ -6,6 +6,7 @@ import io.reactivex.disposables.Disposable
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.monitor.battery.BatteryStatusRepository
 import org.openmined.syft.monitor.network.NetworkStatusRepository
+import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val TAG = "device monitor"
@@ -13,14 +14,18 @@ private const val TAG = "device monitor"
 @ExperimentalUnsignedTypes
 class DeviceMonitor(
     private val networkStatusRepository: NetworkStatusRepository,
-    private val batteryStatusRepository: BatteryStatusRepository
+    private val batteryStatusRepository: BatteryStatusRepository,
+    private val processSchedulers: ProcessSchedulers
 ) : Disposable {
 
     companion object {
-        fun construct(syftConfig: SyftConfiguration): DeviceMonitor {
+        fun construct(
+            syftConfig: SyftConfiguration
+        ): DeviceMonitor {
             return DeviceMonitor(
                 NetworkStatusRepository.initialize(syftConfig),
-                BatteryStatusRepository.initialize(syftConfig)
+                BatteryStatusRepository.initialize(syftConfig),
+                syftConfig.networkingSchedulers
             )
         }
     }
@@ -65,6 +70,8 @@ class DeviceMonitor(
 
         compositeDisposable.add(
             statusListener
+                    .subscribeOn(processSchedulers.computeThreadScheduler)
+                    .observeOn(processSchedulers.calleeThreadScheduler)
                     .subscribe {
                         when (it) {
                             is StateChangeMessage.Charging -> {
