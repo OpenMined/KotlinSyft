@@ -98,11 +98,11 @@ dependencies {
     implementation SyftlibDependencies.torchVisionAndroid
 
     androidTestImplementation CommonDependencies.adxExtJunit
-    androidTestImplementation CommonDependencies.adxTest
     androidTestImplementation CommonDependencies.adxRunner
     androidTestImplementation CommonDependencies.adxExtTruth
     androidTestImplementation CommonDependencies.espresso
 
+    testImplementation CommonDependencies.adxTest
     testImplementation CommonDependencies.robolectric
     testImplementation CommonDependencies.junit
     testImplementation CommonDependencies.mockitoCore

@@ -21,9 +21,9 @@ class SyftConfiguration internal constructor(
     val networkConstraints: List<Int>,
     val transportMedium: Int,
     val cacheTimeOut: Long,
+    val maxConcurrentJobs: Int,
     private val socketClient: SocketClient,
     private val httpClient: HttpClient,
-    private val maxConcurrentJobs: Int,
     private val messagingClient: NetworkingClients
 ) {
     companion object {
@@ -55,7 +55,7 @@ class SyftConfiguration internal constructor(
                 get() = Schedulers.single()
         }
         private var socketClient = SocketClient(baseUrl, 20000u, networkingSchedulers)
-        private var httpClient = HttpClient(baseUrl)
+        private var httpClient = HttpClient.initialize(baseUrl)
         private var filesDir = context.filesDir
         private var batteryCheckEnabled = true
         private var maxConcurrentJobs: Int = 1
@@ -80,9 +80,9 @@ class SyftConfiguration internal constructor(
                 constraintList,
                 networkTransportMedium,
                 cacheTimeOut,
+                maxConcurrentJobs,
                 socketClient,
                 httpClient,
-                maxConcurrentJobs,
                 messagingClient
             )
         }

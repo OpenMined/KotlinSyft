@@ -180,10 +180,13 @@ class SocketClient(
 
     // Free resources
     override fun dispose() {
-        syftWebSocket.close()
         compositeDisposable.clear()
-        socketClientSubscribed.set(false)
-        Log.d(TAG,"Socket Client Disposed")
+        if (isDisposed) {
+            syftWebSocket.close()
+            socketClientSubscribed.set(false)
+            Log.d(TAG, "Socket Client Disposed")
+        } else
+            Log.d(TAG,"socket client already disposed")
     }
 
     /**

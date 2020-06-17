@@ -13,6 +13,7 @@ import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
+import java.lang.Exception
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -21,25 +22,29 @@ private const val TAG = "Syft"
 
 @ExperimentalUnsignedTypes
 class Syft internal constructor(
-    private val authToken: String,
     private val syftConfig: SyftConfiguration,
-    private val deviceMonitor: DeviceMonitor
-) : Disposable {
+    private val deviceMonitor: DeviceMonitor,
+    private val authToken: String?
+    ) : Disposable {
     companion object {
         @Volatile
         private var INSTANCE: Syft? = null
 
         fun getInstance(
-            authToken: String,
-            syftConfiguration: SyftConfiguration
-        ): Syft =
-                INSTANCE ?: synchronized(this) {
-                    INSTANCE ?: Syft(
-                        authToken,
-                        syftConfiguration,
-                        DeviceMonitor.construct(syftConfiguration)
-                    ).also { INSTANCE = it }
-                }
+            syftConfiguration: SyftConfiguration,
+            authToken: String? = null
+        ): Syft {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE?.let {
+                    if (it.syftConfig == syftConfiguration && it.authToken == authToken) it
+                    else throw ExceptionInInitializerError("syft worker initialised with different parameters. Dispose previous worker")
+                } ?: Syft(
+                    syftConfiguration,
+                    DeviceMonitor.construct(syftConfiguration),
+                    authToken
+                ).also { INSTANCE = it }
+            }
+        }
     }
 
     private val workerJobs = ConcurrentHashMap<SyftJob.JobID, SyftJob>()
@@ -59,6 +64,9 @@ class Syft internal constructor(
             this,
             syftConfig
         )
+        if (syftConfig.maxConcurrentJobs == workerJobs.size)
+            throw IndexOutOfBoundsException("maximum number of allowed jobs reached")
+
         workerJobs[job.jobId] = job
         job.subscribe(object : JobStatusSubscriber() {
             override fun onComplete() {
@@ -213,8 +221,10 @@ class Syft internal constructor(
                                     setSyftWorkerId(t.workerId)
                                 executeCycleRequest(job)
                             }
-                            is AuthenticationResponse.AuthenticationError ->
+                            is AuthenticationResponse.AuthenticationError -> {
+                                job.throwError(SecurityException(t.errorMessage))
                                 Log.d(TAG, t.errorMessage)
+                            }
                         }
                     }, {
                         job.throwError(it)

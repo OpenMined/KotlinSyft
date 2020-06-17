@@ -20,7 +20,7 @@ class MnistViewModel(
     configuration: SyftConfiguration,
     private val mnistDataRepository: MNISTDataRepository
 ) : ViewModel() {
-    private val syftWorker = Syft.getInstance(authToken, configuration)
+    private val syftWorker = Syft.getInstance(configuration,authToken)
     private val mnistJob = syftWorker.newJob("mnist", "1.0.0")
 
     val logger

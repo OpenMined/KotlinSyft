@@ -200,10 +200,13 @@ class SyftJob(
     override fun isDisposed() = isDisposed.get()
 
     override fun dispose() {
-        jobStatusProcessor.onComplete()
-        networkDisposable.clear()
-        isDisposed.set(true)
-        Log.d(TAG,"job $jobId disposed")
+        if (!isDisposed()) {
+            jobStatusProcessor.onComplete()
+            networkDisposable.clear()
+            isDisposed.set(true)
+            Log.d(TAG, "job $jobId disposed")
+        } else
+            Log.d(TAG, "job $jobId already disposed")
     }
 
     private fun getDownloadables(workerId: String, request: String): List<Single<String>> {

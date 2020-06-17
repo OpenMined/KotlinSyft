@@ -1,4 +1,4 @@
-package org.openmined.syft.monitor.battery
+package org.openmined.syft.unit.monitor.battery
 
 import android.content.Context
 import android.content.Intent
@@ -12,6 +12,7 @@ import io.reactivex.schedulers.TestScheduler
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.openmined.syft.monitor.StateChangeMessage
+import org.openmined.syft.monitor.battery.BatteryStatusDataSource
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.shadow.api.Shadow
 import java.util.concurrent.TimeUnit

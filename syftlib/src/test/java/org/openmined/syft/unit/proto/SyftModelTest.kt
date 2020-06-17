@@ -1,6 +1,7 @@
-package org.openmined.syft.proto
+package org.openmined.syft.unit.proto
 
 import org.junit.Test
+import org.openmined.syft.proto.SyftModel
 
 @ExperimentalUnsignedTypes
 internal class SyftModelTest {

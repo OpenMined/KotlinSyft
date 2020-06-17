@@ -1,4 +1,4 @@
-package org.openmined.syft.networking.clients
+package org.openmined.syft.unit.networking.clients
 
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.stub
@@ -10,6 +10,11 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.schedulers.TestScheduler
 import kotlinx.serialization.json.json
 import org.junit.Test
+import org.openmined.syft.networking.clients.DATA
+import org.openmined.syft.networking.clients.NetworkMessage
+import org.openmined.syft.networking.clients.SocketClient
+import org.openmined.syft.networking.clients.SyftWebSocket
+import org.openmined.syft.networking.clients.TYPE
 import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CYCLE_ACCEPT

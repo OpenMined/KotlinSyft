@@ -1,9 +1,6 @@
-package org.openmined.syft.monitor.battery
+package org.openmined.syft.unit.monitor.battery
 
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.os.BatteryManager
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
@@ -15,10 +12,8 @@ import com.nhaarman.mockitokotlin2.verify
 import io.reactivex.Flowable
 import io.reactivex.processors.PublishProcessor
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.openmined.syft.monitor.StateChangeMessage
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.shadow.api.Shadow
+import org.openmined.syft.monitor.battery.BatteryStatusDataSource
 
 @ExperimentalUnsignedTypes
 class BatteryStatusDataSourceTest {

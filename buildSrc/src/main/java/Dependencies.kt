@@ -47,7 +47,7 @@ object Versions {
     const val adxCore = "1.1.0"
     const val adxRunner = "1.1.1"
     const val adxExtTruth = "1.1.0"
-    const val robolectric = "4.3"
+    const val robolectric = "4.4-SNAPSHOT"
 
 }
 
