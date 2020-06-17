@@ -64,7 +64,7 @@ class HttpClientMock(
                     )
             )
 
-            on { downloadPlan(any(), any(), any(), eq("torchscript")) }.thenReturn(
+            on { downloadPlan(any(), any(), eq("1"), eq("torchscript")) }.thenReturn(
                 if (downloadPlanSuccess)
                     Single.just(Response.success(planFile.readBytes().toResponseBody()))
                 else
@@ -76,7 +76,7 @@ class HttpClientMock(
                     )
             )
 
-            on { downloadModel(any(), any(), any()) }.thenReturn(
+            on { downloadModel(any(), any(), eq("2")) }.thenReturn(
                 if (downloadModelSuccess)
                     Single.just(Response.success(modelFile.readBytes().toResponseBody()))
                 else

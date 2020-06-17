@@ -13,6 +13,7 @@ import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
+import java.lang.Exception
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -217,8 +218,10 @@ class Syft internal constructor(
                                     setSyftWorkerId(t.workerId)
                                 executeCycleRequest(job)
                             }
-                            is AuthenticationResponse.AuthenticationError ->
+                            is AuthenticationResponse.AuthenticationError -> {
+                                job.throwError(SecurityException(t.errorMessage))
                                 Log.d(TAG, t.errorMessage)
+                            }
                         }
                     }, {
                         job.throwError(it)
