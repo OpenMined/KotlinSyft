@@ -39,9 +39,9 @@ class AuthenticationTest : AbstractSyftWorkerTest() {
             networkConstraints,
             NetworkCapabilities.TRANSPORT_WIFI,
             0,
+            1,
             socketClient.getMockedClient(),
             httpClient.getMockedClient(),
-            1,
             SyftConfiguration.NetworkingClients.SOCKET
         )
 
@@ -75,9 +75,9 @@ class AuthenticationTest : AbstractSyftWorkerTest() {
             networkConstraints,
             NetworkCapabilities.TRANSPORT_WIFI,
             0,
+            1,
             socketClient.getMockedClient(),
             httpClient.getMockedClient(),
-            1,
             SyftConfiguration.NetworkingClients.SOCKET
         )
 
@@ -111,9 +111,9 @@ class AuthenticationTest : AbstractSyftWorkerTest() {
             networkConstraints,
             NetworkCapabilities.TRANSPORT_WIFI,
             0,
+            1,
             socketClient.getMockedClient(),
             httpClient.getMockedClient(),
-            1,
             SyftConfiguration.NetworkingClients.SOCKET
         )
 
@@ -140,7 +140,6 @@ class AuthenticationTest : AbstractSyftWorkerTest() {
             pingSuccess = true, downloadSpeedSuccess = true,
             uploadSuccess = true, downloadPlanSuccess = true, downloadModelSuccess = true
         )
-
         val syftConfiguration = SyftConfiguration(
             context,
             networkingSchedulers,
@@ -150,9 +149,9 @@ class AuthenticationTest : AbstractSyftWorkerTest() {
             networkConstraints,
             NetworkCapabilities.TRANSPORT_WIFI,
             0,
+            1,
             socketClient.getMockedClient(),
             httpClient.getMockedClient(),
-            1,
             SyftConfiguration.NetworkingClients.SOCKET
         )
 

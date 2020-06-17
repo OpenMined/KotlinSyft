@@ -1,10 +1,7 @@
 package org.openmined.syft.integration
 
 import android.content.Intent
-import android.net.ConnectivityManager.TYPE_WIFI
 import android.net.NetworkCapabilities
-import android.net.NetworkInfo
-import android.os.Looper
 import android.os.Looper.getMainLooper
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
@@ -21,7 +18,6 @@ import org.openmined.syft.integration.execution.ShadowPlan
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadow.api.Shadow
-import org.robolectric.shadows.ShadowNetworkInfo
 
 @ExperimentalUnsignedTypes
 class DeviceMonitorTest : AbstractSyftWorkerTest() {
@@ -42,9 +38,9 @@ class DeviceMonitorTest : AbstractSyftWorkerTest() {
         networkConstraints,
         NetworkCapabilities.TRANSPORT_WIFI,
         0,
+        1,
         socketClient.getMockedClient(),
         httpClient.getMockedClient(),
-        1,
         SyftConfiguration.NetworkingClients.SOCKET
     )
 

@@ -21,9 +21,9 @@ class SyftConfiguration internal constructor(
     val networkConstraints: List<Int>,
     val transportMedium: Int,
     val cacheTimeOut: Long,
+    val maxConcurrentJobs: Int,
     private val socketClient: SocketClient,
     private val httpClient: HttpClient,
-    private val maxConcurrentJobs: Int,
     private val messagingClient: NetworkingClients
 ) {
     companion object {
@@ -80,9 +80,9 @@ class SyftConfiguration internal constructor(
                 constraintList,
                 networkTransportMedium,
                 cacheTimeOut,
+                maxConcurrentJobs,
                 socketClient,
                 httpClient,
-                maxConcurrentJobs,
                 messagingClient
             )
         }

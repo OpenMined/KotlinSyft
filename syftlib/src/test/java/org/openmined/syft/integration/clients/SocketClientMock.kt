@@ -1,8 +1,8 @@
 package org.openmined.syft.integration.clients
 
-import com.nhaarman.mockitokotlin2.check
-import com.nhaarman.mockitokotlin2.eq
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.refEq
 import com.nhaarman.mockitokotlin2.stub
 import io.reactivex.Single
 import kotlinx.serialization.json.Json
@@ -125,7 +125,7 @@ class SocketClientMock(
 
     init {
         mockedClient.stub {
-            on { authenticate(check {}) }.thenReturn(
+            on { authenticate(any()) }.thenReturn(
                 Single.just(
                     deserializeSocket(
                         authenticationResponse
@@ -133,15 +133,35 @@ class SocketClientMock(
                 )
             )
 
-            on { getCycle(check { }) }.thenReturn(
+            on {
+                getCycle(
+                    refEq(
+                        cycleRequest1,
+                        "workerId",
+                        "ping",
+                        "downloadSpeed",
+                        "uploadSpeed"
+                    )
+                )
+            }.thenReturn(
                 Single.just(deserializeSocket(socketResponseTest1).data as CycleResponseData)
             )
 
-//            on{getCycle(eq(cycleRequest2))}.thenReturn(
-//                Single.just(deserializeSocket(socketResponseTest2).data as CycleResponseData)
-//            )
+            on {
+                getCycle(
+                    refEq(
+                        cycleRequest2,
+                        "workerId",
+                        "ping",
+                        "downloadSpeed",
+                        "uploadSpeed"
+                    )
+                )
+            }.thenReturn(
+                Single.just(deserializeSocket(socketResponseTest2).data as CycleResponseData)
+            )
 
-            on { report(check {}) }.thenReturn(
+            on { report(any()) }.thenReturn(
                 Single.just(ReportResponse("success"))
             )
 

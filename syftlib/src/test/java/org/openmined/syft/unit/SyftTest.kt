@@ -56,9 +56,9 @@ internal class SyftTest {
             listOf(),
             NetworkCapabilities.TRANSPORT_WIFI,
             0L,
+            1,
             socketClient,
             httpClient,
-            1,
             SyftConfiguration.NetworkingClients.SOCKET
         )
         val workerTest = spy(

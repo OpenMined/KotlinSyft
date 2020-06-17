@@ -38,9 +38,9 @@ class DownloadablesTest : AbstractSyftWorkerTest() {
             networkConstraints,
             NetworkCapabilities.TRANSPORT_WIFI,
             0,
+            1,
             socketClient.getMockedClient(),
             httpClient.getMockedClient(),
-            1,
             SyftConfiguration.NetworkingClients.SOCKET
         )
 
@@ -74,9 +74,9 @@ class DownloadablesTest : AbstractSyftWorkerTest() {
             networkConstraints,
             NetworkCapabilities.TRANSPORT_WIFI,
             0,
+            1,
             socketClient.getMockedClient(),
             httpClient.getMockedClient(),
-            1,
             SyftConfiguration.NetworkingClients.SOCKET
         )
 
