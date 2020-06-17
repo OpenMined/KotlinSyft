@@ -68,6 +68,7 @@ class MultipleSyftJobsTest : AbstractSyftWorkerTest() {
         } catch (e: IndexOutOfBoundsException) {
             assert(true)
         }
+        syftWorker.dispose()
     }
 
 }
