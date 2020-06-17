@@ -33,15 +33,16 @@ class Syft internal constructor(
             syftConfiguration: SyftConfiguration,
             authToken: String? = null
         ): Syft {
-            return if (INSTANCE?.syftConfig == syftConfiguration && INSTANCE?.authToken == authToken)
-                INSTANCE ?: synchronized(this) {
-                    INSTANCE ?: Syft(
-                        syftConfiguration,
-                        DeviceMonitor.construct(syftConfiguration),
-                        authToken
-                    ).also { INSTANCE = it }
-                }
-            else throw ExceptionInInitializerError("syft worker initialised with different parameters. Dispose previous worker")
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE?.let {
+                    if (it.syftConfig == syftConfiguration && it.authToken == authToken) it
+                    else throw ExceptionInInitializerError("syft worker initialised with different parameters. Dispose previous worker")
+                } ?: Syft(
+                    syftConfiguration,
+                    DeviceMonitor.construct(syftConfiguration),
+                    authToken
+                ).also { INSTANCE = it }
+            }
         }
     }
 

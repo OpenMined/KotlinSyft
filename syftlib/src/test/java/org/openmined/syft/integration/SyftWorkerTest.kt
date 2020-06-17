@@ -92,12 +92,12 @@ class SyftWorkerTest {
         )
 
         val deviceMonitor = DeviceMonitor.construct(syftConfiguration)
-        val syftWorker = Syft(syftConfiguration, deviceMonitor,"test token")
+        val syftWorker = Syft.getInstance(syftConfiguration,"test token")
         val job = syftWorker.newJob("test", "1")
         val jobStatusSubscriber = spy<JobStatusSubscriber>()
         job.start(jobStatusSubscriber)
         verify(jobStatusSubscriber).onReady(any(), any(), any())
-        job.dispose()
+        syftWorker.dispose()
         verify(jobStatusSubscriber).onComplete()
     }
 
