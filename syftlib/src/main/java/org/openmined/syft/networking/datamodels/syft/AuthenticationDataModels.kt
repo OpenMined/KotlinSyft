@@ -11,7 +11,7 @@ const val AUTH_FAILURE = "rejected"
 @Serializable
 data class AuthenticationRequest(
     @SerialName("auth_token")
-    val authToken: String
+    val authToken: String? = null
 ) : NetworkModels()
 
 @Serializable

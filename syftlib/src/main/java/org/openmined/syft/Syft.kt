@@ -21,24 +21,24 @@ private const val TAG = "Syft"
 
 @ExperimentalUnsignedTypes
 class Syft internal constructor(
-    private val authToken: String,
     private val syftConfig: SyftConfiguration,
-    private val deviceMonitor: DeviceMonitor
-) : Disposable {
+    private val deviceMonitor: DeviceMonitor,
+    private val authToken: String?
+    ) : Disposable {
     companion object {
         @Volatile
         private var INSTANCE: Syft? = null
 
         fun getInstance(
-            authToken: String,
-            syftConfiguration: SyftConfiguration
-        ): Syft =
+            syftConfiguration: SyftConfiguration,
+            authToken: String?= null
+            ): Syft =
                 INSTANCE ?: synchronized(this) {
                     INSTANCE ?: Syft(
-                        authToken,
                         syftConfiguration,
-                        DeviceMonitor.construct(syftConfiguration)
-                    ).also { INSTANCE = it }
+                        DeviceMonitor.construct(syftConfiguration),
+                        authToken
+                        ).also { INSTANCE = it }
                 }
     }
 
