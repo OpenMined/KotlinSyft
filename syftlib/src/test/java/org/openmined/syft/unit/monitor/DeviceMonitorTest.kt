@@ -66,17 +66,9 @@ internal class DeviceMonitorTest {
             networkingSchedulers
         )
         assert(deviceMonitor.isNetworkStateValid())
-        processor.offer(
-            StateChangeMessage.NetworkStatus(
-                false
-            )
-        )
+        processor.offer(StateChangeMessage.NetworkStatus(false))
         assert(!deviceMonitor.isNetworkStateValid())
-        processor.offer(
-            StateChangeMessage.NetworkStatus(
-                true
-            )
-        )
+        processor.offer(StateChangeMessage.NetworkStatus(true))
         assert(deviceMonitor.isNetworkStateValid())
     }
 

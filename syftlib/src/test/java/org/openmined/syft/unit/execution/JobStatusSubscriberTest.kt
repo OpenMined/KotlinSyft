@@ -20,11 +20,7 @@ internal class JobStatusSubscriberTest {
         val model = mock<SyftModel>()
         val clientConfig = mock<ClientConfig>()
         val plans = ConcurrentHashMap<String, Plan>()
-        val msg = JobStatusMessage.JobReady(
-            model,
-            plans,
-            clientConfig
-        )
+        val msg = JobStatusMessage.JobReady(model, plans, clientConfig)
         subscriber.onJobStatusMessage(msg)
         verify(subscriber).onReady(model, plans, clientConfig)
     }
@@ -32,9 +28,7 @@ internal class JobStatusSubscriberTest {
     @Test
     fun `given a job cycle rejected message verify status subscriber calls onRejected`() {
         val timeout = "timeout string"
-        val msg = JobStatusMessage.JobCycleRejected(
-            timeout
-        )
+        val msg = JobStatusMessage.JobCycleRejected(timeout)
         subscriber.onJobStatusMessage(msg)
         verify(subscriber).onRejected(timeout)
     }

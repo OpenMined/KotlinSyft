@@ -30,11 +30,7 @@ class RobolectricBatteryDataSource {
             on { registerReceiver(eq(null), any()) }
                     .thenReturn(intent)
         }
-        val batteryStatusDataSource =
-                BatteryStatusDataSource(
-                    contextMock,
-                    true
-                )
+        val batteryStatusDataSource = BatteryStatusDataSource(contextMock, true)
         assert(batteryStatusDataSource.getBatteryLevel() == 25.0f)
     }
 
@@ -46,11 +42,7 @@ class RobolectricBatteryDataSource {
             on { registerReceiver(eq(null), any()) }
                     .thenReturn(intent)
         }
-        val batteryStatusDataSource =
-                BatteryStatusDataSource(
-                    contextMock,
-                    true
-                )
+        val batteryStatusDataSource = BatteryStatusDataSource(contextMock, true)
         assert(batteryStatusDataSource.checkIfCharging())
     }
 
@@ -63,11 +55,7 @@ class RobolectricBatteryDataSource {
             on { registerReceiver(eq(null), any()) }
                     .thenReturn(intent)
         }
-        val batteryStatusDataSource =
-                BatteryStatusDataSource(
-                    contextMock,
-                    true
-                )
+        val batteryStatusDataSource = BatteryStatusDataSource(contextMock, true)
         assert(!batteryStatusDataSource.checkIfCharging())
     }
 
@@ -82,12 +70,7 @@ class RobolectricBatteryDataSource {
             on { registerReceiver(notNull(), any()) }
                     .thenReturn(null)
         }
-        private val batterySource =
-                BatteryStatusDataSource(
-                    contextMock,
-                    true,
-                    statusProcessor
-                )
+        private val batterySource = BatteryStatusDataSource(contextMock, true, statusProcessor)
         private val batteryChangeReceiver = batterySource.BatteryChangeReceiver()
 
         @Test

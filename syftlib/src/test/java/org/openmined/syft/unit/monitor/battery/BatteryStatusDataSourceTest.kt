@@ -21,12 +21,7 @@ class BatteryStatusDataSourceTest {
     @Test
     fun `battery validity always returns true if check is disabled`() {
         val contextMock = mock<Context>()
-        val batteryStatusDataSource = spy(
-            BatteryStatusDataSource(
-                contextMock,
-                false
-            )
-        ) {
+        val batteryStatusDataSource = spy(BatteryStatusDataSource(contextMock, false)) {
             on { checkIfCharging() }.thenReturn(false)
         }
         val batteryStat = batteryStatusDataSource.getBatteryValidity()
@@ -37,12 +32,7 @@ class BatteryStatusDataSourceTest {
     @Test
     fun `battery validity calls checkIfCharging if check is enabled`() {
         val contextMock = mock<Context>()
-        val batteryStatusDataSource = spy(
-            BatteryStatusDataSource(
-                contextMock,
-                true
-            )
-        ) {
+        val batteryStatusDataSource = spy(BatteryStatusDataSource(contextMock, true)) {
             on { checkIfCharging() }.thenReturn(false)
         }
         val batteryStat = batteryStatusDataSource.getBatteryValidity()
@@ -56,11 +46,7 @@ class BatteryStatusDataSourceTest {
             on { registerReceiver(eq(null), any()) }
                     .thenReturn(null)
         }
-        val batteryStatusDataSource =
-                BatteryStatusDataSource(
-                    contextMock,
-                    true
-                )
+        val batteryStatusDataSource = BatteryStatusDataSource(contextMock, true)
         batteryStatusDataSource.subscribeStateChange()
         verify(contextMock, times(1)).registerReceiver(eq(null), any())
         verify(contextMock, times(1)).registerReceiver(notNull(), any())
@@ -72,11 +58,7 @@ class BatteryStatusDataSourceTest {
             on { registerReceiver(eq(null), any()) }
                     .thenReturn(null)
         }
-        val batteryStatusDataSource =
-                BatteryStatusDataSource(
-                    contextMock,
-                    true
-                )
+        val batteryStatusDataSource = BatteryStatusDataSource(contextMock, true)
         batteryStatusDataSource.unsubscribeStateChange()
         verify(contextMock, times(1)).unregisterReceiver(notNull())
     }
@@ -91,12 +73,7 @@ class BatteryStatusDataSourceTest {
         val statusProcessor = mock<PublishProcessor<StateChangeMessage>>{
             on { onBackpressureLatest() }.thenReturn(flowable)
         }
-        val batteryStatusDataSource =
-                BatteryStatusDataSource(
-                    contextMock,
-                    false,
-                    statusProcessor
-                )
+        val batteryStatusDataSource = BatteryStatusDataSource(contextMock, false, statusProcessor)
         assert(batteryStatusDataSource.subscribeStateChange() == flowable)
     }
 
@@ -107,12 +84,7 @@ class BatteryStatusDataSourceTest {
                     .thenReturn(null)
         }
         val statusProcessor = mock<PublishProcessor<StateChangeMessage>>()
-        val batteryStatusDataSource =
-                BatteryStatusDataSource(
-                    contextMock,
-                    false,
-                    statusProcessor
-                )
+        val batteryStatusDataSource = BatteryStatusDataSource(contextMock, false, statusProcessor)
         batteryStatusDataSource.unsubscribeStateChange()
         verify(statusProcessor).onComplete()
     }

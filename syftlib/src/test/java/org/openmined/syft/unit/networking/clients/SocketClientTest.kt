@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit
  * The serialization and deserialization of socket messages is also verified by default
  */
 @ExperimentalUnsignedTypes
-internal class SocketClientMockTest {
+internal class SocketClientTest {
     private val schedulers = object : ProcessSchedulers {
         override val computeThreadScheduler: Scheduler
             get() = Schedulers.trampoline()
@@ -43,11 +43,7 @@ internal class SocketClientMockTest {
 
     }
     private val testScheduler = TestScheduler()
-    private val socketClient =
-            SocketClient(
-                webSocket,
-                schedulers = schedulers
-            )
+    private val socketClient = SocketClient(webSocket, schedulers = schedulers)
 
 
     @Test
@@ -87,11 +83,7 @@ internal class SocketClientMockTest {
                 .test()
         verify(webSocket).send(serializedAuthRequest)
         testScheduler.advanceTimeBy(1L, TimeUnit.SECONDS)
-        processor.offer(
-            NetworkMessage.MessageReceived(
-                authenticationResponse.toString()
-            )
-        )
+        processor.offer(NetworkMessage.MessageReceived(authenticationResponse.toString()))
         testScheduler.advanceTimeBy(1L, TimeUnit.SECONDS)
         testAuthenticate.assertValue(AuthenticationResponse.AuthenticationSuccess("test_id"))
         testAuthenticate.dispose()
@@ -150,11 +142,7 @@ internal class SocketClientMockTest {
                 .test()
         verify(webSocket).send(serializedRequest)
         testScheduler.advanceTimeBy(500, TimeUnit.MILLISECONDS)
-        processor.offer(
-            NetworkMessage.MessageReceived(
-                socketResponse.toString()
-            )
-        )
+        processor.offer(NetworkMessage.MessageReceived(socketResponse.toString()))
         testScheduler.advanceTimeBy(500, TimeUnit.MILLISECONDS)
         testCycle.assertValue(cycleResponse)
         testCycle.dispose()
