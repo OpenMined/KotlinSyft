@@ -1,6 +1,7 @@
 package org.openmined.syft.integration.clients
 
 import com.nhaarman.mockitokotlin2.check
+import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.stub
 import io.reactivex.Single
@@ -14,6 +15,7 @@ import org.openmined.syft.networking.datamodels.SocketResponse
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CYCLE_ACCEPT
 import org.openmined.syft.networking.datamodels.syft.CYCLE_REJECT
+import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import org.openmined.syft.networking.requests.REQUESTS
@@ -43,7 +45,16 @@ class SocketClientMock(
             }
     }.toString()
 
-    private val socketResponse = json {
+    private val cycleRequest1 = CycleRequest(
+        "test_id",
+        "test",
+        "1",
+        "10",
+        "1000",
+        "1000"
+    )
+
+    private val socketResponseTest1 = json {
         TYPE to REQUESTS.CYCLE_REQUEST.value
         DATA to if (cycleSuccess)
             json {
@@ -73,6 +84,45 @@ class SocketClientMock(
             }
     }.toString()
 
+    private val cycleRequest2 = CycleRequest(
+        "test_id",
+        "test2",
+        "1",
+        "10",
+        "1000",
+        "1000"
+    )
+
+    private val socketResponseTest2 = json {
+        TYPE to REQUESTS.CYCLE_REQUEST.value
+        DATA to if (cycleSuccess)
+            json {
+                "status" to CYCLE_ACCEPT
+                "model" to "test2"
+                "version" to "1"
+                "request_key" to "random key"
+                "plans" to json {
+                    "test plan" to "1"
+                }
+                "client_config" to json {
+                    "name" to "test2"
+                    "version" to "1"
+                    "batch_size" to 1L
+                    "lr" to 0.1f
+                    "max_updates" to 1
+                }
+                "protocols" to json {}
+                "model_id" to "2"
+            }
+        else
+            json {
+                "status" to CYCLE_REJECT
+                "model" to "test2"
+                "version" to "1"
+                "timeout" to "never"
+            }
+    }.toString()
+
     init {
         mockedClient.stub {
             on { authenticate(check {}) }.thenReturn(
@@ -84,8 +134,12 @@ class SocketClientMock(
             )
 
             on { getCycle(check {}) }.thenReturn(
-                Single.just(deserializeSocket(socketResponse).data as CycleResponseData)
+                Single.just(deserializeSocket(socketResponseTest1).data as CycleResponseData)
             )
+
+//            on{getCycle(eq(cycleRequest2))}.thenReturn(
+//                Single.just(deserializeSocket(socketResponseTest2).data as CycleResponseData)
+//            )
 
             on { report(check {}) }.thenReturn(
                 Single.just(ReportResponse("success"))
