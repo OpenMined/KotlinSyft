@@ -133,7 +133,7 @@ class SocketClientMock(
                 )
             )
 
-            on { getCycle(check {}) }.thenReturn(
+            on { getCycle(check { }) }.thenReturn(
                 Single.just(deserializeSocket(socketResponseTest1).data as CycleResponseData)
             )
 

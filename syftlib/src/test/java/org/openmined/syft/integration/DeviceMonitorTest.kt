@@ -4,6 +4,8 @@ import android.content.Intent
 import android.net.ConnectivityManager.TYPE_WIFI
 import android.net.NetworkCapabilities
 import android.net.NetworkInfo
+import android.os.Looper
+import android.os.Looper.getMainLooper
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.never
@@ -16,6 +18,7 @@ import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.integration.clients.HttpClientMock
 import org.openmined.syft.integration.clients.SocketClientMock
 import org.openmined.syft.integration.execution.ShadowPlan
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadow.api.Shadow
 import org.robolectric.shadows.ShadowNetworkInfo
@@ -57,6 +60,7 @@ class DeviceMonitorTest : AbstractSyftWorkerTest() {
         chargingStatus.action = Intent.ACTION_POWER_DISCONNECTED
         // registered receiver updates battery status
         context.sendBroadcast(chargingStatus)
+        shadowOf(getMainLooper()).idle();
 
         job.start(jobStatusSubscriber)
         argumentCaptor<Throwable>().apply {
@@ -85,6 +89,7 @@ class DeviceMonitorTest : AbstractSyftWorkerTest() {
         val laterCharge = Shadow.newInstanceOf(Intent::class.java)
         chargingStatus.action = Intent.ACTION_POWER_CONNECTED
         context.sendBroadcast(laterCharge)
+        shadowOf(getMainLooper()).idle();
 
         job.start(jobStatusSubscriber)
         verify(jobStatusSubscriber).onReady(any(), any(), any())
@@ -103,7 +108,7 @@ class DeviceMonitorTest : AbstractSyftWorkerTest() {
         shadowNetworkManager.networkCallbacks.forEach {
             it.onLost(getConnectivityManager().activeNetwork!!)
         }
-
+        shadowOf(getMainLooper()).idle();
         job.start(jobStatusSubscriber)
         argumentCaptor<Throwable>().apply {
             verify(jobStatusSubscriber).onError(capture())
@@ -131,6 +136,7 @@ class DeviceMonitorTest : AbstractSyftWorkerTest() {
         shadowNetworkManager.networkCallbacks.forEach {
             it.onAvailable(networkManger.activeNetwork!!)
         }
+        shadowOf(getMainLooper()).idle();
 
         job.start(jobStatusSubscriber)
         verify(jobStatusSubscriber).onReady(any(), any(), any())

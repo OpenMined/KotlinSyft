@@ -13,12 +13,15 @@ import org.junit.runner.RunWith
 import org.openmined.syft.threading.ProcessSchedulers
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
+import org.robolectric.annotation.LooperMode.Mode.PAUSED
+import org.robolectric.annotation.LooperMode
 import org.robolectric.shadow.api.Shadow
 import org.robolectric.shadows.ShadowConnectivityManager
 import org.robolectric.shadows.ShadowNetworkCapabilities
 
 @ExperimentalUnsignedTypes
 @RunWith(RobolectricTestRunner::class)
+@LooperMode(PAUSED)
 abstract class AbstractSyftWorkerTest {
 
     protected val context: Context = ApplicationProvider.getApplicationContext()
