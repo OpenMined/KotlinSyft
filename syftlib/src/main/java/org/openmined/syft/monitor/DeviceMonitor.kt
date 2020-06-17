@@ -98,9 +98,12 @@ class DeviceMonitor(
 
     override fun dispose() {
         compositeDisposable.clear()
-        networkStatusRepository.unsubscribeStateChange()
-        batteryStatusRepository.unsubscribeStateChange()
-        isDisposed.set(true)
-        Log.d(TAG,"disposed device monitor")
+        if (!isDisposed()) {
+            networkStatusRepository.unsubscribeStateChange()
+            batteryStatusRepository.unsubscribeStateChange()
+            isDisposed.set(true)
+            Log.d(TAG, "disposed device monitor")
+        } else
+            Log.d(TAG,"device monitor already disposed")
     }
 }

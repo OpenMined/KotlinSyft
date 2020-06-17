@@ -62,7 +62,7 @@ class SocketClientMock(
                     "max_updates" to 1
                 }
                 "protocols" to json {}
-                "model_id" to "model id"
+                "model_id" to "2"
             }
         else
             json {

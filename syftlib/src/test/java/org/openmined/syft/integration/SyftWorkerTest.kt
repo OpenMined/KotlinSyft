@@ -92,7 +92,7 @@ class SyftWorkerTest {
         )
 
         val deviceMonitor = DeviceMonitor.construct(syftConfiguration)
-        val syftWorker = Syft("test token", syftConfiguration, deviceMonitor)
+        val syftWorker = Syft(syftConfiguration, deviceMonitor,"test token")
         val job = syftWorker.newJob("test", "1")
         val jobStatusSubscriber = spy<JobStatusSubscriber>()
         job.start(jobStatusSubscriber)
@@ -100,4 +100,42 @@ class SyftWorkerTest {
         job.dispose()
         verify(jobStatusSubscriber).onComplete()
     }
+
+    @Test
+    @Config(shadows = [ShadowPlan::class])
+    fun `Test workflow with no auth token`() {
+        val socketClient =
+                SocketClientMock(
+                    authenticateSuccess = true,
+                    cycleSuccess = true
+                )
+        val httpClient = HttpClientMock(
+            pingSuccess = true, downloadSpeedSuccess = true,
+            uploadSuccess = true, downloadPlanSuccess = true, downloadModelSuccess = true
+        )
+
+        val syftConfiguration = SyftConfiguration(
+            context,
+            networkingSchedulers,
+            computeSchedulers,
+            context.filesDir,
+            true,
+            listOf(),
+            NetworkCapabilities.TRANSPORT_WIFI,
+            0,
+            socketClient.getMockedClient(),
+            httpClient.getMockedClient(),
+            1,
+            SyftConfiguration.NetworkingClients.SOCKET
+        )
+
+        val syftWorker = Syft.getInstance(syftConfiguration,null)
+        val job = syftWorker.newJob("test", "1")
+        val jobStatusSubscriber = spy<JobStatusSubscriber>()
+        job.start(jobStatusSubscriber)
+        verify(jobStatusSubscriber).onReady(any(), any(), any())
+        syftWorker.dispose()
+        verify(jobStatusSubscriber).onComplete()
+    }
+
 }

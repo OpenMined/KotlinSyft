@@ -31,15 +31,18 @@ class Syft internal constructor(
 
         fun getInstance(
             syftConfiguration: SyftConfiguration,
-            authToken: String?= null
-            ): Syft =
+            authToken: String? = null
+        ): Syft {
+            return if (INSTANCE?.syftConfig == syftConfiguration && INSTANCE?.authToken == authToken)
                 INSTANCE ?: synchronized(this) {
                     INSTANCE ?: Syft(
                         syftConfiguration,
                         DeviceMonitor.construct(syftConfiguration),
                         authToken
-                        ).also { INSTANCE = it }
+                    ).also { INSTANCE = it }
                 }
+            else throw ExceptionInInitializerError("syft worker initialised with different parameters. Dispose previous worker")
+        }
     }
 
     private val workerJobs = ConcurrentHashMap<SyftJob.JobID, SyftJob>()
