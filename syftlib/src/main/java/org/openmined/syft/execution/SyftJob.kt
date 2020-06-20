@@ -28,18 +28,35 @@ private const val TAG = "SyftJob"
  * @param version : The version of the model with name modelName
  */
 @ExperimentalUnsignedTypes
-class SyftJob(
+class SyftJob internal constructor(
     modelName: String,
     version: String? = null,
     private val worker: Syft,
-    private val config: SyftConfiguration
+    private val config: SyftConfiguration,
+    private val jobDownloader: JobDownloader
 ) : Disposable {
+
+    companion object {
+        fun create(
+            modelName: String,
+            version: String? = null,
+            worker: Syft,
+            config: SyftConfiguration
+        ): SyftJob {
+            return SyftJob(
+                modelName,
+                version,
+                worker,
+                config,
+                JobDownloader()
+            )
+        }
+    }
 
     val jobId = JobID(modelName, version)
     private val jobStatusProcessor = PublishProcessor.create<JobStatusMessage>()
     private val isDisposed = AtomicBoolean(false)
     private var cycleStatus = AtomicReference(CycleStatus.APPLY)
-    private var trainingParamsStatus = AtomicReference(DownloadStatus.NOT_STARTED)
     private var requestKey: String? = null
     private var clientConfig: ClientConfig? = null
 
@@ -100,45 +117,17 @@ class SyftJob(
     }
 
     fun downloadData(workerId: String) {
-        if (trainingParamsStatus.get() != DownloadStatus.NOT_STARTED) {
-            Log.d(TAG, "download already running")
-            return
-        }
-        Log.d(TAG, "beginning download")
-        trainingParamsStatus.set(DownloadStatus.RUNNING)
-
-        requestKey?.let { request ->
-
-            networkDisposable.add(
-                Single.zip(
-                    getDownloadables(
-                        workerId,
-                        request
-                    )
-                ) { successMessages ->
-                    successMessages.joinToString(
-                        ",",
-                        prefix = "files ",
-                        postfix = " downloaded successfully"
-                    )
-                }
-                        .compose(config.networkingSchedulers.applySingleSchedulers())
-                        .subscribe(
-                            { successMsg: String ->
-                                Log.d(TAG, successMsg)
-                                trainingParamsStatus.set(DownloadStatus.COMPLETE)
-                                jobStatusProcessor.offer(
-                                    JobStatusMessage.JobReady(
-                                        model,
-                                        plans,
-                                        clientConfig
-                                    )
-                                )
-                            },
-                            { e -> jobStatusProcessor.onError(e) }
-                        )
-            )
-        } ?: throw IllegalStateException("request Key has not been set")
+        jobDownloader.downloadData(
+            workerId,
+            config,
+            requestKey,
+            networkDisposable,
+            jobStatusProcessor,
+            clientConfig,
+            plans,
+            model,
+            protocols
+        )
     }
 
     /**
@@ -209,97 +198,6 @@ class SyftJob(
             Log.d(TAG, "job $jobId already disposed")
     }
 
-    private fun getDownloadables(workerId: String, request: String): List<Single<String>> {
-        val downloadList = mutableListOf<Single<String>>()
-        plans.forEach { (_, plan) ->
-            downloadList.add(
-                planDownloader(
-                    workerId,
-                    request,
-                    "${config.filesDir}/plans",
-                    plan
-                )
-            )
-        }
-        protocols.forEach { (protocolId, protocol) ->
-            protocol.protocolFileLocation = "${config.filesDir}/protocols"
-            downloadList.add(
-                protocolDownloader(
-                    workerId,
-                    request,
-                    protocol.protocolFileLocation,
-                    protocolId
-                )
-            )
-        }
-
-        model.pyGridModelId?.let {
-            downloadList.add(modelDownloader(workerId, request, it))
-        } ?: throw IllegalStateException("model id has not been set")
-
-        return downloadList
-    }
-
-    //We might want to make these public if needed later
-    private fun modelDownloader(
-        workerId: String,
-        requestKey: String,
-        modelId: String
-    ): Single<String> {
-        return config.getDownloader()
-                .downloadModel(workerId, requestKey, modelId)
-                .flatMap { response ->
-                    FileWriter("${config.filesDir}/models", "$modelId.pb")
-                            .writeFromNetwork(response.body())
-                }.flatMap { modelFile ->
-                    Single.create<String> { emitter ->
-                        model.loadModelState(modelFile)
-                        emitter.onSuccess(modelFile)
-                    }
-                }
-                .compose(config.networkingSchedulers.applySingleSchedulers())
-    }
-
-    private fun planDownloader(
-        workerId: String,
-        requestKey: String,
-        destinationDir: String,
-        plan: Plan
-    ): Single<String> {
-        return config.getDownloader().downloadPlan(
-            workerId,
-            requestKey,
-            plan.planId,
-            "torchscript"
-        )
-                .flatMap { response ->
-                    FileWriter(destinationDir, plan.planId + ".pb")
-                            .writeFromNetwork(response.body())
-                }.flatMap { filepath ->
-                    Single.create<String> { emitter ->
-                        plan.generateScriptModule(destinationDir, filepath)
-                        emitter.onSuccess(filepath)
-                    }
-                }
-                .compose(config.networkingSchedulers.applySingleSchedulers())
-
-    }
-
-    private fun protocolDownloader(
-        workerId: String,
-        requestKey: String,
-        destinationDir: String,
-        protocolId: String
-    ): Single<String> {
-        return config.getDownloader().downloadProtocol(
-            workerId, requestKey, protocolId
-        )
-                .flatMap { response ->
-                    FileWriter(destinationDir, "$protocolId.pb")
-                            .writeFromNetwork(response.body())
-                }
-                .compose(config.networkingSchedulers.applySingleSchedulers())
-    }
 
     data class JobID(val modelName: String, val version: String? = null) {
         fun matchWithResponse(modelName: String, version: String? = null) =
