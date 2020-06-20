@@ -27,7 +27,21 @@ internal class JobDownloader {
         protocols: ConcurrentHashMap<String, Protocol>
     ) {
         val trainingParamsStatus = AtomicReference(SyftJob.DownloadStatus.NOT_STARTED)
+        downloadData(workerId, config, requestKey, networkDisposable, jobStatusProcessor, clientConfig, plans, model, protocols, trainingParamsStatus)
+    }
 
+    internal fun downloadData(
+        workerId: String,
+        config: SyftConfiguration,
+        requestKey: String?,
+        networkDisposable: CompositeDisposable,
+        jobStatusProcessor: PublishProcessor<JobStatusMessage>,
+        clientConfig: ClientConfig?,
+        plans: ConcurrentHashMap<String, Plan>,
+        model: SyftModel,
+        protocols: ConcurrentHashMap<String, Protocol>,
+        trainingParamsStatus: AtomicReference<SyftJob.DownloadStatus>
+    ) {
         if (trainingParamsStatus.get() != SyftJob.DownloadStatus.NOT_STARTED) {
             Log.d(TAG, "download already running")
             return
