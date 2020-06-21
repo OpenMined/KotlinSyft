@@ -60,6 +60,7 @@ class SyftJob internal constructor(
     private val model = SyftModel(modelName, version)
     private val networkDisposable = CompositeDisposable()
     private val statusDisposable = CompositeDisposable()
+    private var requestKey = ""
 
     /**
      * create a worker job
@@ -100,6 +101,7 @@ class SyftJob internal constructor(
         responseData.protocols.forEach { (_, protocolId) ->
             protocols[protocolId] = Protocol(protocolId)
         }
+        requestKey = responseData.requestKey
         model.pyGridModelId = responseData.modelId
         cycleStatus.set(CycleStatus.ACCEPTED)
     }
@@ -135,13 +137,14 @@ class SyftJob internal constructor(
     /**
      * report the results back to PyGrid
      */
-    fun report(diff: State, requestKey: String) {
+    fun report(diff: State) {
         val workerId = worker.getSyftWorkerId()
         if (throwErrorIfNetworkInvalid() ||
             throwErrorIfDeviceActive() ||
             throwErrorIfBatteryInvalid()
         ) return
-        if (workerId != null)
+
+        if (!workerId.isNullOrEmpty() && requestKey.isNotEmpty())
             networkDisposable.add(
                 config.getSignallingClient()
                         .report(
