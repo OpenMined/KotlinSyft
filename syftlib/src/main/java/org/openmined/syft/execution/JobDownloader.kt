@@ -15,10 +15,15 @@ private const val TAG = "JobDownloader"
 
 @ExperimentalUnsignedTypes
 internal class JobDownloader {
+
+    private val trainingParamsStatus = AtomicReference(DownloadStatus.NOT_STARTED)
+    val status: DownloadStatus
+        get() = trainingParamsStatus.get()
+
     fun downloadData(
         workerId: String,
         config: SyftConfiguration,
-        requestKey: String?,
+        requestKey: String,
         networkDisposable: CompositeDisposable,
         jobStatusProcessor: PublishProcessor<JobStatusMessage>,
         clientConfig: ClientConfig?,
@@ -26,65 +31,46 @@ internal class JobDownloader {
         model: SyftModel,
         protocols: ConcurrentHashMap<String, Protocol>
     ) {
-        val trainingParamsStatus = AtomicReference(SyftJob.DownloadStatus.NOT_STARTED)
-        downloadData(workerId, config, requestKey, networkDisposable, jobStatusProcessor, clientConfig, plans, model, protocols, trainingParamsStatus)
-    }
-
-    internal fun downloadData(
-        workerId: String,
-        config: SyftConfiguration,
-        requestKey: String?,
-        networkDisposable: CompositeDisposable,
-        jobStatusProcessor: PublishProcessor<JobStatusMessage>,
-        clientConfig: ClientConfig?,
-        plans: ConcurrentHashMap<String, Plan>,
-        model: SyftModel,
-        protocols: ConcurrentHashMap<String, Protocol>,
-        trainingParamsStatus: AtomicReference<SyftJob.DownloadStatus>
-    ) {
-        if (trainingParamsStatus.get() != SyftJob.DownloadStatus.NOT_STARTED) {
+        if (trainingParamsStatus.get() != DownloadStatus.NOT_STARTED) {
             Log.d(TAG, "download already running")
             return
         }
         Log.d(TAG, "beginning download")
-        trainingParamsStatus.set(SyftJob.DownloadStatus.RUNNING)
+        trainingParamsStatus.set(DownloadStatus.RUNNING)
 
-        requestKey?.let { request ->
-
-            networkDisposable.add(
-                Single.zip(
-                    getDownloadables(
-                        workerId,
-                        config,
-                        request,
-                        model,
-                        plans,
-                        protocols
-                    )
-                ) { successMessages ->
-                    successMessages.joinToString(
-                        ",",
-                        prefix = "files ",
-                        postfix = " downloaded successfully"
-                    )
-                }
-                        .compose(config.networkingSchedulers.applySingleSchedulers())
-                        .subscribe(
-                            { successMsg: String ->
-                                Log.d(TAG, successMsg)
-                                trainingParamsStatus.set(SyftJob.DownloadStatus.COMPLETE)
-                                jobStatusProcessor.offer(
-                                    JobStatusMessage.JobReady(
-                                        model,
-                                        plans,
-                                        clientConfig
-                                    )
+        networkDisposable.add(
+            Single.zip(
+                getDownloadables(
+                    workerId,
+                    config,
+                    requestKey,
+                    model,
+                    plans,
+                    protocols
+                )
+            ) { successMessages ->
+                successMessages.joinToString(
+                    ",",
+                    prefix = "files ",
+                    postfix = " downloaded successfully"
+                )
+            }
+                    .compose(config.networkingSchedulers.applySingleSchedulers())
+                    .subscribe(
+                        { successMsg: String ->
+                            Log.d(TAG, successMsg)
+                            trainingParamsStatus.set(DownloadStatus.COMPLETE)
+                            jobStatusProcessor.offer(
+                                JobStatusMessage.JobReady(
+                                    model,
+                                    plans,
+                                    clientConfig
                                 )
-                            },
-                            { e -> jobStatusProcessor.onError(e) }
-                        )
-            )
-        } ?: throw IllegalStateException("request Key has not been set")
+                            )
+                        },
+                        { e -> jobStatusProcessor.onError(e) }
+                    )
+        )
     }
 
     private fun getDownloadables(
@@ -191,5 +177,8 @@ internal class JobDownloader {
                 }
                 .compose(config.networkingSchedulers.applySingleSchedulers())
     }
+}
 
+enum class DownloadStatus {
+    NOT_STARTED, RUNNING, COMPLETE
 }

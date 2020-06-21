@@ -195,7 +195,7 @@ class Syft internal constructor(
                 responseData.version
             )
         )
-        job.setJobArguments(responseData)
+        job.cycleAccepted(responseData)
         if (jobErrorIfDeviceActive(job) ||
             jobErrorIfBatteryInvalid(job) ||
             jobErrorIfNetworkInvalid(job)

@@ -1,7 +1,6 @@
 package org.openmined.syft.execution
 
 import android.util.Log
-import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
@@ -14,7 +13,6 @@ import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import org.openmined.syft.proto.State
 import org.openmined.syft.proto.SyftModel
 import org.openmined.syft.threading.ProcessSchedulers
-import org.openmined.syft.utilities.FileWriter
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -99,7 +97,7 @@ class SyftJob internal constructor(
     }
 
     @Synchronized
-    fun setJobArguments(responseData: CycleResponseData.CycleAccept) {
+    fun cycleAccepted(responseData: CycleResponseData.CycleAccept) {
         Log.d(TAG, "setting Request Key")
         requestKey = responseData.requestKey
         clientConfig = responseData.clientConfig
@@ -117,17 +115,23 @@ class SyftJob internal constructor(
     }
 
     fun downloadData(workerId: String) {
-        jobDownloader.downloadData(
-            workerId,
-            config,
-            requestKey,
-            networkDisposable,
-            jobStatusProcessor,
-            clientConfig,
-            plans,
-            model,
-            protocols
-        )
+        if (cycleStatus.get() != CycleStatus.ACCEPTED) {
+            throwError(IllegalStateException("Cycle not accepted. Download cannot start"))
+            return
+        }
+        if (jobDownloader.status == DownloadStatus.NOT_STARTED) {
+            jobDownloader.downloadData(
+                workerId,
+                config,
+                requestKey,
+                networkDisposable,
+                jobStatusProcessor,
+                clientConfig,
+                plans,
+                model,
+                protocols
+            )
+        }
     }
 
     /**
@@ -205,10 +209,6 @@ class SyftJob internal constructor(
                     this.modelName == modelName
                 else
                     (this.modelName == modelName) && (this.version == version)
-    }
-
-    enum class DownloadStatus {
-        NOT_STARTED, RUNNING, COMPLETE
     }
 
     enum class CycleStatus {

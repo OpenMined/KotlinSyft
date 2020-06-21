@@ -5,6 +5,7 @@ import com.nhaarman.mockitokotlin2.anyOrNull
 import com.nhaarman.mockitokotlin2.capture
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
+import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
 import com.nhaarman.mockitokotlin2.whenever
@@ -17,6 +18,7 @@ import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.openmined.syft.Syft
 import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.execution.DownloadStatus
 import org.openmined.syft.execution.JobDownloader
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
@@ -95,8 +97,48 @@ internal class SyftJobTest {
 
     @Test
     fun `Given a SyftJob when download data is invoked it delegates it to job downloader`() {
+        val responseData = mock<CycleResponseData.CycleAccept> {
+            on { plans } doReturn HashMap()
+            on { protocols } doReturn HashMap()
+        }
+        whenever(jobDownloader.status).doReturn(DownloadStatus.NOT_STARTED)
+
+        cut.cycleAccepted(responseData)
         cut.downloadData("workerId")
 
-        verify(jobDownloader).downloadData(eq("workerId"), any(), anyOrNull(), any(), any(), anyOrNull(), any(), any(), any())
+        verify(jobDownloader).downloadData(
+            workerId = eq("workerId"),
+            config = any(),
+            requestKey = anyOrNull(),
+            networkDisposable = any(),
+            jobStatusProcessor = any(),
+            clientConfig = anyOrNull(),
+            plans = any(),
+            model = any(),
+            protocols = any()
+        )
+    }
+
+    @Test
+    fun `Given a SyftJob when jobDownloader is running then another download is not run`() {
+        val responseData = mock<CycleResponseData.CycleAccept> {
+            on { plans } doReturn HashMap()
+            on { protocols } doReturn HashMap()
+        }
+        cut.cycleAccepted(responseData)
+
+        whenever(jobDownloader.status).doReturn(DownloadStatus.RUNNING)
+
+        cut.downloadData("workerId")
+
+        verify(jobDownloader).status
+        verifyNoMoreInteractions((jobDownloader))
+    }
+
+    @Test()
+    fun `Given a SyftJob when try to download and cycle has not been accepted then an exception is thrown`() {
+        cut.downloadData("workerId")
+
+        verifyNoMoreInteractions((jobDownloader))
     }
 }
