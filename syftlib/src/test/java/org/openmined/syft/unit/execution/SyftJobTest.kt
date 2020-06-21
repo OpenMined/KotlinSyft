@@ -25,10 +25,12 @@ import org.openmined.syft.execution.JobDownloader
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
+import org.openmined.syft.networking.datamodels.syft.ReportRequest
 import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import org.openmined.syft.networking.requests.CommunicationAPI
 import org.openmined.syft.proto.State
 import org.openmined.syft.threading.ProcessSchedulers
+import org.openmined.syftproto.execution.v1.StateOuterClass
 
 private const val modelName = "myModel"
 private const val modelVersion = "1.0"
@@ -175,6 +177,7 @@ internal class SyftJobTest {
         val responseData = mock<CycleResponseData.CycleAccept> {
             on { requestKey } doReturn "requestKey"
         }
+
         cut.cycleAccepted(responseData)
 
         val signallingClient = mock<CommunicationAPI>()
@@ -184,11 +187,14 @@ internal class SyftJobTest {
         whenever(worker.getSyftWorkerId()).thenReturn("workerId")
 
         val diffState = mock<State>()
-        whenever(diffState.serialize()).doReturn(mock())
+        val state = mock < StateOuterClass.State>()
+        val diff = "diffString"
+        whenever(diffState.serialize()).doReturn(state)
+        whenever(state.toString()).doReturn(diff)
 
         cut.report(diffState)
 
         verify(config).getSignallingClient()
-        verify(signallingClient).report(any())
+        verify(signallingClient).report(ReportRequest("workerId", "requestKey", diff))
     }
 }
