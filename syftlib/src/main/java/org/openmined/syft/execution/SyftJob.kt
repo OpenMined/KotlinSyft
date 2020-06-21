@@ -51,9 +51,9 @@ class SyftJob internal constructor(
     }
 
     val jobId = JobID(modelName, version)
+    internal var cycleStatus = AtomicReference(CycleStatus.APPLY)
     private val jobStatusProcessor = PublishProcessor.create<JobStatusMessage>()
     private val isDisposed = AtomicBoolean(false)
-    private var cycleStatus = AtomicReference(CycleStatus.APPLY)
 
     private val plans = ConcurrentHashMap<String, Plan>()
     private val protocols = ConcurrentHashMap<String, Protocol>()

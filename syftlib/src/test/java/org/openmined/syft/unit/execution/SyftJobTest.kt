@@ -10,7 +10,9 @@ import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
 import com.nhaarman.mockitokotlin2.whenever
 import io.reactivex.Scheduler
+import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.ArgumentCaptor
@@ -23,6 +25,9 @@ import org.openmined.syft.execution.JobDownloader
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
+import org.openmined.syft.networking.datamodels.syft.ReportResponse
+import org.openmined.syft.networking.requests.CommunicationAPI
+import org.openmined.syft.proto.State
 import org.openmined.syft.threading.ProcessSchedulers
 
 private const val modelName = "myModel"
@@ -135,11 +140,55 @@ internal class SyftJobTest {
         verifyNoMoreInteractions((jobDownloader))
     }
 
-    @Test()
+    @Test
     fun `Given a SyftJob when try to download and cycle has not been accepted then an exception is thrown`() {
         val responseData = mock<CycleResponseData.CycleAccept>()
         cut.downloadData("workerId", responseData)
 
         verifyNoMoreInteractions((jobDownloader))
+    }
+
+    @Test
+    fun `Given a SyftJob when it is disposed then its disposed status changes to true`() {
+        cut.throwError(Exception())
+
+        assertTrue(cut.isDisposed)
+    }
+
+    @Test
+    fun `Given a SyftJob when cycle is accepted then response data is used to update state of job`() {
+        val responseData = mock<CycleResponseData.CycleAccept> {
+            on { plans } doReturn HashMap()
+            on { protocols } doReturn HashMap()
+        }
+        cut.cycleAccepted(responseData)
+
+        verify(responseData).requestKey
+        verify(responseData).plans
+        verify(responseData).protocols
+        verify(responseData).modelId
+        assert(cut.cycleStatus.get() == SyftJob.CycleStatus.ACCEPTED)
+    }
+
+    @Test
+    fun `Given a SyftJob in accepted cycle when report is invoked then it is executed`() {
+        val responseData = mock<CycleResponseData.CycleAccept> {
+            on { requestKey } doReturn "requestKey"
+        }
+        cut.cycleAccepted(responseData)
+
+        val signallingClient = mock<CommunicationAPI>()
+        whenever(signallingClient.report(any())) doReturn Single.just(ReportResponse("any"))
+        whenever(config.getSignallingClient()).doReturn(signallingClient)
+
+        whenever(worker.getSyftWorkerId()).thenReturn("workerId")
+
+        val diffState = mock<State>()
+        whenever(diffState.serialize()).doReturn(mock())
+
+        cut.report(diffState)
+
+        verify(config).getSignallingClient()
+        verify(signallingClient).report(any())
     }
 }
