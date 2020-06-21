@@ -104,7 +104,7 @@ internal class SyftJobTest {
         whenever(jobDownloader.status).doReturn(DownloadStatus.NOT_STARTED)
 
         cut.cycleAccepted(responseData)
-        cut.downloadData("workerId")
+        cut.downloadData("workerId", responseData)
 
         verify(jobDownloader).downloadData(
             workerId = eq("workerId"),
@@ -129,7 +129,7 @@ internal class SyftJobTest {
 
         whenever(jobDownloader.status).doReturn(DownloadStatus.RUNNING)
 
-        cut.downloadData("workerId")
+        cut.downloadData("workerId", responseData)
 
         verify(jobDownloader).status
         verifyNoMoreInteractions((jobDownloader))
@@ -137,7 +137,8 @@ internal class SyftJobTest {
 
     @Test()
     fun `Given a SyftJob when try to download and cycle has not been accepted then an exception is thrown`() {
-        cut.downloadData("workerId")
+        val responseData = mock<CycleResponseData.CycleAccept>()
+        cut.downloadData("workerId", responseData)
 
         verifyNoMoreInteractions((jobDownloader))
     }

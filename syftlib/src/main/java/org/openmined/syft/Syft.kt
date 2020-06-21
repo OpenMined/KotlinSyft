@@ -203,7 +203,7 @@ class Syft internal constructor(
             return
 
         workerId?.let {
-            job.downloadData(it)
+            job.downloadData(it, responseData)
         } ?: throw IllegalStateException("workerId is not initialised")
 
     }

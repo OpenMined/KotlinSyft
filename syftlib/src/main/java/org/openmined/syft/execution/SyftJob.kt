@@ -6,7 +6,6 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.Syft
 import org.openmined.syft.domain.SyftConfiguration
-import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.datamodels.syft.ReportRequest
 import org.openmined.syft.networking.datamodels.syft.ReportResponse
@@ -55,8 +54,6 @@ class SyftJob internal constructor(
     private val jobStatusProcessor = PublishProcessor.create<JobStatusMessage>()
     private val isDisposed = AtomicBoolean(false)
     private var cycleStatus = AtomicReference(CycleStatus.APPLY)
-    private var requestKey: String? = null
-    private var clientConfig: ClientConfig? = null
 
     private val plans = ConcurrentHashMap<String, Plan>()
     private val protocols = ConcurrentHashMap<String, Protocol>()
@@ -99,8 +96,6 @@ class SyftJob internal constructor(
     @Synchronized
     fun cycleAccepted(responseData: CycleResponseData.CycleAccept) {
         Log.d(TAG, "setting Request Key")
-        requestKey = responseData.requestKey
-        clientConfig = responseData.clientConfig
         responseData.plans.forEach { (_, planId) -> plans[planId] = Plan(this, planId) }
         responseData.protocols.forEach { (_, protocolId) ->
             protocols[protocolId] = Protocol(protocolId)
@@ -114,7 +109,10 @@ class SyftJob internal constructor(
         jobStatusProcessor.offer(JobStatusMessage.JobCycleRejected(responseData.timeout))
     }
 
-    fun downloadData(workerId: String) {
+    fun downloadData(
+        workerId: String,
+        responseData: CycleResponseData.CycleAccept
+    ) {
         if (cycleStatus.get() != CycleStatus.ACCEPTED) {
             throwError(IllegalStateException("Cycle not accepted. Download cannot start"))
             return
@@ -123,10 +121,10 @@ class SyftJob internal constructor(
             jobDownloader.downloadData(
                 workerId,
                 config,
-                requestKey,
+                responseData.requestKey,
                 networkDisposable,
                 jobStatusProcessor,
-                clientConfig,
+                responseData.clientConfig,
                 plans,
                 model,
                 protocols
@@ -137,14 +135,13 @@ class SyftJob internal constructor(
     /**
      * report the results back to PyGrid
      */
-    fun report(diff: State) {
-        val requestKey = requestKey
+    fun report(diff: State, requestKey: String) {
         val workerId = worker.getSyftWorkerId()
         if (throwErrorIfNetworkInvalid() ||
             throwErrorIfDeviceActive() ||
             throwErrorIfBatteryInvalid()
         ) return
-        if (requestKey != null && workerId != null)
+        if (workerId != null)
             networkDisposable.add(
                 config.getSignallingClient()
                         .report(
