@@ -18,4 +18,27 @@ internal class RemoteDataSource(private val httpClient: HttpClient) {
                     it.body()?.byteStream()
                 }
     }
+
+    fun downloadProtocol(
+        workerId: String,
+        requestKey: String,
+        protocolId: String
+    ): Single<InputStream> {
+        return httpClient.apiClient.downloadProtocol(workerId, requestKey, protocolId)
+                .map {
+                    it.body()?.byteStream()
+                }
+    }
+
+    fun downloadPlan(
+        workerId: String,
+        requestKey: String,
+        planId: String,
+        opType: String
+    ): Single<InputStream> {
+        return httpClient.apiClient.downloadPlan(workerId, requestKey, planId, opType)
+                .map {
+                    it.body()?.byteStream()
+                }
+    }
 }

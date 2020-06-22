@@ -1,7 +1,6 @@
 package org.openmined.syft.execution
 
 import android.util.Log
-import androidx.annotation.VisibleForTesting
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.processors.PublishProcessor
@@ -10,10 +9,10 @@ import org.openmined.syft.datasource.RemoteDataSource
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
-import org.openmined.syft.utilities.FileWriter
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
+internal const val PLAN_OP_TYPE = "torchscript"
 private const val TAG = "JobDownloader"
 
 @ExperimentalUnsignedTypes
@@ -79,8 +78,7 @@ internal class JobDownloader(
         )
     }
 
-    @VisibleForTesting
-    internal fun getDownloadables(
+    private fun getDownloadables(
         workerId: String,
         config: SyftConfiguration,
         request: String,
@@ -91,7 +89,7 @@ internal class JobDownloader(
         val downloadList = mutableListOf<Single<String>>()
         plans.forEach { (_, plan) ->
             downloadList.add(
-                planDownloader(
+                processPlans(
                     workerId,
                     config,
                     request,
@@ -103,7 +101,7 @@ internal class JobDownloader(
         protocols.forEach { (protocolId, protocol) ->
             protocol.protocolFileLocation = "${config.filesDir}/protocols"
             downloadList.add(
-                protocolDownloader(
+                processProtocols(
                     workerId,
                     config,
                     request,
@@ -144,22 +142,21 @@ internal class JobDownloader(
                 .compose(config.networkingSchedulers.applySingleSchedulers())
     }
 
-    private fun planDownloader(
+    private fun processPlans(
         workerId: String,
         config: SyftConfiguration,
         requestKey: String,
         destinationDir: String,
         plan: Plan
     ): Single<String> {
-        return config.getDownloader().downloadPlan(
+        return remoteDataSource.downloadPlan(
             workerId,
             requestKey,
             plan.planId,
-            "torchscript"
+            PLAN_OP_TYPE
         )
-                .flatMap { response ->
-                    FileWriter(destinationDir, "${plan.planId}.pb")
-                            .writeFromNetwork(response.body())
+                .flatMap { planInputStream ->
+                    localDataSource.save(planInputStream, destinationDir, "${plan.planId}.pb")
                 }.flatMap { filepath ->
                     Single.create<String> { emitter ->
                         plan.generateScriptModule(destinationDir, filepath)
@@ -170,19 +167,20 @@ internal class JobDownloader(
 
     }
 
-    private fun protocolDownloader(
+    private fun processProtocols(
         workerId: String,
         config: SyftConfiguration,
         requestKey: String,
         destinationDir: String,
         protocolId: String
     ): Single<String> {
-        return config.getDownloader().downloadProtocol(
-            workerId, requestKey, protocolId
-        )
-                .flatMap { response ->
-                    FileWriter(destinationDir, "$protocolId.pb")
-                            .writeFromNetwork(response.body())
+        return remoteDataSource.downloadProtocol(workerId, requestKey, protocolId)
+                .flatMap { protocolInputStream ->
+                    localDataSource.save(
+                        protocolInputStream,
+                        destinationDir,
+                        "$protocolId.pb"
+                    )
                 }
                 .compose(config.networkingSchedulers.applySingleSchedulers())
     }
