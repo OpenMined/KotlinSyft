@@ -5,6 +5,8 @@ import androidx.annotation.VisibleForTesting
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.processors.PublishProcessor
+import org.openmined.syft.datasource.LocalDataSource
+import org.openmined.syft.datasource.RemoteDataSource
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
@@ -15,7 +17,10 @@ import java.util.concurrent.atomic.AtomicReference
 private const val TAG = "JobDownloader"
 
 @ExperimentalUnsignedTypes
-internal class JobDownloader {
+internal class JobDownloader(
+    private val localDataSource: LocalDataSource,
+    private val remoteDataSource: RemoteDataSource
+) {
 
     private val trainingParamsStatus = AtomicReference(DownloadStatus.NOT_STARTED)
     val status: DownloadStatus
@@ -109,25 +114,27 @@ internal class JobDownloader {
         }
 
         model.pyGridModelId?.let {
-            downloadList.add(modelDownloader(workerId, config, request, it, model))
+            downloadList.add(processModel(workerId, config, request, it, model))
         } ?: throw IllegalStateException("model id has not been set")
 
         return downloadList
     }
 
     //We might want to make these public if needed later
-    private fun modelDownloader(
+    private fun processModel(
         workerId: String,
         config: SyftConfiguration,
         requestKey: String,
         modelId: String,
         model: SyftModel
     ): Single<String> {
-        return config.getDownloader()
-                .downloadModel(workerId, requestKey, modelId)
-                .flatMap { response ->
-                    FileWriter("${config.filesDir}/models", "$modelId.pb")
-                            .writeFromNetwork(response.body())
+        return remoteDataSource.downloadModel(workerId, requestKey, modelId)
+                .flatMap { modelInputStream ->
+                    localDataSource.save(
+                        modelInputStream,
+                        "${config.filesDir}/models",
+                        "$modelId.pb"
+                    )
                 }.flatMap { modelFile ->
                     Single.create<String> { emitter ->
                         model.loadModelState(modelFile)
@@ -151,7 +158,7 @@ internal class JobDownloader {
             "torchscript"
         )
                 .flatMap { response ->
-                    FileWriter(destinationDir, plan.planId + ".pb")
+                    FileWriter(destinationDir, "${plan.planId}.pb")
                             .writeFromNetwork(response.body())
                 }.flatMap { filepath ->
                     Single.create<String> { emitter ->

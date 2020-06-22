@@ -5,6 +5,8 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.Syft
+import org.openmined.syft.datasource.LocalDataSource
+import org.openmined.syft.datasource.RemoteDataSource
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.datamodels.syft.ReportRequest
@@ -45,7 +47,7 @@ class SyftJob internal constructor(
                 version,
                 worker,
                 config,
-                JobDownloader()
+                JobDownloader(LocalDataSource(), RemoteDataSource(config.httpClient))
             )
         }
     }
