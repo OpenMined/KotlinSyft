@@ -4,7 +4,7 @@ import io.reactivex.Single
 import org.openmined.syft.networking.clients.HttpClient
 import java.io.InputStream
 
-class RemoteDataSource(private val httpClient: HttpClient) {
+internal class RemoteDataSource(private val httpClient: HttpClient) {
 
     /**
      * Download the model modelId and offers it as an input stream for further processing.
