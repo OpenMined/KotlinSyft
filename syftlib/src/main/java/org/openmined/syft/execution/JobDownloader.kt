@@ -1,6 +1,7 @@
 package org.openmined.syft.execution
 
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.processors.PublishProcessor
@@ -73,7 +74,8 @@ internal class JobDownloader {
         )
     }
 
-    private fun getDownloadables(
+    @VisibleForTesting
+    internal fun getDownloadables(
         workerId: String,
         config: SyftConfiguration,
         request: String,
