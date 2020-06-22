@@ -6,6 +6,7 @@ import com.nhaarman.mockitokotlin2.capture
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.spy
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
 import com.nhaarman.mockitokotlin2.whenever
@@ -152,7 +153,7 @@ internal class SyftJobTest {
 
     @Test
     fun `Given a SyftJob when it is disposed then its disposed status changes to true`() {
-        cut.throwError(Exception())
+        cut.dispose()
 
         assertTrue(cut.isDisposed)
     }
@@ -196,5 +197,26 @@ internal class SyftJobTest {
 
         verify(config).getSignallingClient()
         verify(signallingClient).report(ReportRequest("workerId", "requestKey", diff))
+    }
+
+    @Test
+    fun `Given a SyftJob when an error is thrown then the subscriber is notified and job is in disposed state`() {
+        cut.start(subscriber)
+        cut.throwError(TestException())
+
+        verify(subscriber).onError(TestException())
+        assertTrue(cut.isDisposed)
+    }
+}
+
+private class TestException: Throwable() {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return javaClass.hashCode()
     }
 }
