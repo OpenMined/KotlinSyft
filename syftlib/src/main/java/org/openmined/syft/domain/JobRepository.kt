@@ -1,12 +1,14 @@
-package org.openmined.syft.execution
+package org.openmined.syft.domain
 
 import android.util.Log
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.processors.PublishProcessor
-import org.openmined.syft.datasource.LocalDataSource
-import org.openmined.syft.datasource.RemoteDataSource
-import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.datasource.JobLocalDataSource
+import org.openmined.syft.datasource.JobRemoteDataSource
+import org.openmined.syft.execution.JobStatusMessage
+import org.openmined.syft.execution.Plan
+import org.openmined.syft.execution.Protocol
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
 import java.util.concurrent.ConcurrentHashMap
@@ -16,9 +18,9 @@ internal const val PLAN_OP_TYPE = "torchscript"
 private const val TAG = "JobDownloader"
 
 @ExperimentalUnsignedTypes
-internal class JobDownloader(
-    private val localDataSource: LocalDataSource,
-    private val remoteDataSource: RemoteDataSource
+internal class JobRepository(
+    private val jobLocalDataSource: JobLocalDataSource,
+    private val jobRemoteDataSource: JobRemoteDataSource
 ) {
 
     private val trainingParamsStatus = AtomicReference(DownloadStatus.NOT_STARTED)
@@ -122,9 +124,9 @@ internal class JobDownloader(
         modelId: String,
         model: SyftModel
     ): Single<String> {
-        return remoteDataSource.downloadModel(workerId, requestKey, modelId)
+        return jobRemoteDataSource.downloadModel(workerId, requestKey, modelId)
                 .flatMap { modelInputStream ->
-                    localDataSource.save(
+                    jobLocalDataSource.save(
                         modelInputStream,
                         "${config.filesDir}/models",
                         "$modelId.pb"
@@ -145,14 +147,14 @@ internal class JobDownloader(
         destinationDir: String,
         plan: Plan
     ): Single<String> {
-        return remoteDataSource.downloadPlan(
+        return jobRemoteDataSource.downloadPlan(
             workerId,
             requestKey,
             plan.planId,
             PLAN_OP_TYPE
         )
                 .flatMap { planInputStream ->
-                    localDataSource.save(planInputStream, destinationDir, "${plan.planId}.pb")
+                    jobLocalDataSource.save(planInputStream, destinationDir, "${plan.planId}.pb")
                 }.flatMap { filepath ->
                     Single.create<String> { emitter ->
                         plan.generateScriptModule(destinationDir, filepath)
@@ -170,9 +172,9 @@ internal class JobDownloader(
         destinationDir: String,
         protocolId: String
     ): Single<String> {
-        return remoteDataSource.downloadProtocol(workerId, requestKey, protocolId)
+        return jobRemoteDataSource.downloadProtocol(workerId, requestKey, protocolId)
                 .flatMap { protocolInputStream ->
-                    localDataSource.save(
+                    jobLocalDataSource.save(
                         protocolInputStream,
                         destinationDir,
                         "$protocolId.pb"

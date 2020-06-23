@@ -5,8 +5,10 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.Syft
-import org.openmined.syft.datasource.LocalDataSource
-import org.openmined.syft.datasource.RemoteDataSource
+import org.openmined.syft.datasource.JobLocalDataSource
+import org.openmined.syft.datasource.JobRemoteDataSource
+import org.openmined.syft.domain.DownloadStatus
+import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.datamodels.syft.ReportRequest
@@ -32,7 +34,7 @@ class SyftJob internal constructor(
     version: String? = null,
     private val worker: Syft,
     private val config: SyftConfiguration,
-    private val jobDownloader: JobDownloader
+    private val jobRepository: JobRepository
 ) : Disposable {
 
     companion object {
@@ -47,7 +49,10 @@ class SyftJob internal constructor(
                 version,
                 worker,
                 config,
-                JobDownloader(LocalDataSource(), RemoteDataSource(config.getDownloader()))
+                JobRepository(
+                    JobLocalDataSource(),
+                    JobRemoteDataSource(config.getDownloader())
+                )
             )
         }
     }
@@ -121,8 +126,8 @@ class SyftJob internal constructor(
             throwError(IllegalStateException("Cycle not accepted. Download cannot start"))
             return
         }
-        if (jobDownloader.status == DownloadStatus.NOT_STARTED) {
-            jobDownloader.downloadData(
+        if (jobRepository.status == DownloadStatus.NOT_STARTED) {
+            jobRepository.downloadData(
                 workerId,
                 config,
                 responseData.requestKey,

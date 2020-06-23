@@ -9,23 +9,23 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
-import org.openmined.syft.execution.PLAN_OP_TYPE
+import org.openmined.syft.domain.PLAN_OP_TYPE
 import org.openmined.syft.networking.requests.HttpAPI
 import retrofit2.Response
 import java.io.InputStream
 
 
-class RemoteDataSourceTest {
+class JobRemoteDataSourceTest {
 
     @Mock
     private lateinit var httpApi: HttpAPI
 
-    private lateinit var cut: RemoteDataSource
+    private lateinit var cut: JobRemoteDataSource
 
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
-        cut = RemoteDataSource(httpApi)
+        cut = JobRemoteDataSource(httpApi)
     }
 
     @Test

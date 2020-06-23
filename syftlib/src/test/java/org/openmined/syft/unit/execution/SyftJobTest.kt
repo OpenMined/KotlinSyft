@@ -20,8 +20,8 @@ import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.openmined.syft.Syft
 import org.openmined.syft.domain.SyftConfiguration
-import org.openmined.syft.execution.DownloadStatus
-import org.openmined.syft.execution.JobDownloader
+import org.openmined.syft.domain.DownloadStatus
+import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
@@ -48,7 +48,7 @@ internal class SyftJobTest {
     private lateinit var subscriber: JobStatusSubscriber
 
     @Mock
-    private lateinit var jobDownloader: JobDownloader
+    private lateinit var jobRepository: JobRepository
 
     private lateinit var cut: SyftJob
 
@@ -72,7 +72,7 @@ internal class SyftJobTest {
         whenever(config.computeSchedulers).doReturn(computeSchedulers)
         whenever(config.networkingSchedulers).doReturn(networkingSchedulers)
 
-        cut = SyftJob(modelName, modelVersion, worker, config, jobDownloader)
+        cut = SyftJob(modelName, modelVersion, worker, config, jobRepository)
     }
 
     @Test
@@ -108,12 +108,12 @@ internal class SyftJobTest {
             on { plans } doReturn HashMap()
             on { protocols } doReturn HashMap()
         }
-        whenever(jobDownloader.status).doReturn(DownloadStatus.NOT_STARTED)
+        whenever(jobRepository.status).doReturn(DownloadStatus.NOT_STARTED)
 
         cut.cycleAccepted(responseData)
         cut.downloadData("workerId", responseData)
 
-        verify(jobDownloader).downloadData(
+        verify(jobRepository).downloadData(
             workerId = eq("workerId"),
             config = any(),
             requestKey = anyOrNull(),
@@ -134,12 +134,12 @@ internal class SyftJobTest {
         }
         cut.cycleAccepted(responseData)
 
-        whenever(jobDownloader.status).doReturn(DownloadStatus.RUNNING)
+        whenever(jobRepository.status).doReturn(DownloadStatus.RUNNING)
 
         cut.downloadData("workerId", responseData)
 
-        verify(jobDownloader).status
-        verifyNoMoreInteractions((jobDownloader))
+        verify(jobRepository).status
+        verifyNoMoreInteractions((jobRepository))
     }
 
     @Test
@@ -147,7 +147,7 @@ internal class SyftJobTest {
         val responseData = mock<CycleResponseData.CycleAccept>()
         cut.downloadData("workerId", responseData)
 
-        verifyNoMoreInteractions((jobDownloader))
+        verifyNoMoreInteractions((jobRepository))
     }
 
     @Test

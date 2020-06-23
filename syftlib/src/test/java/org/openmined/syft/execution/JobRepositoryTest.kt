@@ -15,8 +15,10 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
-import org.openmined.syft.datasource.LocalDataSource
-import org.openmined.syft.datasource.RemoteDataSource
+import org.openmined.syft.datasource.JobLocalDataSource
+import org.openmined.syft.datasource.JobRemoteDataSource
+import org.openmined.syft.domain.JobRepository
+import org.openmined.syft.domain.PLAN_OP_TYPE
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.requests.HttpAPI
@@ -27,7 +29,7 @@ import java.io.InputStream
 import java.util.concurrent.ConcurrentHashMap
 
 @ExperimentalUnsignedTypes
-class JobDownloaderTest {
+class JobRepositoryTest {
 
     @Mock
     private lateinit var config: SyftConfiguration
@@ -42,12 +44,12 @@ class JobDownloaderTest {
     private lateinit var httpAPI: HttpAPI
 
     @Mock
-    private lateinit var localDataSource: LocalDataSource
+    private lateinit var jobLocalDataSource: JobLocalDataSource
 
     @Mock
-    private lateinit var remoteDataSource: RemoteDataSource
+    private lateinit var jobRemoteDataSource: JobRemoteDataSource
 
-    private lateinit var cut: JobDownloader
+    private lateinit var cut: JobRepository
 
     private val networkingSchedulers = object : ProcessSchedulers {
         override val computeThreadScheduler: Scheduler
@@ -72,7 +74,10 @@ class JobDownloaderTest {
         whenever(config.getDownloader()) doReturn httpAPI
         whenever(config.filesDir) doReturn File("/filesDir")
 
-        cut = JobDownloader(localDataSource, remoteDataSource)
+        cut = JobRepository(
+            jobLocalDataSource,
+            jobRemoteDataSource
+        )
     }
 
     @Test
@@ -90,10 +95,10 @@ class JobDownloaderTest {
         whenever(model.pyGridModelId) doReturn modelId
 
         whenever(
-            remoteDataSource.downloadModel(workerId, requestKey, modelId)
+            jobRemoteDataSource.downloadModel(workerId, requestKey, modelId)
         ) doReturn Single.just(modelIS)
         whenever(
-            localDataSource.save(modelIS, "${config.filesDir}/models", "$modelId.pb")
+            jobLocalDataSource.save(modelIS, "${config.filesDir}/models", "$modelId.pb")
         ) doReturn Single.just(modelPath)
 
         cut.downloadData(
@@ -108,8 +113,8 @@ class JobDownloaderTest {
             protocols
         )
 
-        verify(remoteDataSource).downloadModel(workerId, requestKey, modelId)
-        verify(localDataSource).save(modelIS, "${config.filesDir}/models", "$modelId.pb")
+        verify(jobRemoteDataSource).downloadModel(workerId, requestKey, modelId)
+        verify(jobLocalDataSource).save(modelIS, "${config.filesDir}/models", "$modelId.pb")
         verify(model).loadModelState(modelPath)
     }
 
@@ -135,18 +140,18 @@ class JobDownloaderTest {
 
         whenever(model.pyGridModelId) doReturn modelId
         whenever(
-            remoteDataSource.downloadModel(workerId, requestKey, modelId)
+            jobRemoteDataSource.downloadModel(workerId, requestKey, modelId)
         ) doReturn Single.just(modelIS)
         whenever(
-            localDataSource.save(modelIS, "${config.filesDir}/models", "$modelId.pb")
+            jobLocalDataSource.save(modelIS, "${config.filesDir}/models", "$modelId.pb")
         ) doReturn Single.just(modelPath)
 
 
         whenever(
-            remoteDataSource.downloadProtocol(eq(workerId), eq(requestKey), any())
+            jobRemoteDataSource.downloadProtocol(eq(workerId), eq(requestKey), any())
         ) doReturn Single.just(protocolIS)
         whenever(
-            localDataSource.save(protocolIS, "${config.filesDir}/protocols", "$protocolId.pb")
+            jobLocalDataSource.save(protocolIS, "${config.filesDir}/protocols", "$protocolId.pb")
         ) doReturn Single.just(protocolPath)
 
         cut.downloadData(
@@ -161,11 +166,11 @@ class JobDownloaderTest {
             protocols
         )
 
-        verify(remoteDataSource).downloadModel(workerId, requestKey, modelId)
-        verify(remoteDataSource).downloadProtocol(workerId, requestKey, protocolId)
-        verify(localDataSource).save(modelIS, "${config.filesDir}/models", "$modelId.pb")
+        verify(jobRemoteDataSource).downloadModel(workerId, requestKey, modelId)
+        verify(jobRemoteDataSource).downloadProtocol(workerId, requestKey, protocolId)
+        verify(jobLocalDataSource).save(modelIS, "${config.filesDir}/models", "$modelId.pb")
         verify(model).loadModelState(modelPath)
-        verify(localDataSource).save(protocolIS, "${config.filesDir}/protocols", "$protocolId.pb")
+        verify(jobLocalDataSource).save(protocolIS, "${config.filesDir}/protocols", "$protocolId.pb")
     }
 
     @Test
@@ -188,18 +193,20 @@ class JobDownloaderTest {
 
         whenever(model.pyGridModelId) doReturn modelId
         whenever(
-            remoteDataSource.downloadModel(workerId, requestKey, modelId)
+            jobRemoteDataSource.downloadModel(workerId, requestKey, modelId)
         ) doReturn Single.just(modelIS)
         whenever(
-            localDataSource.save(modelIS, "${config.filesDir}/models", "$modelId.pb")
+            jobLocalDataSource.save(modelIS, "${config.filesDir}/models", "$modelId.pb")
         ) doReturn Single.just(modelPath)
 
 
         whenever(
-            remoteDataSource.downloadPlan(eq(workerId), eq(requestKey), eq(planId), eq(PLAN_OP_TYPE))
+            jobRemoteDataSource.downloadPlan(eq(workerId), eq(requestKey), eq(planId), eq(
+                PLAN_OP_TYPE
+            ))
         ) doReturn Single.just(planIS)
         whenever(
-            localDataSource.save(planIS, "${config.filesDir}/plans", "$planId.pb")
+            jobLocalDataSource.save(planIS, "${config.filesDir}/plans", "$planId.pb")
         ) doReturn Single.just(protocolPath)
 
         cut.downloadData(
@@ -214,9 +221,11 @@ class JobDownloaderTest {
             protocols
         )
 
-        verify(remoteDataSource).downloadModel(workerId, requestKey, modelId)
-        verify(remoteDataSource).downloadPlan(workerId, requestKey, planId, PLAN_OP_TYPE)
-        verify(localDataSource).save(planIS, "${config.filesDir}/plans", "$planId.pb")
+        verify(jobRemoteDataSource).downloadModel(workerId, requestKey, modelId)
+        verify(jobRemoteDataSource).downloadPlan(workerId, requestKey, planId,
+            PLAN_OP_TYPE
+        )
+        verify(jobLocalDataSource).save(planIS, "${config.filesDir}/plans", "$planId.pb")
     }
 
     @Test(expected = IllegalStateException::class)

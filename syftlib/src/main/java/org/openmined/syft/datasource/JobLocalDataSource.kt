@@ -4,7 +4,7 @@ import io.reactivex.Single
 import org.openmined.syft.utilities.FileWriter
 import java.io.InputStream
 
-internal class LocalDataSource {
+internal class JobLocalDataSource {
 
     /**
      * Persist the given inputStream in the specified destination.
