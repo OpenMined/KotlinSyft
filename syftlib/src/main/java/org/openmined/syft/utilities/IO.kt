@@ -26,7 +26,7 @@ class FileWriter(private val parentPath: File, fileName: String) : File(parentPa
             Log.d(TAG, "directory already exists")
 
         return Single.create { emitter ->
-            input.use { inputStream ->
+            input?.use { inputStream ->
                 this.outputStream().use { outputFile ->
                     inputStream?.copyTo(outputFile)
                     ?: emitter.onError(FileSystemException(this))

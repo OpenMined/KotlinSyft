@@ -36,10 +36,6 @@ internal class JobDownloader(
         model: SyftModel,
         protocols: ConcurrentHashMap<String, Protocol>
     ) {
-        if (trainingParamsStatus.get() != DownloadStatus.NOT_STARTED) {
-            Log.d(TAG, "download already running")
-            return
-        }
         Log.d(TAG, "beginning download")
         trainingParamsStatus.set(DownloadStatus.RUNNING)
 
