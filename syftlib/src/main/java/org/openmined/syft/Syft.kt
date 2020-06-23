@@ -13,10 +13,8 @@ import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
-import java.lang.Exception
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-
 
 private const val TAG = "Syft"
 
@@ -58,7 +56,7 @@ class Syft internal constructor(
         model: String,
         version: String? = null
     ): SyftJob {
-        val job = SyftJob(
+        val job = SyftJob.create(
             model,
             version,
             this,
@@ -197,7 +195,7 @@ class Syft internal constructor(
                 responseData.version
             )
         )
-        job.setJobArguments(responseData)
+        job.cycleAccepted(responseData)
         if (jobErrorIfDeviceActive(job) ||
             jobErrorIfBatteryInvalid(job) ||
             jobErrorIfNetworkInvalid(job)
@@ -205,7 +203,7 @@ class Syft internal constructor(
             return
 
         workerId?.let {
-            job.downloadData(it)
+            job.downloadData(it, responseData)
         } ?: throw IllegalStateException("workerId is not initialised")
 
     }

@@ -1,6 +1,7 @@
 package org.openmined.syft.unit
 
 import android.net.NetworkCapabilities
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.spy
 import com.nhaarman.mockitokotlin2.verify
@@ -33,7 +34,9 @@ internal class SyftTest {
                 )
             )
         }
-        val httpClient = mock<HttpClient>()
+        val httpClient = mock<HttpClient>() {
+            on { apiClient } doReturn mock()
+        }
         val schedulers = object : ProcessSchedulers {
             override val computeThreadScheduler: Scheduler
                 get() = Schedulers.io()
@@ -64,7 +67,7 @@ internal class SyftTest {
         val workerTest = spy(
             Syft( config, deviceMonitor,"auth token")
         )
-        val syftJob = SyftJob(
+        val syftJob = SyftJob.create(
             "model name",
             "1.0.0",
             workerTest,

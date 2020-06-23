@@ -2,7 +2,6 @@ package org.openmined.syft.utilities
 
 import android.util.Log
 import io.reactivex.Single
-import okhttp3.ResponseBody
 import java.io.File
 import java.io.InputStream
 
@@ -22,28 +21,12 @@ class FileWriter(private val parentPath: File, fileName: String) : File(parentPa
         return this
     }
 
-    fun writeFromNetworkStreaming(input: ResponseBody?): Single<String> {
-        if (!this.parentPath.mkdirs())
-            Log.d(TAG, "directory already exists")
-        return Single.create { emitter ->
-            input?.byteStream()?.bufferedReader().use { inputReader ->
-                this.outputStream().bufferedWriter().use { outputFile ->
-                    inputReader?.forEachLine { line ->
-                        outputFile.write(line)
-                    } ?: emitter.onError(FileSystemException(this))
-                }
-                Log.d(TAG, "file written at ${this.absolutePath}")
-                emitter.onSuccess(this.absolutePath)
-            }
-        }
-    }
-
-    fun writeFromNetwork(input: ResponseBody?): Single<String> {
+    fun writeInputStream(input: InputStream?): Single<String> {
         if (!this.parentPath.mkdirs())
             Log.d(TAG, "directory already exists")
 
         return Single.create { emitter ->
-            input?.byteStream().use { inputStream ->
+            input?.use { inputStream ->
                 this.outputStream().use { outputFile ->
                     inputStream?.copyTo(outputFile)
                     ?: emitter.onError(FileSystemException(this))
