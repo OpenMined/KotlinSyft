@@ -23,7 +23,7 @@ class SyftConfiguration internal constructor(
     val cacheTimeOut: Long,
     val maxConcurrentJobs: Int,
     private val socketClient: SocketClient,
-    val httpClient: HttpClient,
+    private val httpClient: HttpClient,
     private val messagingClient: NetworkingClients
 ) {
     companion object {

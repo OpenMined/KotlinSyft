@@ -10,7 +10,6 @@ import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.openmined.syft.execution.PLAN_OP_TYPE
-import org.openmined.syft.networking.clients.HttpClient
 import org.openmined.syft.networking.requests.HttpAPI
 import retrofit2.Response
 import java.io.InputStream
@@ -19,16 +18,14 @@ import java.io.InputStream
 class RemoteDataSourceTest {
 
     @Mock
-    private lateinit var httpClient: HttpClient
-    @Mock
-    private lateinit var apiClient: HttpAPI
+    private lateinit var httpApi: HttpAPI
 
     private lateinit var cut: RemoteDataSource
 
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
-        cut = RemoteDataSource(httpClient)
+        cut = RemoteDataSource(httpApi)
     }
 
     @Test
@@ -40,8 +37,7 @@ class RemoteDataSourceTest {
         val body = mock<ResponseBody>()
         val content = mock<InputStream>()
 
-        whenever(httpClient.apiClient) doReturn apiClient
-        whenever(apiClient.downloadModel(workerId, requestKey, modelId)) doReturn Single.just(response)
+        whenever(httpApi.downloadModel(workerId, requestKey, modelId)) doReturn Single.just(response)
         whenever(response.body()) doReturn body
         whenever(body.byteStream()) doReturn content
 
@@ -63,8 +59,7 @@ class RemoteDataSourceTest {
         val body = mock<ResponseBody>()
         val content = mock<InputStream>()
 
-        whenever(httpClient.apiClient) doReturn apiClient
-        whenever(apiClient.downloadPlan(workerId, requestKey, id, opType)) doReturn Single.just(response)
+        whenever(httpApi.downloadPlan(workerId, requestKey, id, opType)) doReturn Single.just(response)
         whenever(response.body()) doReturn body
         whenever(body.byteStream()) doReturn content
 
@@ -85,8 +80,7 @@ class RemoteDataSourceTest {
         val body = mock<ResponseBody>()
         val content = mock<InputStream>()
 
-        whenever(httpClient.apiClient) doReturn apiClient
-        whenever(apiClient.downloadProtocol(workerId, requestKey, id)) doReturn Single.just(response)
+        whenever(httpApi.downloadProtocol(workerId, requestKey, id)) doReturn Single.just(response)
         whenever(response.body()) doReturn body
         whenever(body.byteStream()) doReturn content
 

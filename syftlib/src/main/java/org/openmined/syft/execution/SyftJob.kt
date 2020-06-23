@@ -47,7 +47,7 @@ class SyftJob internal constructor(
                 version,
                 worker,
                 config,
-                JobDownloader(LocalDataSource(), RemoteDataSource(config.httpClient))
+                JobDownloader(LocalDataSource(), RemoteDataSource(config.getDownloader()))
             )
         }
     }
