@@ -83,8 +83,7 @@ class Syft internal constructor(
     fun getSyftWorkerId() = workerId
 
     fun executeCycleRequest(job: SyftJob) {
-        if (jobErrorIfDeviceActive(job) ||
-            jobErrorIfBatteryInvalid(job) ||
+        if (jobErrorIfBatteryInvalid(job) ||
             jobErrorIfNetworkInvalid(job)
         )
             return
@@ -144,14 +143,6 @@ class Syft internal constructor(
         return false
     }
 
-    fun jobErrorIfDeviceActive(job: SyftJob): Boolean {
-        if (!deviceMonitor.isActivityStateValid()) {
-            job.throwError(IllegalStateException("User activity constraints failed"))
-            return true
-        }
-        return false
-    }
-
     private fun requestCycle(
         id: String,
         job: SyftJob,
@@ -196,8 +187,7 @@ class Syft internal constructor(
             )
         )
         job.cycleAccepted(responseData)
-        if (jobErrorIfDeviceActive(job) ||
-            jobErrorIfBatteryInvalid(job) ||
+        if (jobErrorIfBatteryInvalid(job) ||
             jobErrorIfNetworkInvalid(job)
         )
             return

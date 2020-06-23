@@ -28,8 +28,7 @@ class FileWriter(private val parentPath: File, fileName: String) : File(parentPa
         return Single.create { emitter ->
             input?.use { inputStream ->
                 this.outputStream().use { outputFile ->
-                    inputStream?.copyTo(outputFile)
-                    ?: emitter.onError(FileSystemException(this))
+                    inputStream.copyTo(outputFile)
                 }
                 Log.d(TAG, "file written at ${this.absolutePath}")
                 emitter.onSuccess(this.absolutePath)

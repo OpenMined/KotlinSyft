@@ -147,7 +147,6 @@ class SyftJob internal constructor(
     fun report(diff: State) {
         val workerId = worker.getSyftWorkerId()
         if (throwErrorIfNetworkInvalid() ||
-            throwErrorIfDeviceActive() ||
             throwErrorIfBatteryInvalid()
         ) return
 
@@ -177,14 +176,6 @@ class SyftJob internal constructor(
 
     fun throwErrorIfBatteryInvalid(): Boolean {
         if (worker.jobErrorIfBatteryInvalid(this)) {
-            //todo save model to a file here
-            return true
-        }
-        return false
-    }
-
-    fun throwErrorIfDeviceActive(): Boolean {
-        if (worker.jobErrorIfDeviceActive(this)) {
             //todo save model to a file here
             return true
         }
