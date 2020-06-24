@@ -82,9 +82,6 @@ class DeviceMonitor(
                                 networkValidity.set(it.connected)
                                 Log.d(TAG, "connected to valid network ${it.connected}")
                             }
-
-                            is StateChangeMessage.Activity ->
-                                Log.d(TAG, "user activity started")
                         }
                     }
         )

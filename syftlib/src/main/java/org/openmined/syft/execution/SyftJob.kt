@@ -23,10 +23,11 @@ import java.util.concurrent.atomic.AtomicReference
 private const val TAG = "SyftJob"
 
 /**
- * @param worker : The syft worker handling this job
- * @param config : The configuration class for schedulers and clients
  * @param modelName : The model being trained or used in inference
  * @param version : The version of the model with name modelName
+ * @property worker : The syft worker handling this job
+ * @property config : The configuration class for schedulers and clients
+ * @property jobRepository : The repository dealing data downloading and file writing of job
  */
 @ExperimentalUnsignedTypes
 class SyftJob internal constructor(
@@ -38,6 +39,16 @@ class SyftJob internal constructor(
 ) : Disposable {
 
     companion object {
+
+        /**
+         * Creates a new Syft Job
+         *
+         * @param modelName : The model being trained or used in inference
+         * @param version : The version of the model with name modelName
+         * @param worker : The syft worker handling this job
+         * @param config : The configuration class for schedulers and clients
+         * @sample org.openmined.syft.Syft.newJob
+         */
         fun create(
             modelName: String,
             version: String? = null,
@@ -70,7 +81,31 @@ class SyftJob internal constructor(
     private var requestKey = ""
 
     /**
-     * create a worker job
+     * Starts the job by asking syft worker to request for cycle.
+     * Sets up [Socket Client][org.openmined.syft.networking.clients.SocketClient] if not initialised already.
+     * @param subscriber (Optional) Contains the methods overridden by the user to be called upon job success/error
+     * @see org.openmined.syft.execution.JobStatusSubscriber for available methods
+     *
+     * ```kotlin
+     * job.start()
+     * // OR
+     * val jobStatusSubscriber = object : JobStatusSubscriber() {
+     *      override fun onReady(
+     *      model: SyftModel,
+     *      plans: ConcurrentHashMap<String, Plan>,
+     *      clientConfig: ClientConfig
+     *      ) {
+     *      }
+     *
+     *      override fun onRejected(timeout: String) {
+     *      }
+     *
+     *      override fun onError(throwable: Throwable) {
+     *      }
+     * }
+     *
+     * job.start(jobStatusSubscriber)
+     * ```
      */
     fun start(subscriber: JobStatusSubscriber = JobStatusSubscriber()) {
         if (cycleStatus.get() == CycleStatus.REJECT) {
@@ -86,6 +121,12 @@ class SyftJob internal constructor(
         worker.executeCycleRequest(this)
     }
 
+    /**
+     * This method can be called when the user needs to attach a listener to the job but do not wish to start it
+     * @param subscriber (Optional) Contains the methods overridden by the user to be called upon job success/error
+     * @see org.openmined.syft.execution.JobStatusSubscriber for available methods
+     * @sample org.openmined.syft.Syft.newJob
+     */
     fun subscribe(
         subscriber: JobStatusSubscriber,
         schedulers: ProcessSchedulers
@@ -101,8 +142,12 @@ class SyftJob internal constructor(
         )
     }
 
+    /**
+     * This method is called by [Syft Worker][org.openmined.syft.Syft] on being accepted by PyGrid into a cycle
+     * @param responseData The training parameters and requestKey returned by PyGrid
+     */
     @Synchronized
-    fun cycleAccepted(responseData: CycleResponseData.CycleAccept) {
+    internal fun cycleAccepted(responseData: CycleResponseData.CycleAccept) {
         Log.d(TAG, "setting Request Key")
         responseData.plans.forEach { (_, planId) -> plans[planId] = Plan(this, planId) }
         responseData.protocols.forEach { (_, protocolId) ->
@@ -113,12 +158,21 @@ class SyftJob internal constructor(
         cycleStatus.set(CycleStatus.ACCEPTED)
     }
 
-    fun cycleRejected(responseData: CycleResponseData.CycleReject) {
+    /**
+     * This method is called by [Syft Worker][org.openmined.syft.Syft] on being rejected by PyGrid into a cycle
+     * @param responseData The timeout returned by PyGrid after which the worker should retry
+     */
+    internal fun cycleRejected(responseData: CycleResponseData.CycleReject) {
         cycleStatus.set(CycleStatus.REJECT)
         jobStatusProcessor.offer(JobStatusMessage.JobCycleRejected(responseData.timeout))
     }
 
-    fun downloadData(
+    /**
+     * Downloads all the plans, protocols and the model weights from PyGrid
+     * @param workerId The unique id assigned to the syft worker by PyGrid
+     * @param responseData contains the cycle accept request key and training parameters
+     */
+    internal fun downloadData(
         workerId: String,
         responseData: CycleResponseData.CycleAccept
     ) {
@@ -142,12 +196,12 @@ class SyftJob internal constructor(
     }
 
     /**
-     * report the results back to PyGrid
+     * Once training is finished submit the new model weights to PyGrid to complete the cycle
+     * @param diff the difference of the new and old model weights serialised into [State][org.openmined.syft.proto.State]
      */
     fun report(diff: State) {
         val workerId = worker.getSyftWorkerId()
         if (throwErrorIfNetworkInvalid() ||
-            throwErrorIfDeviceActive() ||
             throwErrorIfBatteryInvalid()
         ) return
 
@@ -167,7 +221,10 @@ class SyftJob internal constructor(
                         })
     }
 
-    fun throwErrorIfNetworkInvalid(): Boolean {
+    /**
+     * Throw an error when network constraints fail
+     */
+    internal fun throwErrorIfNetworkInvalid(): Boolean {
         if (worker.jobErrorIfNetworkInvalid(this)) {
             //todo save model to a file here
             return true
@@ -175,7 +232,10 @@ class SyftJob internal constructor(
         return false
     }
 
-    fun throwErrorIfBatteryInvalid(): Boolean {
+    /**
+     * Throw an error when battery constraints fail
+     */
+    internal fun throwErrorIfBatteryInvalid(): Boolean {
         if (worker.jobErrorIfBatteryInvalid(this)) {
             //todo save model to a file here
             return true
@@ -183,22 +243,23 @@ class SyftJob internal constructor(
         return false
     }
 
-    fun throwErrorIfDeviceActive(): Boolean {
-        if (worker.jobErrorIfDeviceActive(this)) {
-            //todo save model to a file here
-            return true
-        }
-        return false
-    }
-
-    fun throwError(throwable: Throwable) {
+    /**
+     * Notify all the listeners about the error and dispose the job
+     */
+    internal fun throwError(throwable: Throwable) {
         jobStatusProcessor.onError(throwable)
         networkDisposable.clear()
         isDisposed.set(true)
     }
 
+    /**
+     * Identifies if the job is already disposed
+     */
     override fun isDisposed() = isDisposed.get()
 
+    /**
+     * Dispose the job. Once disposed, a job cannot be resumed again.
+     */
     override fun dispose() {
         if (!isDisposed()) {
             jobStatusProcessor.onComplete()
