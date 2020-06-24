@@ -7,7 +7,7 @@ import java.io.InputStream
 internal class JobRemoteDataSource(private val httpApi: HttpAPI) {
 
     /**
-     * Download the model modelId and offers it as an input stream for further processing.
+     * Downloads the model modelId and offers it as an input stream for further processing.
      * @param workerId
      * @param requestKey
      * @param modelId

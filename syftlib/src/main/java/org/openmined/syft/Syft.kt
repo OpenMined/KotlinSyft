@@ -80,11 +80,10 @@ class Syft internal constructor(
         return job
     }
 
-    fun getSyftWorkerId() = workerId
+    internal fun getSyftWorkerId() = workerId
 
-    fun executeCycleRequest(job: SyftJob) {
-        if (jobErrorIfDeviceActive(job) ||
-            jobErrorIfBatteryInvalid(job) ||
+    internal fun executeCycleRequest(job: SyftJob) {
+        if (jobErrorIfBatteryInvalid(job) ||
             jobErrorIfNetworkInvalid(job)
         )
             return
@@ -127,7 +126,7 @@ class Syft internal constructor(
         INSTANCE = null
     }
 
-    fun jobErrorIfNetworkInvalid(job: SyftJob): Boolean {
+    internal fun jobErrorIfNetworkInvalid(job: SyftJob): Boolean {
         if (!deviceMonitor.isNetworkStateValid()) {
             job.throwError(IllegalStateException("network constraints failed"))
             disposeSocketClient()
@@ -136,17 +135,9 @@ class Syft internal constructor(
         return false
     }
 
-    fun jobErrorIfBatteryInvalid(job: SyftJob): Boolean {
+    internal fun jobErrorIfBatteryInvalid(job: SyftJob): Boolean {
         if (!deviceMonitor.isBatteryStateValid()) {
             job.throwError(IllegalStateException("Battery constraints failed"))
-            return true
-        }
-        return false
-    }
-
-    fun jobErrorIfDeviceActive(job: SyftJob): Boolean {
-        if (!deviceMonitor.isActivityStateValid()) {
-            job.throwError(IllegalStateException("User activity constraints failed"))
             return true
         }
         return false
@@ -196,8 +187,7 @@ class Syft internal constructor(
             )
         )
         job.cycleAccepted(responseData)
-        if (jobErrorIfDeviceActive(job) ||
-            jobErrorIfBatteryInvalid(job) ||
+        if (jobErrorIfBatteryInvalid(job) ||
             jobErrorIfNetworkInvalid(job)
         )
             return

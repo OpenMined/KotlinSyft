@@ -41,8 +41,7 @@ class Plan(val job: SyftJob, val planId: String) {
         trainingBatch: Pair<IValue, IValue>,
         clientConfig: ClientConfig
     ): IValue? {
-        if (job.throwErrorIfDeviceActive() ||
-            job.throwErrorIfBatteryInvalid()
+        if (job.throwErrorIfBatteryInvalid()
         )
         //todo decide how we want to handle this. Throw an error or quietly skip execution
             return null
