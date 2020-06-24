@@ -15,7 +15,7 @@ KotlinSyft makes it easy for you to **train and inference PySyft models on Andro
 
 - :gear: **Training and inference** of any PySyft model written in PyTorch or TensorFlow
 - :bust_in_silhouette: Allows all data to stay on the user's device
-- :back: Support for delegation to background task scheduler
+- :zap: Support for full multi-threading / background service execution 
 - :key: Support for **JWT authentication** to protect models from Sybil attacks
 - :+1: A set of **inbuilt best practices** to prevent apps from over using device resources. 
     - :electric_plug: **Charge detection** to allow background training only when device is connected to charger
