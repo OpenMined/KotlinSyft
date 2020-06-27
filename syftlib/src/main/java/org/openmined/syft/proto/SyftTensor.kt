@@ -27,26 +27,7 @@ data class SyftTensor(
     companion object {
         // Generate & Return SyftTensor from SyftProtoTensor
         fun deserialize(tensor: SyftProtoTensor): SyftTensor {
-            val tensorData = tensor.contentsData
-            val chain = if (tensor.hasChain())
-                deserialize(tensor.chain)
-            else
-                null
-            val gradChain = if (tensor.hasGradChain())
-                deserialize(tensor.gradChain)
-            else
-                null
-            return SyftTensor(
-                tensor.id,
-                tensorData,
-                //todo we should ideally have long here
-                tensorData.shape.dimsList,
-                tensorData.dtype,
-                chain,
-                gradChain,
-                tensor.tagsList,
-                tensor.description
-            )
+            return tensor.deserialize()
         }
 
         // Generate & Return SyftTensor from TorchTensor
@@ -168,5 +149,28 @@ data class SyftTensor(
             else -> throw Exception("Invalid Tensor type")
         }
     }
+}
 
+@ExperimentalUnsignedTypes
+fun SyftProtoTensor.deserialize(): SyftTensor {
+    val tensorData = this.contentsData
+    val chain = if (this.hasChain())
+        this.chain.deserialize()
+    else
+        null
+    val gradChain = if (this.hasGradChain())
+        this.gradChain.deserialize()
+    else
+        null
+    return SyftTensor(
+        this.id,
+        tensorData,
+        //todo we should ideally have long here
+        tensorData.shape.dimsList,
+        tensorData.dtype,
+        chain,
+        gradChain,
+        this.tagsList,
+        this.description
+    )
 }
