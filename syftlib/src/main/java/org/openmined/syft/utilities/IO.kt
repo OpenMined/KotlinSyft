@@ -1,40 +1,14 @@
 package org.openmined.syft.utilities
 
 import android.util.Log
-import io.reactivex.Single
 import java.io.File
 import java.io.InputStream
 
 const val MB = 1024 * 1024
 private const val TAG = "utilities.File"
 
-class FileWriter(private val parentPath: File, fileName: String) : File(parentPath, fileName) {
-
+class FileWriter(parentPath: File, fileName: String) : File(parentPath, fileName) {
     constructor(parentPath: String, fileName: String) : this(File(parentPath), fileName)
-
-    fun writeRandomData(sizeInMB: Int): FileWriter {
-        this.bufferedWriter().use { output ->
-            repeat(sizeInMB) {
-                output.write("x".repeat(MB))
-            }
-        }
-        return this
-    }
-
-    fun writeInputStream(input: InputStream?): Single<String> {
-        if (!this.parentPath.mkdirs())
-            Log.d(TAG, "directory already exists")
-
-        return Single.create { emitter ->
-            input?.use { inputStream ->
-                this.outputStream().use { outputFile ->
-                    inputStream.copyTo(outputFile)
-                }
-                Log.d(TAG, "file written at ${this.absolutePath}")
-                emitter.onSuccess(this.absolutePath)
-            }
-        }
-    }
 }
 
 fun InputStream.readNBuffers(

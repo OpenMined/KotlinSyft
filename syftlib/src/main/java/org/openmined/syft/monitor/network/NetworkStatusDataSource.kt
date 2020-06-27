@@ -19,7 +19,6 @@ import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.monitor.BroadCastListener
 import org.openmined.syft.monitor.StateChangeMessage
 import org.openmined.syft.networking.requests.HttpAPI
-import org.openmined.syft.utilities.FileWriter
 import org.openmined.syft.utilities.MB
 import org.openmined.syft.utilities.readNBuffers
 import java.io.File
@@ -106,8 +105,13 @@ class NetworkStatusRealTimeDataSource internal constructor(
         networkStatusModel: NetworkStatusModel
     ): Completable {
         val fileSize = 64
-        val file = FileWriter(filesDir, "uploadFile")
-                .writeRandomData(fileSize)
+        val file = File(filesDir, "uploadFile").apply {
+            bufferedWriter().use { output ->
+                repeat(fileSize) {
+                    output.write("x".repeat(MB))
+                }
+            }
+        }
         val requestFile = file.asRequestBody("text/plain".toMediaType())
         val body = MultipartBody.Part.createFormData("sample", file.name, requestFile)
         val description = "uploadFile".toRequestBody()
