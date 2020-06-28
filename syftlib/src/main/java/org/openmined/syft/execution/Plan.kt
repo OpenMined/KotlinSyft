@@ -40,10 +40,10 @@ class Plan(val job: SyftJob, val planId: String) {
         trainingBatch: Pair<IValue, IValue>,
         clientConfig: ClientConfig
     ): IValue? {
-        if (job.throwErrorIfBatteryInvalid()
-        )
-        //todo decide how we want to handle this. Throw an error or quietly skip execution
+        if (job.throwErrorIfBatteryInvalid()) {
+            //todo decide how we want to handle this. Throw an error or quietly skip execution
             return null
+        }
 
         val localModuleState = pyTorchModule
         if (localModuleState == null) {
@@ -95,10 +95,9 @@ class Plan(val job: SyftJob, val planId: String) {
      * @return the absolute path of the file containing the TorchScript model.
      */
     private fun saveScript(filesDir: String, obj: com.google.protobuf.ByteString): String {
-        val file = File( "$filesDir/torchscript_${planId}.pt")
-        file.parentFile?.let {
-            if (!it.exists()) it.mkdirs()
-        }
+        val parent = File(filesDir)
+        if (!parent.exists()) parent.mkdirs()
+        val file = File(parent, "torchscript_${planId}.pt")
 
         file.outputStream().use {
             it.write(obj.toByteArray())

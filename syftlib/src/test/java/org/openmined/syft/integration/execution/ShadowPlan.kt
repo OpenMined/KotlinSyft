@@ -31,10 +31,9 @@ class ShadowPlan {
     }
 
     private fun saveScript(filesDir: String, obj: com.google.protobuf.ByteString): String {
-        val file = File("$filesDir/torchscript.pt")
-        file.parentFile?.let {
-            if (!it.exists()) it.mkdirs()
-        }
+        val parent = File(filesDir)
+        if (!parent.exists()) parent.mkdirs()
+        val file = File(parent,"torchscript.pt")
 
         file.outputStream().use {
             it.write(obj.toByteArray())
