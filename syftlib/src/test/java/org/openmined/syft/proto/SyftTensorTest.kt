@@ -31,7 +31,7 @@ class SyftTensorTest {
         val desc = "I'm your father"
         val tensor = createTorchTensor(hasChain = true, hasGradChain = true, desc = desc)
         // When
-        val result = tensor.deserialize()
+        val result = tensor.toSyftTensor()
 
         // Then
         assert(tensorId == result.id)

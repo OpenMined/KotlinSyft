@@ -25,11 +25,6 @@ data class SyftTensor(
     val description: String
 ) {
     companion object {
-        // Generate & Return SyftTensor from SyftProtoTensor
-        fun deserialize(tensor: SyftProtoTensor): SyftTensor {
-            return tensor.deserialize()
-        }
-
         // Generate & Return SyftTensor from TorchTensor
         fun fromTorchTensor(tensor: TorchTensor): SyftTensor {
             val shape = SizeOuterClass.Size.newBuilder()
@@ -152,14 +147,14 @@ data class SyftTensor(
 }
 
 @ExperimentalUnsignedTypes
-fun SyftProtoTensor.deserialize(): SyftTensor {
+fun SyftProtoTensor.toSyftTensor(): SyftTensor {
     val tensorData = this.contentsData
     val chain = if (this.hasChain())
-        this.chain.deserialize()
+        this.chain.toSyftTensor()
     else
         null
     val gradChain = if (this.hasGradChain())
-        this.gradChain.deserialize()
+        this.gradChain.toSyftTensor()
     else
         null
     return SyftTensor(
