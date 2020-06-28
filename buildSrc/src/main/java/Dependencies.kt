@@ -48,6 +48,7 @@ object Versions {
     const val adxRunner = "1.1.1"
     const val adxExtTruth = "1.1.0"
     const val robolectric = "4.4-SNAPSHOT"
+    const val mockk = "1.10.0"
 
 }
 
@@ -82,7 +83,7 @@ object CommonDependencies {
     const val junit = "junit:junit:${Versions.junit}"
     const val robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
     const val mockitoCore = "org.mockito:mockito-core:${Versions.mockitoCore}"
-
+    const val mockk = "io.mockk:mockk:${Versions.mockk}"
 }
 
 object DemoAppDependencies {

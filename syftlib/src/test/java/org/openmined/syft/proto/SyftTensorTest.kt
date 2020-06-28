@@ -1,39 +1,35 @@
 package org.openmined.syft.proto
 
-import com.google.protobuf.ProtocolStringList
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
+import io.mockk.MockKAnnotations
+import io.mockk.every
+import io.mockk.impl.annotations.RelaxedMockK
+import org.junit.Before
 import org.junit.Test
 import org.openmined.syftproto.types.syft.v1.IdOuterClass
-import org.openmined.syftproto.types.torch.v1.SizeOuterClass
 import org.openmined.syftproto.types.torch.v1.Tensor
 import org.openmined.syftproto.types.torch.v1.TensorDataOuterClass
 
 @ExperimentalUnsignedTypes
 class SyftTensorTest {
 
+    private val type = "TensorType"
+
+    @RelaxedMockK
+    private lateinit var tensorData: TensorDataOuterClass.TensorData
+    @RelaxedMockK
+    private lateinit var tensorId: IdOuterClass.Id
+
+    @Before
+    fun setUp() {
+        MockKAnnotations.init(this)
+        every { tensorData.shape.dimsList } returns listOf(1, 2)
+        every { tensorData.dtype } returns type
+    }
+
     @Test
     fun `Given a SyftProtoTensor when deserialized it return the expected SyftTensor`() {
-        val tensorShape = mock<SizeOuterClass.Size> {
-            on { dimsList } doReturn listOf(1, 2)
-        }
-        val type = "Long"
-        val tensorData = mock<TensorDataOuterClass.TensorData> {
-            on { shape } doReturn tensorShape
-            on { dtype } doReturn type
-        }
-        val tensorId = mock<IdOuterClass.Id>()
-
-        val protocolTagList = mock<ProtocolStringList>()
-        val description = "Description of this tensor"
-
-        val tensor = mock<Tensor.TorchTensor> {
-            on { contentsData } doReturn tensorData
-            on { id } doReturn tensorId
-            on { tagsList } doReturn protocolTagList
-            on { this.description } doReturn description
-        }
-
+        val desc = "I'm your father"
+        val tensor = createTorchTensor(hasChain = true, hasGradChain = true, desc = desc)
         // When
         val result = tensor.deserialize()
 
@@ -42,7 +38,34 @@ class SyftTensorTest {
         assert(tensorData == result.contents)
         assert(listOf(1, 2) == result.shape)
         assert(type == result.dtype)
-        assert(protocolTagList == result.tags)
-        assert(description == description)
+        assert(listOf("myTag") == result.tags)
+        assert(desc == result.description)
+        assert(result.chain != null)
+        assert(result.grad_chain != null)
+    }
+
+    private fun createTorchTensor(hasChain: Boolean, hasGradChain: Boolean, desc: String): Tensor.TorchTensor {
+
+        val builder = Tensor.TorchTensor.newBuilder()
+                .setId(tensorId)
+                .setContentsData(tensorData)
+                .addTags("myTag")
+                .setDescription(desc)
+
+        if (hasChain) {
+            builder.chain = createTorchTensor(
+                hasChain = false,
+                hasGradChain = false,
+                desc = "I'm your child"
+            )
+        }
+        if (hasGradChain) {
+            builder.gradChain = createTorchTensor(
+                hasChain = false,
+                hasGradChain = false,
+                desc = "I'm your graduated child"
+            )
+        }
+        return builder.build()
     }
 }
