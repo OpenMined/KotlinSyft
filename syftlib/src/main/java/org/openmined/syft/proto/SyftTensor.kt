@@ -24,51 +24,6 @@ data class SyftTensor(
     val tags: List<String>,
     val description: String
 ) {
-    companion object {
-        // Generate & Return SyftTensor from TorchTensor
-        fun fromTorchTensor(tensor: TorchTensor): SyftTensor {
-            val shape = SizeOuterClass.Size.newBuilder()
-                    .addAllDims(tensor.shape().map { it.toInt() })
-                    .build()
-            val tensorDataBuilder = TensorDataOuterClass.TensorData.newBuilder()
-                    .setShape(shape)
-                    .setDtype(tensor.dtype().name.toLowerCase(Locale.US))
-            val tensorData = tensorDataBuilderFromTorchTensor(
-                tensor,
-                tensorDataBuilder
-            ).build()
-            val id = IdOuterClass.Id.newBuilder().setIdInt(random().toLong()).build()
-            return SyftTensor(
-                id,
-                tensorData,
-                shape.dimsList,
-                tensorData.dtype,
-                tags = listOf(),
-                description = ""
-            )
-        }
-
-        private fun tensorDataBuilderFromTorchTensor(
-            tensor: TorchTensor,
-            tensorBuilder: TensorDataOuterClass.TensorData.Builder
-        ): TensorDataOuterClass.TensorData.Builder {
-            when (tensor.dtype()) {
-//                todo Uint8 is converted to int below due to no Pytorch constructor `fromBlob`
-//                DType.UINT8 ->
-//                    tensorBuilder.addAllContentsUint8(tensor.dataAsUnsignedByteArray)
-//                todo Int8 protobuf implementation uses List<Int> losing all the memory efficiency
-//                DType.INT8 ->
-//                    tensorBuilder.addAllContentsInt8(tensor.dataAsByteArray)
-                DType.INT32 -> tensorBuilder.addAllContentsInt32(tensor.dataAsIntArray.toList())
-                DType.FLOAT32 -> tensorBuilder.addAllContentsFloat32(tensor.dataAsFloatArray.toList())
-                DType.INT64 -> tensorBuilder.addAllContentsInt64(tensor.dataAsLongArray.toList())
-                DType.FLOAT64 -> tensorBuilder.addAllContentsFloat64(tensor.dataAsDoubleArray.toList())
-                else -> throw InvalidClassException("Dtype does not exist")
-            }
-            return tensorBuilder
-        }
-    }
-
     // Generate & Return SyftProtoTensor object
     fun serialize(): SyftProtoTensor {
         SizeOuterClass.Size.newBuilder().addAllDims(shape)
@@ -168,4 +123,47 @@ fun SyftProtoTensor.toSyftTensor(): SyftTensor {
         this.tagsList,
         this.description
     )
+}
+
+fun TorchTensor.toSyftTensor(): SyftTensor {
+    val shape = SizeOuterClass.Size.newBuilder()
+            .addAllDims(this.shape().map { it.toInt() })
+            .build()
+    val tensorDataBuilder = TensorDataOuterClass.TensorData.newBuilder()
+            .setShape(shape)
+            .setDtype(this.dtype().name.toLowerCase(Locale.US))
+    val tensorData = tensorDataBuilderFromTorchTensor(
+        this,
+        tensorDataBuilder
+    ).build()
+    val id = IdOuterClass.Id.newBuilder().setIdInt(random().toLong()).build()
+    return SyftTensor(
+        id,
+        tensorData,
+        shape.dimsList,
+        tensorData.dtype,
+        tags = listOf(),
+        description = ""
+    )
+}
+
+
+private fun tensorDataBuilderFromTorchTensor(
+    tensor: TorchTensor,
+    tensorBuilder: TensorDataOuterClass.TensorData.Builder
+): TensorDataOuterClass.TensorData.Builder {
+    when (tensor.dtype()) {
+//                todo Uint8 is converted to int below due to no Pytorch constructor `fromBlob`
+//                DType.UINT8 ->
+//                    tensorBuilder.addAllContentsUint8(tensor.dataAsUnsignedByteArray)
+//                todo Int8 protobuf implementation uses List<Int> losing all the memory efficiency
+//                DType.INT8 ->
+//                    tensorBuilder.addAllContentsInt8(tensor.dataAsByteArray)
+        DType.INT32 -> tensorBuilder.addAllContentsInt32(tensor.dataAsIntArray.toList())
+        DType.FLOAT32 -> tensorBuilder.addAllContentsFloat32(tensor.dataAsFloatArray.toList())
+        DType.INT64 -> tensorBuilder.addAllContentsInt64(tensor.dataAsLongArray.toList())
+        DType.FLOAT64 -> tensorBuilder.addAllContentsFloat64(tensor.dataAsDoubleArray.toList())
+        else -> throw InvalidClassException("Dtype does not exist")
+    }
+    return tensorBuilder
 }

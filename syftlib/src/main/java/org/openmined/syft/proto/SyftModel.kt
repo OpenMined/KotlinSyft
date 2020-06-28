@@ -62,7 +62,7 @@ data class SyftModel(
     fun updateModel(newModelParams: List<Tensor>) {
         modelState?.let { state ->
             newModelParams.forEachIndexed { index, pytorchTensor ->
-                state.syftTensors[index] = SyftTensor.fromTorchTensor(pytorchTensor)
+                state.syftTensors[index] = pytorchTensor.toSyftTensor()
             }
         }
     }
