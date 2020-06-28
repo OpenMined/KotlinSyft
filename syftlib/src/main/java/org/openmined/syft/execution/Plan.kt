@@ -75,33 +75,9 @@ class Plan(val job: SyftJob, val planId: String) {
     /**
      * Loads a TorchScript module from the specified path on the disk.
      *
-     * @param filesDir directory where the TorchScript is saved. 
-     * @param torchScriptPlan location where the TorchScript plan is located.
+     * @param torchScriptLocation location of the TorchScript plan.
      */
-    fun generateScriptModule(filesDir: String, torchScriptPlan: String) {
-        val scriptModule = PlanOuterClass.Plan.parseFrom(
-            File(torchScriptPlan).readBytes()
-        )
-        val torchscriptLocation = saveScript(filesDir, scriptModule.torchscript)
-        Log.d(TAG, "TorchScript saved at $torchscriptLocation")
-        pyTorchModule = Module.load(torchscriptLocation)
-    }
-
-    /**
-     * Writes the module to the torchscript and returns the absolute path.
-     *
-     * @param filesDir The directory where the torchscript file will be written.
-     * @param obj Protobuf stream containing the contents of the TorchScript module.
-     * @return the absolute path of the file containing the TorchScript model.
-     */
-    private fun saveScript(filesDir: String, obj: com.google.protobuf.ByteString): String {
-        val parent = File(filesDir)
-        if (!parent.exists()) parent.mkdirs()
-        val file = File(parent, "torchscript_${planId}.pt")
-
-        file.outputStream().use {
-            it.write(obj.toByteArray())
-        }
-        return file.absolutePath
+    fun loadScriptModule(torchScriptLocation: String) {
+        pyTorchModule = Module.load(torchScriptLocation)
     }
 }

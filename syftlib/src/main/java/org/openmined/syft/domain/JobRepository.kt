@@ -157,7 +157,12 @@ internal class JobRepository(
                     jobLocalDataSource.save(planInputStream, destinationDir, "${plan.planId}.pb")
                 }.flatMap { filepath ->
                     Single.create<String> { emitter ->
-                        plan.generateScriptModule(destinationDir, filepath)
+                        val torchscriptLocation = jobLocalDataSource.saveTorchScript(
+                            destinationDir,
+                            filepath,
+                            "torchscript_${plan.planId}.pt"
+                        )
+                        plan.loadScriptModule(torchscriptLocation)
                         emitter.onSuccess(filepath)
                     }
                 }

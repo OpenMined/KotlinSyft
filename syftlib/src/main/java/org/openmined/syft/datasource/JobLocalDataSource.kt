@@ -3,6 +3,7 @@ package org.openmined.syft.datasource
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import io.reactivex.Single
+import org.openmined.syftproto.execution.v1.PlanOuterClass
 import java.io.File
 import java.io.InputStream
 
@@ -35,5 +36,32 @@ internal class JobLocalDataSource {
                 }
             }
         }
+    }
+
+    /**
+     * Writes the module to the torchscript and returns the absolute path.
+     *
+     * @param parentDir The file representing the output location for the torchscript.
+     * @param torchScriptPlanPath Location of the TorchScript plan
+     * @param fileName The name for this file
+     * @return the absolute path of the file containing the TorchScript model.
+     */
+    fun saveTorchScript(parentDir: String, torchScriptPlanPath: String, fileName: String): String {
+        val parent = File(parentDir)
+        if (!parent.exists()) parent.mkdirs()
+        val file = File(parent, fileName)
+
+        val scriptModule = PlanOuterClass.Plan.parseFrom(
+            File(torchScriptPlanPath).readBytes()
+        )
+        return saveTorchScript(file, scriptModule)
+    }
+
+    @VisibleForTesting
+    internal fun saveTorchScript(file: File, plan: PlanOuterClass.Plan): String {
+        file.outputStream().use {
+            it.write(plan.torchscript.toByteArray())
+        }
+        return file.absolutePath
     }
 }
