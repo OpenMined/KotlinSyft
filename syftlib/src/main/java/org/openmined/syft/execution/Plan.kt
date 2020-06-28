@@ -3,7 +3,6 @@ package org.openmined.syft.execution
 import android.util.Log
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
-import org.openmined.syft.utilities.FileWriter
 import org.openmined.syftproto.execution.v1.PlanOuterClass
 import org.pytorch.IValue
 import org.pytorch.Module
@@ -96,10 +95,14 @@ class Plan(val job: SyftJob, val planId: String) {
      * @return the absolute path of the file containing the TorchScript model.
      */
     private fun saveScript(filesDir: String, obj: com.google.protobuf.ByteString): String {
-        val fileWriter = FileWriter(filesDir, "torchscript_${planId}.pt")
-        fileWriter.outputStream().use {
+        val file = File( "$filesDir/torchscript_${planId}.pt")
+        file.parentFile?.let {
+            if (!it.exists()) it.mkdirs()
+        }
+
+        file.outputStream().use {
             it.write(obj.toByteArray())
         }
-        return fileWriter.absolutePath
+        return file.absolutePath
     }
 }

@@ -3,7 +3,6 @@ package org.openmined.syft.integration.execution
 import org.openmined.syft.execution.Plan
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
-import org.openmined.syft.utilities.FileWriter
 import org.openmined.syftproto.execution.v1.PlanOuterClass
 import org.pytorch.IValue
 import org.robolectric.annotation.Implementation
@@ -32,10 +31,14 @@ class ShadowPlan {
     }
 
     private fun saveScript(filesDir: String, obj: com.google.protobuf.ByteString): String {
-        val fileWriter = FileWriter(filesDir, "torchscript.pt")
-        fileWriter.outputStream().use {
+        val file = File("$filesDir/torchscript.pt")
+        file.parentFile?.let {
+            if (!it.exists()) it.mkdirs()
+        }
+
+        file.outputStream().use {
             it.write(obj.toByteArray())
         }
-        return fileWriter.absolutePath
+        return file.absolutePath
     }
 }

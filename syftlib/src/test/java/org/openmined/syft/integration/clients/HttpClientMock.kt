@@ -10,9 +10,10 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import org.openmined.syft.networking.clients.HttpClient
 import org.openmined.syft.networking.datamodels.syft.SpeedCheckResponse
 import org.openmined.syft.networking.requests.HttpAPI
-import org.openmined.syft.utilities.MB
 import retrofit2.Response
 import java.io.InputStream
+
+private const val MB = 1024 * 1024
 
 class HttpClientMock(
     private val pingSuccess: Boolean,
