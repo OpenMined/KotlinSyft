@@ -28,7 +28,8 @@ data class SyftTensor(
     fun serialize(): SyftProtoTensor {
         SizeOuterClass.Size.newBuilder().addAllDims(shape)
         val syftTensorBuilder = SyftProtoTensor.newBuilder()
-                .addAllTags(tags).setId(id)
+                .addAllTags(tags)
+                .setId(id)
                 .setContentsData(contents)
                 .setDescription(description)
                 .setSerializer(Tensor.TorchTensor.Serializer.SERIALIZER_ALL)
@@ -125,6 +126,7 @@ fun SyftProtoTensor.toSyftTensor(): SyftTensor {
     )
 }
 
+@ExperimentalUnsignedTypes
 fun TorchTensor.toSyftTensor(): SyftTensor {
     val shape = SizeOuterClass.Size.newBuilder()
             .addAllDims(this.shape().map { it.toInt() })
@@ -146,7 +148,6 @@ fun TorchTensor.toSyftTensor(): SyftTensor {
         description = ""
     )
 }
-
 
 private fun tensorDataBuilderFromTorchTensor(
     tensor: TorchTensor,

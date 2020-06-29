@@ -121,6 +121,236 @@ class SyftTensorTest {
         assert(result.description.isEmpty())
     }
 
+    @Test
+    fun `Given a SyftTensor when it is serialized it returns the corresponding syftProtoTensor`() {
+        val tensorId = IdOuterClass.Id.newBuilder().setIdStr("myId").build()
+        val tagList = listOf("tag1", "tag2")
+        val description = "description"
+        val tensorData = mockk<TensorDataOuterClass.TensorData> {
+            every { dtype } returns "INT32"
+        }
+
+        val cut = SyftTensor(
+            id = tensorId,
+            contents = tensorData,
+            shape = mutableListOf(1, 2),
+            dtype = "int32",
+            chain = null,
+            grad_chain = null,
+            tags = tagList,
+            description = description
+        )
+        val syftProtoTensor = cut.serialize()
+
+        assert(syftProtoTensor.contentsData == tensorData)
+        assert(syftProtoTensor.id == tensorId)
+        assert(syftProtoTensor.contentsData.dtype == "INT32")
+        assert(syftProtoTensor.tagsList == tagList)
+        assert(syftProtoTensor.description == description)
+        assert(syftProtoTensor.serializer == Tensor.TorchTensor.Serializer.SERIALIZER_ALL)
+    }
+
+    @Test
+    fun `Given a SyftTensor when getTorchTensor then the type int32 is used to extract the embedded tensor`() {
+        val tensorData = mockk<TensorDataOuterClass.TensorData> {
+            every { dtype } returns "INT32"
+            every { contentsInt32List } returns listOf(100, 100, 100)
+        }
+
+        val cut = createSyftTensorFromType("int32", tensorData)
+
+        val torchTensor = cut.getTorchTensor()
+
+        assert(listOf(100, 100, 100) == torchTensor.dataAsIntArray.toList())
+        assert(3L == torchTensor.shape()[0])
+        assert(1L == torchTensor.shape()[1])
+    }
+
+    @Test
+    fun `Given a SyftTensor when getTorchTensor then the type uint8 is used to extract the embedded tensor`() {
+        val tensorData = mockk<TensorDataOuterClass.TensorData> {
+            every { dtype } returns "UINT8"
+            every { contentsUint8List } returns listOf(100, 100, 100)
+        }
+
+        val cut = createSyftTensorFromType("uint8", tensorData)
+
+        val torchTensor = cut.getTorchTensor()
+
+        assert(listOf(100, 100, 100) == torchTensor.dataAsIntArray.toList())
+        assert(3L == torchTensor.shape()[0])
+        assert(1L == torchTensor.shape()[1])
+    }
+
+    @Test
+    fun `Given a SyftTensor when getTorchTensor then the type int8 is used to extract the embedded tensor`() {
+        val tensorData = mockk<TensorDataOuterClass.TensorData> {
+            every { dtype } returns "UINT8"
+            every { contentsInt8List } returns listOf(100, 100, 100)
+        }
+
+        val cut = createSyftTensorFromType("int8", tensorData)
+
+        val torchTensor = cut.getTorchTensor()
+
+        assert(listOf(100, 100, 100) == torchTensor.dataAsIntArray.toList())
+        assert(3L == torchTensor.shape()[0])
+        assert(1L == torchTensor.shape()[1])
+    }
+
+    @Test
+    fun `Given a SyftTensor when getTorchTensor then the type int16 is used to extract the embedded tensor`() {
+        val tensorData = mockk<TensorDataOuterClass.TensorData> {
+            every { dtype } returns "INT16"
+            every { contentsInt16List } returns listOf(100, 100, 100)
+        }
+
+        val cut = createSyftTensorFromType("int16", tensorData)
+
+        val torchTensor = cut.getTorchTensor()
+
+        assert(listOf(100, 100, 100) == torchTensor.dataAsIntArray.toList())
+        assert(3L == torchTensor.shape()[0])
+        assert(1L == torchTensor.shape()[1])
+    }
+
+    @Test
+    fun `Given a SyftTensor when getTorchTensor then the type int64 is used to extract the embedded tensor`() {
+        val tensorData = mockk<TensorDataOuterClass.TensorData> {
+            every { dtype } returns "INT64"
+            every { contentsInt64List } returns listOf(100, 100, 100)
+        }
+
+        val cut = createSyftTensorFromType("int64", tensorData)
+
+        val torchTensor = cut.getTorchTensor()
+
+        assert(listOf(100L, 100L, 100L) == torchTensor.dataAsLongArray.toList())
+        assert(3L == torchTensor.shape()[0])
+        assert(1L == torchTensor.shape()[1])
+    }
+
+    @Test
+    fun `Given a SyftTensor when getTorchTensor then the type float16 is used to extract the embedded tensor`() {
+        val tensorData = mockk<TensorDataOuterClass.TensorData> {
+            every { dtype } returns "FLOAT16"
+            every { contentsFloat16List } returns listOf(100F, 100F, 100F)
+        }
+
+        val cut = createSyftTensorFromType("float16", tensorData)
+
+        val torchTensor = cut.getTorchTensor()
+
+        assert(listOf(100F, 100F, 100F) == torchTensor.dataAsFloatArray.toList())
+        assert(3L == torchTensor.shape()[0])
+        assert(1L == torchTensor.shape()[1])
+    }
+
+    @Test
+    fun `Given a SyftTensor when getTorchTensor then the type float32 is used to extract the embedded tensor`() {
+        val tensorData = mockk<TensorDataOuterClass.TensorData> {
+            every { dtype } returns "FLOAT32"
+            every { contentsFloat32List } returns listOf(100F, 100F, 100F)
+        }
+
+        val cut = createSyftTensorFromType("float32", tensorData)
+
+        val torchTensor = cut.getTorchTensor()
+
+        assert(listOf(100F, 100F, 100F) == torchTensor.dataAsFloatArray.toList())
+        assert(3L == torchTensor.shape()[0])
+        assert(1L == torchTensor.shape()[1])
+    }
+
+    @Test
+    fun `Given a SyftTensor when getTorchTensor then the type qint8 is used to extract the embedded tensor`() {
+        val tensorData = mockk<TensorDataOuterClass.TensorData> {
+            every { dtype } returns "QINT8"
+            every { contentsQint8List } returns listOf(100, 100, 100)
+        }
+
+        val cut = createSyftTensorFromType("qint8", tensorData)
+
+        val torchTensor = cut.getTorchTensor()
+
+        assert(listOf(100, 100, 100) == torchTensor.dataAsIntArray.toList())
+        assert(3L == torchTensor.shape()[0])
+        assert(1L == torchTensor.shape()[1])
+    }
+
+    @Test
+    fun `Given a SyftTensor when getTorchTensor then the type quint8 is used to extract the embedded tensor`() {
+        val tensorData = mockk<TensorDataOuterClass.TensorData> {
+            every { dtype } returns "QUINT8"
+            every { contentsQuint8List } returns listOf(100, 100, 100)
+        }
+
+        val cut = createSyftTensorFromType("quint8", tensorData)
+
+        val torchTensor = cut.getTorchTensor()
+
+        assert(listOf(100, 100, 100) == torchTensor.dataAsIntArray.toList())
+        assert(3L == torchTensor.shape()[0])
+        assert(1L == torchTensor.shape()[1])
+    }
+
+    @Test
+    fun `Given a SyftTensor when getTorchTensor then the type qint32 is used to extract the embedded tensor`() {
+        val tensorData = mockk<TensorDataOuterClass.TensorData> {
+            every { dtype } returns "QINT32"
+            every { contentsQint32List } returns listOf(100, 100, 100)
+        }
+
+        val cut = createSyftTensorFromType("qint32", tensorData)
+
+        val torchTensor = cut.getTorchTensor()
+
+        assert(listOf(100, 100, 100) == torchTensor.dataAsIntArray.toList())
+        assert(3L == torchTensor.shape()[0])
+        assert(1L == torchTensor.shape()[1])
+    }
+
+    @Test
+    fun `Given a SyftTensor when getTorchTensor then the type bfloat16 is used to extract the embedded tensor`() {
+        val tensorData = mockk<TensorDataOuterClass.TensorData> {
+            every { dtype } returns "BFLOAT16"
+            every { contentsBfloat16List } returns listOf(100F, 100F, 100F)
+        }
+
+        val cut = createSyftTensorFromType("bfloat16", tensorData)
+
+        val torchTensor = cut.getTorchTensor()
+
+        assert(listOf(100F, 100F, 100F) == torchTensor.dataAsFloatArray.toList())
+        assert(3L == torchTensor.shape()[0])
+        assert(1L == torchTensor.shape()[1])
+    }
+
+    @Test(expected = Exception::class)
+    fun `Given a SyftTensor when getTorchTensor with a non-existant type then an exception is thrown`() {
+        val tensorData = mockk<TensorDataOuterClass.TensorData> {
+            every { dtype } returns "IM_NOT_A_TYPE"
+            every { contentsBfloat16List } returns listOf(100F, 100F, 100F)
+        }
+
+        val cut = createSyftTensorFromType("I'm not a type!", tensorData)
+
+        cut.getTorchTensor()
+    }
+
+    private fun createSyftTensorFromType(dtype: String, tensorData: TensorDataOuterClass.TensorData): SyftTensor {
+        return SyftTensor(
+            id = tensorId,
+            contents = tensorData,
+            shape = mutableListOf(3, 1),
+            dtype = dtype,
+            chain = null,
+            grad_chain = null,
+            tags = mockk(),
+            description = "description"
+        )
+    }
+
     private fun createSyftProtoTensor(
         hasChain: Boolean,
         hasGradChain: Boolean,
