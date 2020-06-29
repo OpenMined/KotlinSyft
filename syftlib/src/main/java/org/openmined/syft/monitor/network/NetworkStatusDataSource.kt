@@ -19,13 +19,11 @@ import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.monitor.BroadCastListener
 import org.openmined.syft.monitor.StateChangeMessage
 import org.openmined.syft.networking.requests.HttpAPI
-import org.openmined.syft.utilities.FileWriter
-import org.openmined.syft.utilities.MB
-import org.openmined.syft.utilities.readNBuffers
 import java.io.File
+import java.io.InputStream
 import java.util.Random
 
-
+private const val MB = 1024 * 1024
 private const val SPEED_BUFFER_WINDOW = 20
 private const val SPEED_MULTIPLICATION_FACTOR = 10
 private const val MAX_SPEED_TESTING_BYTES = MB * 8
@@ -106,8 +104,13 @@ class NetworkStatusRealTimeDataSource internal constructor(
         networkStatusModel: NetworkStatusModel
     ): Completable {
         val fileSize = 64
-        val file = FileWriter(filesDir, "uploadFile")
-                .writeRandomData(fileSize)
+        val file = File(filesDir, "uploadFile").apply {
+            bufferedWriter().use { output ->
+                repeat(fileSize) {
+                    output.write("x".repeat(MB))
+                }
+            }
+        }
         val requestFile = file.asRequestBody("text/plain".toMediaType())
         val body = MultipartBody.Part.createFormData("sample", file.name, requestFile)
         val description = "uploadFile".toRequestBody()
@@ -191,4 +194,28 @@ class NetworkStatusRealTimeDataSource internal constructor(
         }
     }
 
+    private fun InputStream.readNBuffers(
+        n: Int,
+        bufferArray: ByteArray? = null
+    ): Int {
+        val smallBuffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        var count = 0
+        for (i in 0..(n / DEFAULT_BUFFER_SIZE)) {
+            val line = this.read(smallBuffer)
+            if (line == -1)
+                break
+            if (bufferArray != null) {
+                val offset = count % bufferArray.size
+                if (offset != count)
+                    Log.w(TAG, "Overriding buffer values due to overflow")
+                val endIdx = Integer.min(line, bufferArray.size - offset)
+                if (endIdx != DEFAULT_BUFFER_SIZE)
+                    smallBuffer.sliceArray(0..endIdx).copyInto(bufferArray, offset)
+                else
+                    smallBuffer.copyInto(bufferArray, offset)
+            }
+            count += line
+        }
+        return count
+    }
 }

@@ -170,7 +170,11 @@ class JobRepositoryTest {
         verify(jobRemoteDataSource).downloadProtocol(workerId, requestKey, protocolId)
         verify(jobLocalDataSource).save(modelIS, "${config.filesDir}/models", "$modelId.pb")
         verify(model).loadModelState(modelPath)
-        verify(jobLocalDataSource).save(protocolIS, "${config.filesDir}/protocols", "$protocolId.pb")
+        verify(jobLocalDataSource).save(
+            protocolIS,
+            "${config.filesDir}/protocols",
+            "$protocolId.pb"
+        )
     }
 
     @Test
@@ -178,13 +182,17 @@ class JobRepositoryTest {
         val workerId = "workerId"
         val requestKey = "request"
         val planId = "p1"
-        val plan = Plan(mock(), planId)
+        val plan = mock<Plan> {
+            on { this.planId } doReturn planId
+            on { job } doReturn mock()
+        }
         val plans = ConcurrentHashMap<String, Plan>().also {
             it["p1"] = plan
         }
         val protocols = ConcurrentHashMap<String, Protocol>()
-        val protocolPath = "/somewhere/protocols/p1.pb"
+        val planPath = "/somewhere/plan/p1.pb"
         val modelPath = "/modelPath"
+        val torchscriptLocation = "torchscriptPath"
         val modelId = "modelId"
         val modelIS: InputStream = "Model Content".byteInputStream()
         val planIS: InputStream = "Plan Content".byteInputStream()
@@ -199,33 +207,46 @@ class JobRepositoryTest {
             jobLocalDataSource.save(modelIS, "${config.filesDir}/models", "$modelId.pb")
         ) doReturn Single.just(modelPath)
 
-
         whenever(
-            jobRemoteDataSource.downloadPlan(eq(workerId), eq(requestKey), eq(planId), eq(
-                PLAN_OP_TYPE
-            ))
+            jobRemoteDataSource.downloadPlan(
+                eq(workerId), eq(requestKey), eq(planId), eq(
+                    PLAN_OP_TYPE
+                )
+            )
         ) doReturn Single.just(planIS)
         whenever(
             jobLocalDataSource.save(planIS, "${config.filesDir}/plans", "$planId.pb")
-        ) doReturn Single.just(protocolPath)
+        ) doReturn Single.just(planPath)
+
+        whenever(
+            jobLocalDataSource.saveTorchScript(
+                any(),
+                any(),
+                any()
+            )
+        ) doReturn torchscriptLocation
 
         cut.downloadData(
-            workerId,
-            config,
-            requestKey,
-            networkDisposable,
-            jobStatusProcessor,
-            clientConfig,
-            plans,
-            model,
-            protocols
+            workerId = workerId,
+            config = config,
+            requestKey = requestKey,
+            networkDisposable = networkDisposable,
+            jobStatusProcessor = jobStatusProcessor,
+            clientConfig = clientConfig,
+            plans = plans,
+            model = model,
+            protocols = protocols
         )
 
         verify(jobRemoteDataSource).downloadModel(workerId, requestKey, modelId)
-        verify(jobRemoteDataSource).downloadPlan(workerId, requestKey, planId,
-            PLAN_OP_TYPE
-        )
+        verify(jobRemoteDataSource).downloadPlan(workerId, requestKey, planId, PLAN_OP_TYPE)
         verify(jobLocalDataSource).save(planIS, "${config.filesDir}/plans", "$planId.pb")
+        verify(jobLocalDataSource).saveTorchScript(
+            "${config.filesDir}/plans",
+            planPath,
+            "torchscript_${plan.planId}.pt"
+        )
+        verify(plan).loadScriptModule(torchscriptLocation)
     }
 
     @Test(expected = IllegalStateException::class)
