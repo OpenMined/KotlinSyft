@@ -7,3 +7,4 @@ local.properties
 .idea/caches
 .idea/libraries
 demo-app/local_config.properties
+*.kts

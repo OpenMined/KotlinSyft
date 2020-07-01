@@ -107,4 +107,5 @@ dependencies {
     testImplementation CommonDependencies.junit
     testImplementation CommonDependencies.mockitoCore
     testImplementation CommonDependencies.mockitoKotlin
+    testImplementation CommonDependencies.mockk
 }

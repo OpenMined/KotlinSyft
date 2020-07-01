@@ -24,80 +24,12 @@ data class SyftTensor(
     val tags: List<String>,
     val description: String
 ) {
-    companion object {
-        // Generate & Return SyftTensor from SyftProtoTensor
-        fun deserialize(tensor: SyftProtoTensor): SyftTensor {
-            val tensorData = tensor.contentsData
-            val chain = if (tensor.hasChain())
-                deserialize(tensor.chain)
-            else
-                null
-            val gradChain = if (tensor.hasGradChain())
-                deserialize(tensor.gradChain)
-            else
-                null
-            return SyftTensor(
-                tensor.id,
-                tensorData,
-                //todo we should ideally have long here
-                tensorData.shape.dimsList,
-                tensorData.dtype,
-                chain,
-                gradChain,
-                tensor.tagsList,
-                tensor.description
-            )
-        }
-
-        // Generate & Return SyftTensor from TorchTensor
-        fun fromTorchTensor(tensor: TorchTensor): SyftTensor {
-            val shape = SizeOuterClass.Size.newBuilder()
-                    .addAllDims(tensor.shape().map { it.toInt() })
-                    .build()
-            val tensorDataBuilder = TensorDataOuterClass.TensorData.newBuilder()
-                    .setShape(shape)
-                    .setDtype(tensor.dtype().name.toLowerCase(Locale.US))
-            val tensorData = tensorDataBuilderFromTorchTensor(
-                tensor,
-                tensorDataBuilder
-            ).build()
-            val id = IdOuterClass.Id.newBuilder().setIdInt(random().toLong()).build()
-            return SyftTensor(
-                id,
-                tensorData,
-                shape.dimsList,
-                tensorData.dtype,
-                tags = listOf(),
-                description = ""
-            )
-        }
-
-        private fun tensorDataBuilderFromTorchTensor(
-            tensor: TorchTensor,
-            tensorBuilder: TensorDataOuterClass.TensorData.Builder
-        ): TensorDataOuterClass.TensorData.Builder {
-            when (tensor.dtype()) {
-//                todo Uint8 is converted to int below due to no Pytorch constructor `fromBlob`
-//                DType.UINT8 ->
-//                    tensorBuilder.addAllContentsUint8(tensor.dataAsUnsignedByteArray)
-//                todo Int8 protobuf implementation uses List<Int> losing all the memory efficiency
-//                DType.INT8 ->
-//                    tensorBuilder.addAllContentsInt8(tensor.dataAsByteArray)
-                DType.INT32 -> tensorBuilder.addAllContentsInt32(tensor.dataAsIntArray.toList())
-                DType.FLOAT32 -> tensorBuilder.addAllContentsFloat32(tensor.dataAsFloatArray.toList())
-                DType.INT64 -> tensorBuilder.addAllContentsInt64(tensor.dataAsLongArray.toList())
-                DType.FLOAT64 -> tensorBuilder.addAllContentsFloat64(tensor.dataAsDoubleArray.toList())
-                else -> throw InvalidClassException("Dtype does not exist")
-            }
-            return tensorBuilder
-        }
-    }
-
     // Generate & Return SyftProtoTensor object
     fun serialize(): SyftProtoTensor {
         SizeOuterClass.Size.newBuilder().addAllDims(shape)
         val syftTensorBuilder = SyftProtoTensor.newBuilder()
-                .addAllTags(tags).setId(id)
+                .addAllTags(tags)
+                .setId(id)
                 .setContentsData(contents)
                 .setDescription(description)
                 .setSerializer(Tensor.TorchTensor.Serializer.SERIALIZER_ALL)
@@ -168,5 +100,71 @@ data class SyftTensor(
             else -> throw Exception("Invalid Tensor type")
         }
     }
+}
 
+@ExperimentalUnsignedTypes
+fun SyftProtoTensor.toSyftTensor(): SyftTensor {
+    val tensorData = this.contentsData
+    val chain = if (this.hasChain())
+        this.chain.toSyftTensor()
+    else
+        null
+    val gradChain = if (this.hasGradChain())
+        this.gradChain.toSyftTensor()
+    else
+        null
+    return SyftTensor(
+        this.id,
+        tensorData,
+        //todo we should ideally have long here
+        tensorData.shape.dimsList,
+        tensorData.dtype,
+        chain,
+        gradChain,
+        this.tagsList,
+        this.description
+    )
+}
+
+@ExperimentalUnsignedTypes
+fun TorchTensor.toSyftTensor(): SyftTensor {
+    val shape = SizeOuterClass.Size.newBuilder()
+            .addAllDims(this.shape().map { it.toInt() })
+            .build()
+    val tensorDataBuilder = TensorDataOuterClass.TensorData.newBuilder()
+            .setShape(shape)
+            .setDtype(this.dtype().name.toLowerCase(Locale.US))
+    val tensorData = tensorDataBuilderFromTorchTensor(
+        this,
+        tensorDataBuilder
+    ).build()
+    val id = IdOuterClass.Id.newBuilder().setIdInt(random().toLong()).build()
+    return SyftTensor(
+        id,
+        tensorData,
+        shape.dimsList,
+        tensorData.dtype,
+        tags = listOf(),
+        description = ""
+    )
+}
+
+private fun tensorDataBuilderFromTorchTensor(
+    tensor: TorchTensor,
+    tensorBuilder: TensorDataOuterClass.TensorData.Builder
+): TensorDataOuterClass.TensorData.Builder {
+    when (tensor.dtype()) {
+//                todo Uint8 is converted to int below due to no Pytorch constructor `fromBlob`
+//                DType.UINT8 ->
+//                    tensorBuilder.addAllContentsUint8(tensor.dataAsUnsignedByteArray)
+//                todo Int8 protobuf implementation uses List<Int> losing all the memory efficiency
+//                DType.INT8 ->
+//                    tensorBuilder.addAllContentsInt8(tensor.dataAsByteArray)
+        DType.INT32 -> tensorBuilder.addAllContentsInt32(tensor.dataAsIntArray.toList())
+        DType.FLOAT32 -> tensorBuilder.addAllContentsFloat32(tensor.dataAsFloatArray.toList())
+        DType.INT64 -> tensorBuilder.addAllContentsInt64(tensor.dataAsLongArray.toList())
+        DType.FLOAT64 -> tensorBuilder.addAllContentsFloat64(tensor.dataAsDoubleArray.toList())
+        else -> throw InvalidClassException("Dtype does not exist")
+    }
+    return tensorBuilder
 }

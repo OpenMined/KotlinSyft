@@ -40,7 +40,7 @@ data class State(
                 Placeholder.deserialize(it)
             }
             val syftTensors = state.tensorsList.map {
-                SyftTensor.deserialize(it.torchTensor)
+                it.torchTensor.toSyftTensor()
             }.toMutableList()
             return State(placeholders, syftTensors)
         }
