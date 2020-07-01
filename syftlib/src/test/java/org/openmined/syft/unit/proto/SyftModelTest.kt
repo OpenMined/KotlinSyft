@@ -67,7 +67,7 @@ internal class SyftModelTest {
         val syftTensor2 = mockk<SyftTensor>()
         val syftTensor3 = mockk<SyftTensor>()
         val syftTensor4 = mockk<SyftTensor>()
-        val syftTensors = mutableListOf(syftTensor1, syftTensor2, syftTensor3, syftTensor4)
+        val syftTensors = arrayOf(syftTensor1, syftTensor2, syftTensor3, syftTensor4)
         val tensor1 = mockk<Tensor> {
             every { toSyftTensor() } returns syftTensor1
         }
@@ -89,6 +89,6 @@ internal class SyftModelTest {
 
         // Then
         assert(params.size == cut.modelSyftState?.syftTensors?.size)
-        assert(cut.modelSyftState?.syftTensors == syftTensors)
+        assert(cut.modelSyftState?.syftTensors?.contentEquals(syftTensors) == true)
     }
 }

@@ -1,11 +1,14 @@
 package org.openmined.syft.unit.execution
 
+import android.util.Base64
+import android.util.Base64.encodeToString
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.anyOrNull
 import com.nhaarman.mockitokotlin2.capture
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
 import com.nhaarman.mockitokotlin2.whenever
@@ -15,13 +18,14 @@ import io.reactivex.schedulers.Schedulers
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.openmined.syft.Syft
-import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.domain.DownloadStatus
 import org.openmined.syft.domain.JobRepository
+import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
@@ -31,6 +35,7 @@ import org.openmined.syft.networking.requests.CommunicationAPI
 import org.openmined.syft.proto.SyftState
 import org.openmined.syft.threading.ProcessSchedulers
 import org.openmined.syftproto.execution.v1.StateOuterClass
+import org.robolectric.RobolectricTestRunner
 
 private const val modelName = "myModel"
 private const val modelVersion = "1.0"
@@ -138,7 +143,7 @@ internal class SyftJobTest {
 
         cut.downloadData("workerId", responseData)
 
-        verify(jobRepository).status
+        verify(jobRepository, times(2)).status
         verifyNoMoreInteractions((jobRepository))
     }
 
@@ -173,6 +178,57 @@ internal class SyftJobTest {
     }
 
     @Test
+    fun `Given a SyftJob when an error is thrown then the subscriber is notified and job is in disposed state`() {
+        cut.start(subscriber)
+        cut.throwError(TestException())
+
+        verify(subscriber).onError(TestException())
+        assertTrue(cut.isDisposed)
+    }
+}
+
+@ExperimentalUnsignedTypes
+@RunWith(RobolectricTestRunner::class)
+internal class RobolectricJobTests {
+
+    @Mock
+    private lateinit var worker: Syft
+
+    @Mock
+    private lateinit var config: SyftConfiguration
+
+    @Mock
+    private lateinit var subscriber: JobStatusSubscriber
+
+    @Mock
+    private lateinit var jobRepository: JobRepository
+
+    private lateinit var cut: SyftJob
+
+    private val networkingSchedulers = object : ProcessSchedulers {
+        override val computeThreadScheduler: Scheduler
+            get() = Schedulers.trampoline()
+        override val calleeThreadScheduler: Scheduler
+            get() = Schedulers.trampoline()
+    }
+    private val computeSchedulers = object : ProcessSchedulers {
+        override val computeThreadScheduler: Scheduler
+            get() = Schedulers.trampoline()
+        override val calleeThreadScheduler: Scheduler
+            get() = Schedulers.trampoline()
+    }
+
+    @Before
+    fun setUp() {
+        MockitoAnnotations.initMocks(this)
+
+        whenever(config.computeSchedulers).doReturn(computeSchedulers)
+        whenever(config.networkingSchedulers).doReturn(networkingSchedulers)
+
+        cut = SyftJob(modelName, modelVersion, worker, config, jobRepository)
+    }
+
+    @Test
     fun `Given a SyftJob in accepted cycle when report is invoked then it is executed`() {
         val responseData = mock<CycleResponseData.CycleAccept> {
             on { requestKey } doReturn "requestKey"
@@ -187,24 +243,20 @@ internal class SyftJobTest {
         whenever(worker.getSyftWorkerId()).thenReturn("workerId")
 
         val diffState = mock<SyftState>()
-        val state = mock < StateOuterClass.State>()
-        val diff = "diffString"
+        val state = mock<StateOuterClass.State>()
+        val diff = "hello".toByteArray()
         whenever(diffState.serialize()).doReturn(state)
-        whenever(state.toString()).doReturn(diff)
-
+        whenever(state.toByteArray()).doReturn(diff)
         cut.report(diffState)
 
         verify(config).getSignallingClient()
-        verify(signallingClient).report(ReportRequest("workerId", "requestKey", diff))
-    }
-
-    @Test
-    fun `Given a SyftJob when an error is thrown then the subscriber is notified and job is in disposed state`() {
-        cut.start(subscriber)
-        cut.throwError(TestException())
-
-        verify(subscriber).onError(TestException())
-        assertTrue(cut.isDisposed)
+        verify(signallingClient).report(
+            ReportRequest(
+                "workerId",
+                "requestKey",
+                encodeToString(diff, Base64.DEFAULT)
+            )
+        )
     }
 }
 
