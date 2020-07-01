@@ -1,5 +1,7 @@
 package org.openmined.syft.execution
 
+import android.accounts.NetworkErrorException
+import android.util.Base64
 import android.util.Log
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
@@ -224,12 +226,20 @@ class SyftJob internal constructor(
                             ReportRequest(
                                 workerId,
                                 requestKey,
-                                diff.serialize().toString()
+                                Base64.encodeToString(
+                                    diff.serialize().toByteArray(),
+                                    Base64.DEFAULT
+                                )
                             )
                         )
                         .compose(config.networkingSchedulers.applySingleSchedulers())
                         .subscribe { reportResponse: ReportResponse ->
-                            Log.i(TAG, reportResponse.status)
+                            if (reportResponse.error != null)
+                                throwError(NetworkErrorException(reportResponse.error))
+                            if (reportResponse.status != null) {
+                                Log.d(TAG, "report status ${reportResponse.status}")
+                                jobStatusProcessor.onComplete()
+                            }
                         })
     }
 

@@ -120,7 +120,6 @@ class Syft internal constructor(
     override fun dispose() {
         Log.d(TAG, "disposing syft worker")
         deviceMonitor.dispose()
-        disposeSocketClient()
         compositeDisposable.clear()
         workerJobs.forEach { (_, job) -> job.dispose() }
         INSTANCE = null

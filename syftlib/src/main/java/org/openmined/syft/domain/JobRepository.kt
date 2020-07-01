@@ -32,10 +32,11 @@ internal class JobRepository(
     fun copyDiffScriptAsset(config: SyftConfiguration): String {
         if (!File(config.filesDir, DIFF_SCRIPT_NAME).exists())
             jobLocalDataSource.save(
-                config.context.assets.open(DIFF_SCRIPT_NAME),
+                config.context.assets.open("torchscripts/$DIFF_SCRIPT_NAME"),
                 config.filesDir.toString(),
                 DIFF_SCRIPT_NAME
-            )
+            ).blockingGet()
+
         return config.filesDir.toString() + "/" + DIFF_SCRIPT_NAME
     }
 
