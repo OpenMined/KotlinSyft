@@ -28,7 +28,7 @@ import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.datamodels.syft.ReportRequest
 import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import org.openmined.syft.networking.requests.CommunicationAPI
-import org.openmined.syft.proto.State
+import org.openmined.syft.proto.SyftState
 import org.openmined.syft.threading.ProcessSchedulers
 import org.openmined.syftproto.execution.v1.StateOuterClass
 
@@ -186,7 +186,7 @@ internal class SyftJobTest {
 
         whenever(worker.getSyftWorkerId()).thenReturn("workerId")
 
-        val diffState = mock<State>()
+        val diffState = mock<SyftState>()
         val state = mock < StateOuterClass.State>()
         val diff = "diffString"
         whenever(diffState.serialize()).doReturn(state)

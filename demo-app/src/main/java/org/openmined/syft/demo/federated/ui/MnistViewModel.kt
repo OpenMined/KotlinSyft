@@ -85,7 +85,7 @@ class MnistViewModel(
                     clientConfig
                 )?.toTuple()
                 output?.let { outputResult ->
-                    val paramSize = model.modelState!!.syftTensors.size
+                    val paramSize = model.modelSyftState!!.syftTensors.size
                     val beginIndex = outputResult.size - paramSize
                     val updatedParams =
                             outputResult.slice(beginIndex until outputResult.size - 1)
@@ -99,7 +99,10 @@ class MnistViewModel(
                 postData(result)
 
             }
-            postLog("Training done!")
+            postLog("Training done!\n reporting diff")
+            val diff = mnistJob.createDiff()
+            mnistJob.report(diff)
+            postLog("reported the model to PyGrid")
 
         }
 

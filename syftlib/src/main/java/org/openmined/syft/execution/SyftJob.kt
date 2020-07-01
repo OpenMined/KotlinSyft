@@ -13,8 +13,8 @@ import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.datamodels.syft.ReportRequest
 import org.openmined.syft.networking.datamodels.syft.ReportResponse
-import org.openmined.syft.proto.State
 import org.openmined.syft.proto.SyftModel
+import org.openmined.syft.proto.SyftState
 import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -193,13 +193,25 @@ class SyftJob internal constructor(
                 protocols
             )
         }
+        if (jobRepository.status == DownloadStatus.COMPLETE){
+            // we have already downloaded the plans, protocols and models
+            // User trying to enter into another cycle of the same job. Refresh model files
+            jobRepository.processModel(workerId,config,responseData.requestKey,model)
+        }
+    }
+
+    fun createDiff(): SyftState {
+        val modulePath = jobRepository.copyDiffScriptAsset(config)
+        val oldState =
+                SyftState.loadSyftState("${config.filesDir}/models/${model.pyGridModelId}.pb")
+        return model.createDiff(oldState, modulePath)
     }
 
     /**
      * Once training is finished submit the new model weights to PyGrid to complete the cycle
-     * @param diff the difference of the new and old model weights serialised into [State][org.openmined.syft.proto.State]
+     * @param diff the difference of the new and old model weights serialised into [State][org.openmined.syft.proto.SyftState]
      */
-    fun report(diff: State) {
+    fun report(diff: SyftState) {
         val workerId = worker.getSyftWorkerId()
         if (throwErrorIfNetworkInvalid() ||
             throwErrorIfBatteryInvalid()

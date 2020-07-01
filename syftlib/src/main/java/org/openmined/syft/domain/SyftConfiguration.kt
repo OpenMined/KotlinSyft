@@ -12,7 +12,7 @@ import org.openmined.syft.threading.ProcessSchedulers
 import java.io.File
 
 @ExperimentalUnsignedTypes
-class SyftConfiguration internal constructor(
+open class SyftConfiguration internal constructor(
     val context: Context,
     val networkingSchedulers: ProcessSchedulers,
     val computeSchedulers: ProcessSchedulers,

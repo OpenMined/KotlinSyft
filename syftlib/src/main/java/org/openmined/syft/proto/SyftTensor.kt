@@ -5,6 +5,8 @@ import org.openmined.syftproto.types.torch.v1.SizeOuterClass
 import org.openmined.syftproto.types.torch.v1.Tensor
 import org.openmined.syftproto.types.torch.v1.TensorDataOuterClass
 import org.pytorch.DType
+import org.pytorch.IValue
+import org.pytorch.Module
 import java.io.InvalidClassException
 import java.lang.Math.random
 import java.nio.DoubleBuffer
@@ -39,6 +41,15 @@ data class SyftTensor(
             syftTensorBuilder.gradChain = grad_chain.serialize()
         syftTensorBuilder.contentsData = contents
         return syftTensorBuilder.build()
+    }
+
+    fun applyOperation(scriptModuleLocation: String, vararg operands: SyftTensor): SyftTensor {
+        val diffModule = Module.load(scriptModuleLocation)
+        val output = diffModule.forward(
+            this.getIValue(),
+            *(operands.map { it.getIValue() }.toTypedArray())
+        )
+        return output.toTensor().toSyftTensor()
     }
 
     // Generate & Return TorchTensor object based on the dtype
@@ -100,6 +111,9 @@ data class SyftTensor(
             else -> throw Exception("Invalid Tensor type")
         }
     }
+
+    private fun getIValue(): IValue = IValue.from(this.getTorchTensor())
+
 }
 
 @ExperimentalUnsignedTypes

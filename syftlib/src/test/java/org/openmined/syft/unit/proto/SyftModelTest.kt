@@ -30,8 +30,8 @@ internal class SyftModelTest {
     @Test
     fun `given a model param file test it correctly serialises to SyftModel`() {
         cut.loadModelState(modelFilePath)
-        assert(cut.modelState?.syftTensors?.size == 4)
-        assert(cut.modelState?.placeholders?.size == 4)
+        assert(cut.modelSyftState?.syftTensors?.size == 4)
+        assert(cut.modelSyftState?.placeholders?.size == 4)
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -88,7 +88,7 @@ internal class SyftModelTest {
         cut.updateModel(params)
 
         // Then
-        assert(params.size == cut.modelState?.syftTensors?.size)
-        assert(cut.modelState?.syftTensors == syftTensors)
+        assert(params.size == cut.modelSyftState?.syftTensors?.size)
+        assert(cut.modelSyftState?.syftTensors == syftTensors)
     }
 }
