@@ -1,4 +1,4 @@
-package org.openmined.syft.datasource
+package org.openmined.syft.unit.datasource
 
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
@@ -9,6 +9,7 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import org.openmined.syft.datasource.JobRemoteDataSource
 import org.openmined.syft.domain.PLAN_OP_TYPE
 import org.openmined.syft.networking.requests.HttpAPI
 import retrofit2.Response

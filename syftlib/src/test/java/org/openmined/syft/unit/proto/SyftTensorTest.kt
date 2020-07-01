@@ -1,4 +1,4 @@
-package org.openmined.syft.proto
+package org.openmined.syft.unit.proto
 
 import io.mockk.MockKAnnotations
 import io.mockk.every
@@ -6,6 +6,8 @@ import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.mockk
 import org.junit.Before
 import org.junit.Test
+import org.openmined.syft.proto.SyftTensor
+import org.openmined.syft.proto.toSyftTensor
 import org.openmined.syftproto.types.syft.v1.IdOuterClass
 import org.openmined.syftproto.types.torch.v1.Tensor
 import org.openmined.syftproto.types.torch.v1.TensorDataOuterClass

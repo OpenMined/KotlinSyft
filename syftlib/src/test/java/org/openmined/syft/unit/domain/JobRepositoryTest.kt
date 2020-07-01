@@ -1,4 +1,4 @@
-package org.openmined.syft.execution
+package org.openmined.syft.unit.domain
 
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
@@ -20,6 +20,9 @@ import org.openmined.syft.datasource.JobRemoteDataSource
 import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.PLAN_OP_TYPE
 import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.execution.JobStatusMessage
+import org.openmined.syft.execution.Plan
+import org.openmined.syft.execution.Protocol
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.requests.HttpAPI
 import org.openmined.syft.proto.SyftModel
