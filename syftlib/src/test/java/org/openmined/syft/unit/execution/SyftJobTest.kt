@@ -41,6 +41,7 @@ import org.openmined.syft.proto.SyftState
 import org.openmined.syft.threading.ProcessSchedulers
 import org.openmined.syftproto.execution.v1.StateOuterClass
 import org.robolectric.RobolectricTestRunner
+import java.io.File
 
 
 private const val modelName = "myModel"
@@ -84,8 +85,6 @@ class SyftJobTest {
         MockitoAnnotations.initMocks(this)
         mockkObject(SyftState.Companion)
         every { SyftState.loadSyftState(any()) } returns mockk()
-
-        whenever(jobRepository.copyDiffScriptAsset(config)).doReturn("test module path")
         whenever(config.computeSchedulers).doReturn(computeSchedulers)
         whenever(config.networkingSchedulers).doReturn(networkingSchedulers)
         cut = SyftJob(modelName, modelVersion, worker, config, jobRepository)
@@ -150,9 +149,18 @@ class SyftJobTest {
     @Test
     fun `createDiff creates the diff module and then evaluates diff`() {
         whenever(stateMock.createDiff(any(), any())).doReturn(mockk())
-        cut.model.modelSyftState = stateMock
-        cut.createDiff()
-        verify(jobRepository).copyDiffScriptAsset(config)
+
+        val config = mockk<SyftConfiguration>(){
+            every { filesDir } returns File("test")
+        }
+        whenever(jobRepository.getDiffScript(config)).doReturn(mockk())
+        whenever(jobRepository.persistToLocalStorage(any(), any(), any())).doReturn("test module path")
+
+        val jobTest = SyftJob(modelName, modelVersion, worker, config, jobRepository)
+
+        jobTest.model.modelSyftState = stateMock
+        jobTest.createDiff()
+        verify(jobRepository).persistToLocalStorage(any(), any(), any())
         verify(stateMock).createDiff(any(), eq("test module path"))
     }
 

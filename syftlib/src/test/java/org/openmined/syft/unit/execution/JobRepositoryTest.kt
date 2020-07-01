@@ -21,9 +21,9 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
-import org.openmined.syft.domain.DIFF_SCRIPT_NAME
 import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.PLAN_OP_TYPE
 import org.openmined.syft.domain.SyftConfiguration
@@ -92,48 +92,6 @@ class JobRepositoryTest {
             jobLocalDataSource,
             jobRemoteDataSource
         )
-    }
-
-    @Test
-    fun `Given config check copyDiffScriptAsset returns correct path and does not save if file exists`() {
-        val filesDir = tempFolder.newFolder("files")
-        val file = File(filesDir, DIFF_SCRIPT_NAME)
-        file.writeText("test stream")
-        val inputStream = file.inputStream()
-        val contextMock = mockk<Context> {
-            every { assets } returns mockk {
-                every { open("torchscripts/$DIFF_SCRIPT_NAME") } returns inputStream
-            }
-        }
-        whenever(jobLocalDataSource.save(any(), any(), any())).thenReturn(Single.just("any"))
-        val config = SyftConfiguration(
-            contextMock, networkingSchedulers, computeSchedulers, filesDir, true,
-            listOf(), 0, 0, 1, mockk(), mockk(), SyftConfiguration.NetworkingClients.SOCKET
-        )
-        val path = cut.copyDiffScriptAsset(config)
-        verify(jobLocalDataSource, never()).save(inputStream,filesDir.toString(), DIFF_SCRIPT_NAME)
-        assert(path == "$filesDir/$DIFF_SCRIPT_NAME")
-    }
-
-    @Test
-    fun `Given config check copyDiffScriptAsset returns correct path and saves if file does not exist`() {
-        val filesDir = tempFolder.newFolder("files")
-        val file = File(filesDir, "random_file")
-        file.writeText("asset file")
-        val inputStream = file.inputStream()
-        val contextMock = mockk<Context> {
-            every { assets } returns mockk {
-                every { open("torchscripts/$DIFF_SCRIPT_NAME") } returns inputStream
-            }
-        }
-        whenever(jobLocalDataSource.save(any(), any(), any())).thenReturn(Single.just("any"))
-        val config = SyftConfiguration(
-            contextMock, networkingSchedulers, computeSchedulers, filesDir, true,
-            listOf(), 0, 0, 1, mockk(), mockk(), SyftConfiguration.NetworkingClients.SOCKET
-        )
-        val path = cut.copyDiffScriptAsset(config)
-        verify(jobLocalDataSource).save(inputStream,filesDir.toString(), DIFF_SCRIPT_NAME)
-        assert(path == "$filesDir/$DIFF_SCRIPT_NAME")
     }
 
     @Test
