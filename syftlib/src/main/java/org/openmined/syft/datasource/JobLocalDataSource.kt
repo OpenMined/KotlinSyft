@@ -18,19 +18,61 @@ internal class JobLocalDataSource {
             config.context.assets.open("torchscripts/$DIFF_SCRIPT_NAME")
 
     /**
-     * Persist the given inputStream in the specified destination.
+     * Persist the given inputStream in the specified destination
      *
      * @return The absolute path where the file has been saved if successful.
      */
-    fun save(input: InputStream, parentDir: String, fileName: String): Single<String> {
+    fun save(
+        input: InputStream,
+        parentDir: String,
+        fileName: String,
+        overwrite: Boolean = true
+    ): String {
         if (!File(parentDir).mkdirs())
             Log.d(TAG, "directory already exists")
 
-        return save(input, File(parentDir, fileName))
+        return save(input, File(parentDir, fileName), overwrite)
     }
 
     @VisibleForTesting
-    internal fun save(input: InputStream, file: File, overwrite: Boolean = true): Single<String> {
+    internal fun save(input: InputStream, file: File, overwrite: Boolean): String {
+        if (file.exists() and !overwrite)
+            return file.absolutePath
+        file.apply {
+            input.use { inputStream ->
+                this.outputStream().use { outputFile ->
+                    inputStream.copyTo(outputFile)
+                }
+                Log.d(TAG, "file written at ${this.absolutePath}")
+                return (this.absolutePath)
+            }
+        }
+    }
+
+
+    /**
+     * Persist the given inputStream in the specified destination asynchronously
+     *
+     * @return The absolute path where the file has been saved if successful.
+     */
+    fun saveAsync(
+        input: InputStream,
+        parentDir: String,
+        fileName: String,
+        overwrite: Boolean = true
+    ): Single<String> {
+        if (!File(parentDir).mkdirs())
+            Log.d(TAG, "directory already exists")
+
+        return saveAsync(input, File(parentDir, fileName), overwrite)
+    }
+
+    @VisibleForTesting
+    internal fun saveAsync(
+        input: InputStream,
+        file: File,
+        overwrite: Boolean
+    ): Single<String> {
         if (file.exists() and !overwrite)
             return Single.just(file.absolutePath)
         file.apply {

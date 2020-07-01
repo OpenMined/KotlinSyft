@@ -31,8 +31,13 @@ internal class JobRepository(
     fun getDiffScript(config: SyftConfiguration) =
             jobLocalDataSource.getDiffScript(config)
 
-    fun persistToLocalStorage(input: InputStream, parentDir: String, fileName: String): String {
-        return jobLocalDataSource.save(input, parentDir, fileName).blockingGet()
+    fun persistToLocalStorage(
+        input: InputStream,
+        parentDir: String,
+        fileName: String,
+        overwrite: Boolean = false
+    ): String {
+        return jobLocalDataSource.save(input, parentDir, fileName, overwrite)
     }
 
     fun downloadData(
@@ -129,7 +134,7 @@ internal class JobRepository(
         val modelId = model.pyGridModelId ?: throw IllegalStateException("Model id not initiated")
         return jobRemoteDataSource.downloadModel(workerId, requestKey, modelId)
                 .flatMap { modelInputStream ->
-                    jobLocalDataSource.save(
+                    jobLocalDataSource.saveAsync(
                         modelInputStream,
                         "${config.filesDir}/models",
                         "$modelId.pb"
@@ -157,7 +162,11 @@ internal class JobRepository(
             PLAN_OP_TYPE
         )
                 .flatMap { planInputStream ->
-                    jobLocalDataSource.save(planInputStream, destinationDir, "${plan.planId}.pb")
+                    jobLocalDataSource.saveAsync(
+                        planInputStream,
+                        destinationDir,
+                        "${plan.planId}.pb"
+                    )
                 }.flatMap { filepath ->
                     Single.create<String> { emitter ->
                         val torchscriptLocation = jobLocalDataSource.saveTorchScript(
@@ -182,7 +191,7 @@ internal class JobRepository(
     ): Single<String> {
         return jobRemoteDataSource.downloadProtocol(workerId, requestKey, protocolId)
                 .flatMap { protocolInputStream ->
-                    jobLocalDataSource.save(
+                    jobLocalDataSource.saveAsync(
                         protocolInputStream,
                         destinationDir,
                         "$protocolId.pb"

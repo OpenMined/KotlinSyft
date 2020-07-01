@@ -154,13 +154,13 @@ class SyftJobTest {
             every { filesDir } returns File("test")
         }
         whenever(jobRepository.getDiffScript(config)).doReturn(mockk())
-        whenever(jobRepository.persistToLocalStorage(any(), any(), any())).doReturn("test module path")
+        whenever(jobRepository.persistToLocalStorage(any(), any(), any(), eq(false))).doReturn("test module path")
 
         val jobTest = SyftJob(modelName, modelVersion, worker, config, jobRepository)
 
         jobTest.model.modelSyftState = stateMock
         jobTest.createDiff()
-        verify(jobRepository).persistToLocalStorage(any(), any(), any())
+        verify(jobRepository).persistToLocalStorage(any(), any(), any(), eq(false))
         verify(stateMock).createDiff(any(), eq("test module path"))
     }
 
