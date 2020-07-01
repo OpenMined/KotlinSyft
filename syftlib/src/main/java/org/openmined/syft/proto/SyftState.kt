@@ -5,7 +5,7 @@ import org.openmined.syftproto.execution.v1.StateTensorOuterClass
 import org.pytorch.IValue
 import java.io.File
 
-/** State class is responsible for storing all the weights of the neural network.
+/** SyftState class is responsible for storing all the weights of the neural network.
  * We update these model weights after every plan.execute
  * @property placeholders the variables describing the location of tensor in the plan torchscript
  * @property syftTensors the tensors for the model params

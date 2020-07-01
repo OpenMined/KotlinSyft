@@ -137,7 +137,7 @@ internal class JobRepository(
                     jobLocalDataSource.save(
                         modelInputStream,
                         "${config.filesDir}/models",
-                        "${modelId}.pb"
+                        "$modelId.pb"
                     )
                 }.flatMap { modelFile ->
                     Single.create<String> { emitter ->
