@@ -12,9 +12,14 @@ import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
 import com.nhaarman.mockitokotlin2.whenever
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkAll
 import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
+import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -37,11 +42,12 @@ import org.openmined.syft.threading.ProcessSchedulers
 import org.openmined.syftproto.execution.v1.StateOuterClass
 import org.robolectric.RobolectricTestRunner
 
+
 private const val modelName = "myModel"
 private const val modelVersion = "1.0"
 
 @ExperimentalUnsignedTypes
-internal class SyftJobTest {
+class SyftJobTest {
 
     @Mock
     private lateinit var worker: Syft
@@ -54,6 +60,9 @@ internal class SyftJobTest {
 
     @Mock
     private lateinit var jobRepository: JobRepository
+
+    @Mock
+    private lateinit var stateMock: SyftState
 
     private lateinit var cut: SyftJob
 
@@ -73,11 +82,18 @@ internal class SyftJobTest {
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
+        mockkObject(SyftState.Companion)
+        every { SyftState.loadSyftState(any()) } returns mockk()
 
+        whenever(jobRepository.copyDiffScriptAsset(config)).doReturn("test module path")
         whenever(config.computeSchedulers).doReturn(computeSchedulers)
         whenever(config.networkingSchedulers).doReturn(networkingSchedulers)
-
         cut = SyftJob(modelName, modelVersion, worker, config, jobRepository)
+    }
+
+    @After
+    fun clear() {
+        unmockkAll()
     }
 
     @Test
@@ -132,6 +148,15 @@ internal class SyftJobTest {
     }
 
     @Test
+    fun `createDiff creates the diff module and then evaluates diff`() {
+        whenever(stateMock.createDiff(any(), any())).doReturn(mockk())
+        cut.model.modelSyftState = stateMock
+        cut.createDiff()
+        verify(jobRepository).copyDiffScriptAsset(config)
+        verify(stateMock).createDiff(any(), eq("test module path"))
+    }
+
+    @Test
     fun `Given a SyftJob when jobDownloader is running then another download is not run`() {
         val responseData = mock<CycleResponseData.CycleAccept> {
             on { plans } doReturn HashMap()
@@ -143,7 +168,7 @@ internal class SyftJobTest {
 
         cut.downloadData("workerId", responseData)
 
-        verify(jobRepository, times(2)).status
+        verify(jobRepository).status
         verifyNoMoreInteractions((jobRepository))
     }
 

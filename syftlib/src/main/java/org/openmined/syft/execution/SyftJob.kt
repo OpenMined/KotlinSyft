@@ -3,6 +3,7 @@ package org.openmined.syft.execution
 import android.accounts.NetworkErrorException
 import android.util.Base64
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
@@ -77,7 +78,10 @@ class SyftJob internal constructor(
 
     private val plans = ConcurrentHashMap<String, Plan>()
     private val protocols = ConcurrentHashMap<String, Protocol>()
-    private val model = SyftModel(modelName, version)
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val model = SyftModel(modelName, version)
+
     private val networkDisposable = CompositeDisposable()
     private val statusDisposable = CompositeDisposable()
     private var requestKey = ""
@@ -194,11 +198,6 @@ class SyftJob internal constructor(
                 model,
                 protocols
             )
-        }
-        if (jobRepository.status == DownloadStatus.COMPLETE){
-            // we have already downloaded the plans, protocols and models
-            // User trying to enter into another cycle of the same job. Refresh model files
-            jobRepository.processModel(workerId,config,responseData.requestKey,model)
         }
     }
 

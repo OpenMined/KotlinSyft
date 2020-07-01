@@ -125,7 +125,7 @@ internal class JobRepository(
         return downloadList
     }
 
-    fun processModel(
+    private fun processModel(
         workerId: String,
         config: SyftConfiguration,
         requestKey: String,

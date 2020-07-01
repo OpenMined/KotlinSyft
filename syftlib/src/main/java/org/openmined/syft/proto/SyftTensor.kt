@@ -1,5 +1,6 @@
 package org.openmined.syft.proto
 
+import androidx.annotation.VisibleForTesting
 import org.openmined.syftproto.types.syft.v1.IdOuterClass
 import org.openmined.syftproto.types.torch.v1.SizeOuterClass
 import org.openmined.syftproto.types.torch.v1.Tensor
@@ -112,7 +113,8 @@ data class SyftTensor(
         }
     }
 
-    private fun getIValue(): IValue = IValue.from(this.getTorchTensor())
+    @VisibleForTesting
+    internal fun getIValue(): IValue = IValue.from(this.getTorchTensor())
 
 }
 

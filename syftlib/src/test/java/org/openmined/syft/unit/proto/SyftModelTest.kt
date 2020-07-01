@@ -1,11 +1,14 @@
 package org.openmined.syft.unit.proto
 
+import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.verify
 import org.junit.Before
 import org.junit.Test
 import org.openmined.syft.proto.SyftModel
+import org.openmined.syft.proto.SyftState
 import org.openmined.syft.proto.SyftTensor
 import org.openmined.syft.proto.toSyftTensor
 import org.pytorch.Tensor
@@ -57,6 +60,17 @@ internal class SyftModelTest {
 
         // When
         cut.updateModel(params)
+    }
+
+    @Test
+    fun `createDiff calls the the diffing method of SyftState if modelState is not null`() {
+        val mockOldState = mockk<SyftState>()
+        val mockCurrentState = mockk<SyftState> {
+            every { createDiff(mockOldState, "script location") } returns mockk()
+        }
+        val cut = SyftModel("test", modelSyftState = mockCurrentState)
+        cut.createDiff(mockOldState, "script location")
+        verify { mockCurrentState.createDiff(mockOldState, "script location") }
     }
 
     @Test

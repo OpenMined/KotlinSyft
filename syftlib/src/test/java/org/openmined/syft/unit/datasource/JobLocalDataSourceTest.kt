@@ -1,4 +1,4 @@
-package org.openmined.syft.datasource
+package org.openmined.syft.unit.datasource
 
 import com.google.protobuf.ByteString
 import com.nhaarman.mockitokotlin2.doReturn
@@ -6,6 +6,7 @@ import com.nhaarman.mockitokotlin2.mock
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syftproto.execution.v1.PlanOuterClass
 
 class JobLocalDataSourceTest {

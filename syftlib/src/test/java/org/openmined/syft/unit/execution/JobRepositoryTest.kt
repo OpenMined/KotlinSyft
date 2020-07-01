@@ -1,25 +1,35 @@
-package org.openmined.syft.execution
+package org.openmined.syft.unit.execution
 
+import android.content.Context
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
+import io.mockk.every
+import io.mockk.mockk
 import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.processors.PublishProcessor
 import io.reactivex.schedulers.Schedulers
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
+import org.openmined.syft.domain.DIFF_SCRIPT_NAME
 import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.PLAN_OP_TYPE
 import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.execution.JobStatusMessage
+import org.openmined.syft.execution.Plan
+import org.openmined.syft.execution.Protocol
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.requests.HttpAPI
 import org.openmined.syft.proto.SyftModel
@@ -30,6 +40,10 @@ import java.util.concurrent.ConcurrentHashMap
 
 @ExperimentalUnsignedTypes
 class JobRepositoryTest {
+
+    @Rule
+    @JvmField
+    var tempFolder = TemporaryFolder()
 
     @Mock
     private lateinit var config: SyftConfiguration
@@ -78,6 +92,48 @@ class JobRepositoryTest {
             jobLocalDataSource,
             jobRemoteDataSource
         )
+    }
+
+    @Test
+    fun `Given config check copyDiffScriptAsset returns correct path and does not save if file exists`() {
+        val filesDir = tempFolder.newFolder("files")
+        val file = File(filesDir, DIFF_SCRIPT_NAME)
+        file.writeText("test stream")
+        val inputStream = file.inputStream()
+        val contextMock = mockk<Context> {
+            every { assets } returns mockk {
+                every { open("torchscripts/$DIFF_SCRIPT_NAME") } returns inputStream
+            }
+        }
+        whenever(jobLocalDataSource.save(any(), any(), any())).thenReturn(Single.just("any"))
+        val config = SyftConfiguration(
+            contextMock, networkingSchedulers, computeSchedulers, filesDir, true,
+            listOf(), 0, 0, 1, mockk(), mockk(), SyftConfiguration.NetworkingClients.SOCKET
+        )
+        val path = cut.copyDiffScriptAsset(config)
+        verify(jobLocalDataSource, never()).save(inputStream,filesDir.toString(), DIFF_SCRIPT_NAME)
+        assert(path == "$filesDir/$DIFF_SCRIPT_NAME")
+    }
+
+    @Test
+    fun `Given config check copyDiffScriptAsset returns correct path and saves if file does not exist`() {
+        val filesDir = tempFolder.newFolder("files")
+        val file = File(filesDir, "random_file")
+        file.writeText("asset file")
+        val inputStream = file.inputStream()
+        val contextMock = mockk<Context> {
+            every { assets } returns mockk {
+                every { open("torchscripts/$DIFF_SCRIPT_NAME") } returns inputStream
+            }
+        }
+        whenever(jobLocalDataSource.save(any(), any(), any())).thenReturn(Single.just("any"))
+        val config = SyftConfiguration(
+            contextMock, networkingSchedulers, computeSchedulers, filesDir, true,
+            listOf(), 0, 0, 1, mockk(), mockk(), SyftConfiguration.NetworkingClients.SOCKET
+        )
+        val path = cut.copyDiffScriptAsset(config)
+        verify(jobLocalDataSource).save(inputStream,filesDir.toString(), DIFF_SCRIPT_NAME)
+        assert(path == "$filesDir/$DIFF_SCRIPT_NAME")
     }
 
     @Test
