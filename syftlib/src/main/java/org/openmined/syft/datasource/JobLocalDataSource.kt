@@ -3,13 +3,19 @@ package org.openmined.syft.datasource
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import io.reactivex.Single
+import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syftproto.execution.v1.PlanOuterClass
 import java.io.File
 import java.io.InputStream
 
+internal const val DIFF_SCRIPT_NAME = "diff_script.pt"
 private const val TAG = "JobLocalDataSource"
 
 internal class JobLocalDataSource {
+
+    @ExperimentalUnsignedTypes
+    fun getDiffScript(config: SyftConfiguration) =
+            config.context.assets.open("torchscripts/$DIFF_SCRIPT_NAME")
 
     /**
      * Persist the given inputStream in the specified destination.
@@ -24,7 +30,9 @@ internal class JobLocalDataSource {
     }
 
     @VisibleForTesting
-    internal fun save(input: InputStream, file: File): Single<String> {
+    internal fun save(input: InputStream, file: File, overwrite: Boolean = true): Single<String> {
+        if (file.exists() and !overwrite)
+            return Single.just(file.absolutePath)
         file.apply {
             return Single.create { emitter ->
                 input.use { inputStream ->

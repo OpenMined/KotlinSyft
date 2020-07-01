@@ -11,11 +11,10 @@ import org.openmined.syft.execution.Plan
 import org.openmined.syft.execution.Protocol
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
-import java.io.File
+import java.io.InputStream
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
-internal const val DIFF_SCRIPT_NAME = "diff_script.pt"
 internal const val PLAN_OP_TYPE = "torchscript"
 private const val TAG = "JobDownloader"
 
@@ -29,15 +28,11 @@ internal class JobRepository(
     val status: DownloadStatus
         get() = trainingParamsStatus.get()
 
-    fun copyDiffScriptAsset(config: SyftConfiguration): String {
-        if (!File(config.filesDir, DIFF_SCRIPT_NAME).exists())
-            jobLocalDataSource.save(
-                config.context.assets.open("torchscripts/$DIFF_SCRIPT_NAME"),
-                config.filesDir.toString(),
-                DIFF_SCRIPT_NAME
-            ).blockingGet()
+    fun getDiffScript(config: SyftConfiguration) =
+            jobLocalDataSource.getDiffScript(config)
 
-        return config.filesDir.toString() + "/" + DIFF_SCRIPT_NAME
+    fun persistToLocalStorage(input: InputStream, parentDir: String, fileName: String): String {
+        return jobLocalDataSource.save(input, parentDir, fileName).blockingGet()
     }
 
     fun downloadData(
