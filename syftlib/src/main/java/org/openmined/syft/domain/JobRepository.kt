@@ -11,6 +11,7 @@ import org.openmined.syft.execution.Plan
 import org.openmined.syft.execution.Protocol
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
+import java.io.InputStream
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
@@ -26,6 +27,18 @@ internal class JobRepository(
     private val trainingParamsStatus = AtomicReference(DownloadStatus.NOT_STARTED)
     val status: DownloadStatus
         get() = trainingParamsStatus.get()
+
+    fun getDiffScript(config: SyftConfiguration) =
+            jobLocalDataSource.getDiffScript(config)
+
+    fun persistToLocalStorage(
+        input: InputStream,
+        parentDir: String,
+        fileName: String,
+        overwrite: Boolean = false
+    ): String {
+        return jobLocalDataSource.save(input, parentDir, fileName, overwrite)
+    }
 
     fun downloadData(
         workerId: String,
@@ -108,25 +121,20 @@ internal class JobRepository(
                 )
             )
         }
-
-        model.pyGridModelId?.let {
-            downloadList.add(processModel(workerId, config, request, it, model))
-        } ?: throw IllegalStateException("model id has not been set")
-
+        downloadList.add(processModel(workerId, config, request, model))
         return downloadList
     }
 
-    //We might want to make these public if needed later
     private fun processModel(
         workerId: String,
         config: SyftConfiguration,
         requestKey: String,
-        modelId: String,
         model: SyftModel
     ): Single<String> {
+        val modelId = model.pyGridModelId ?: throw IllegalStateException("Model id not initiated")
         return jobRemoteDataSource.downloadModel(workerId, requestKey, modelId)
                 .flatMap { modelInputStream ->
-                    jobLocalDataSource.save(
+                    jobLocalDataSource.saveAsync(
                         modelInputStream,
                         "${config.filesDir}/models",
                         "$modelId.pb"
@@ -154,7 +162,11 @@ internal class JobRepository(
             PLAN_OP_TYPE
         )
                 .flatMap { planInputStream ->
-                    jobLocalDataSource.save(planInputStream, destinationDir, "${plan.planId}.pb")
+                    jobLocalDataSource.saveAsync(
+                        planInputStream,
+                        destinationDir,
+                        "${plan.planId}.pb"
+                    )
                 }.flatMap { filepath ->
                     Single.create<String> { emitter ->
                         val torchscriptLocation = jobLocalDataSource.saveTorchScript(
@@ -179,7 +191,7 @@ internal class JobRepository(
     ): Single<String> {
         return jobRemoteDataSource.downloadProtocol(workerId, requestKey, protocolId)
                 .flatMap { protocolInputStream ->
-                    jobLocalDataSource.save(
+                    jobLocalDataSource.saveAsync(
                         protocolInputStream,
                         destinationDir,
                         "$protocolId.pb"

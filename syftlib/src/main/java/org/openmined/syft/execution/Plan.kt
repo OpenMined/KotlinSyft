@@ -3,11 +3,9 @@ package org.openmined.syft.execution
 import android.util.Log
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
-import org.openmined.syftproto.execution.v1.PlanOuterClass
 import org.pytorch.IValue
 import org.pytorch.Module
 import org.pytorch.Tensor
-import java.io.File
 
 private const val TAG = "syft.processes.Plan"
 
@@ -50,7 +48,7 @@ class Plan(val job: SyftJob, val planId: String) {
             Log.e(TAG, "pytorch module not initialized yet")
             return null
         }
-        val params = model.modelState?.getIValueTensorArray()
+        val params = model.modelSyftState?.getIValueTensorArray()
         if (params == null) {
             Log.e(TAG, "model state not initialised yet")
             return null

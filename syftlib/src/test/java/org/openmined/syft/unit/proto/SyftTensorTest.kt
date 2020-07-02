@@ -1,15 +1,23 @@
-package org.openmined.syft.proto
+package org.openmined.syft.unit.proto
 
+import com.nhaarman.mockitokotlin2.spy
+import com.nhaarman.mockitokotlin2.verify
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.spyk
 import org.junit.Before
 import org.junit.Test
+import org.openmined.syft.proto.SyftTensor
+import org.openmined.syft.proto.toSyftTensor
 import org.openmined.syftproto.types.syft.v1.IdOuterClass
 import org.openmined.syftproto.types.torch.v1.Tensor
 import org.openmined.syftproto.types.torch.v1.TensorDataOuterClass
 import org.pytorch.DType
+import org.pytorch.IValue
+import org.pytorch.Module
 import org.pytorch.Tensor as TorchTensor
 
 @ExperimentalUnsignedTypes
@@ -338,7 +346,81 @@ class SyftTensorTest {
         cut.getTorchTensor()
     }
 
-    private fun createSyftTensorFromType(dtype: String, tensorData: TensorDataOuterClass.TensorData): SyftTensor {
+    @Test
+    fun `applyOperation calls the module forward with relevant arguments and returns syftTensor`() {
+        val tensorData = mockk<TensorDataOuterClass.TensorData> {
+            every { dtype } returns "BFLOAT16"
+            every { contentsBfloat16List } returns listOf(100F, 100F, 100F)
+        }
+
+        val tensor = createSyftTensorFromType("bfloat16", tensorData)
+
+        val opIvalue1 = mockk<IValue>()
+        val opTensor1 = mockk<SyftTensor> {
+            every { getIValue() } returns opIvalue1
+        }
+        val opIvalue2 = mockk<IValue>()
+        val opTensor2 = mockk<SyftTensor> {
+            every { getIValue() } returns opIvalue2
+        }
+        val opIvalue3 = mockk<IValue>()
+        val opTensor3 = mockk<SyftTensor> {
+            every { getIValue() } returns opIvalue3
+        }
+        val outputTensor = mockk<org.pytorch.Tensor>{
+            every { shape() } returns listOf(3L).toLongArray()
+            every { dtype() } returns DType.FLOAT32
+            every { dataAsFloatArray } returns listOf(100F, 100F, 100F).toFloatArray()
+        }
+        val outputIvalue = mockk<IValue> {
+            every { toTensor() } returns outputTensor
+        }
+
+        val cut = spyk(tensor)
+        val diffModule = mockk<Module> {
+            every {
+                forward(
+                    cut.getIValue(),
+                    opIvalue1,
+                    opIvalue2,
+                    opIvalue3
+                )
+            } returns outputIvalue
+
+        }
+
+        mockkStatic(Module::class)
+        every { Module.load(any()) } returns diffModule
+        cut.applyOperation("filepath", opTensor1, opTensor2, opTensor3)
+    }
+
+    @Test
+    fun `Given a SyftTensor getIValue calls the getTorchTensor internally`() {
+        val tensorData = mockk<TensorDataOuterClass.TensorData> {
+            every { dtype } returns "BFLOAT16"
+            every { contentsBfloat16List } returns listOf(100F, 100F, 100F)
+        }
+
+        val cut = spy(
+            SyftTensor(
+                id = tensorId,
+                contents = tensorData,
+                shape = mutableListOf(3, 1),
+                dtype = "bfloat16",
+                chain = null,
+                grad_chain = null,
+                tags = mockk(),
+                description = "description"
+            )
+        )
+        cut.getIValue()
+        verify(cut).getTorchTensor()
+    }
+
+    private fun createSyftTensorFromType(
+        dtype: String,
+        tensorData: TensorDataOuterClass.TensorData
+    ): SyftTensor {
         return SyftTensor(
             id = tensorId,
             contents = tensorData,

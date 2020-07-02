@@ -7,6 +7,7 @@ import org.openmined.syft.demo.federated.domain.MNISTDataRepository
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.Plan
+import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
 import java.util.concurrent.ConcurrentHashMap
@@ -16,12 +17,13 @@ private const val TAG = "FederatedCycleViewModel"
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class MnistViewModel(
-    authToken: String,
-    configuration: SyftConfiguration,
+    private val authToken: String,
+    private val configuration: SyftConfiguration,
     private val mnistDataRepository: MNISTDataRepository
 ) : ViewModel() {
-    private val syftWorker = Syft.getInstance(configuration,authToken)
-    private val mnistJob = syftWorker.newJob("mnist", "1.0.0")
+
+    private lateinit var syftWorker: Syft
+    private lateinit var mnistJob: SyftJob
 
     val logger
         get() = _logger
@@ -39,7 +41,11 @@ class MnistViewModel(
         get() = _processData
     private val _processData = MutableLiveData<ProcessData>()
 
+    private val result = mutableListOf<Float>()
+
     fun startCycle() {
+        syftWorker = Syft.getInstance(configuration, authToken)
+        mnistJob = syftWorker.newJob("mnist", "1.0.0")
         postLog("MNIST job started \n\nChecking for download and upload speeds")
         postState(ContentState.Loading)
         val jobStatusSubscriber = object : JobStatusSubscriber() {
@@ -53,6 +59,9 @@ class MnistViewModel(
                 trainingProcess(model, plans, clientConfig)
             }
 
+            override fun onComplete() {
+                syftWorker.dispose()
+            }
             override fun onRejected(timeout: String) {
                 postLog("We've been rejected $timeout")
             }
@@ -75,7 +84,6 @@ class MnistViewModel(
     ) {
 
         plans.values.first().let { plan ->
-            val result = mutableListOf<Float>()
             repeat(clientConfig.maxUpdates) { step ->
                 postEpoch(step + 1)
                 val batchData = mnistDataRepository.loadDataBatch(clientConfig.batchSize.toInt())
@@ -85,10 +93,10 @@ class MnistViewModel(
                     clientConfig
                 )?.toTuple()
                 output?.let { outputResult ->
-                    val paramSize = model.modelState!!.syftTensors.size
+                    val paramSize = model.modelSyftState!!.syftTensors.size
                     val beginIndex = outputResult.size - paramSize
                     val updatedParams =
-                            outputResult.slice(beginIndex until outputResult.size - 1)
+                            outputResult.slice(beginIndex until outputResult.size)
                     model.updateModel(updatedParams.map { it.toTensor() })
                     result.add(outputResult[1].toTensor().dataAsFloatArray.last())
                 } ?: run {
@@ -99,7 +107,10 @@ class MnistViewModel(
                 postData(result)
 
             }
-            postLog("Training done!")
+            postLog("Training done!\n reporting diff")
+            val diff = mnistJob.createDiff()
+            mnistJob.report(diff)
+            postLog("reported the model to PyGrid")
 
         }
 

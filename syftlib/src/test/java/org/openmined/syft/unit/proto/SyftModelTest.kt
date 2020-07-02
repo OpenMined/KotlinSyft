@@ -1,14 +1,18 @@
 package org.openmined.syft.unit.proto
 
+import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.verify
 import org.junit.Before
 import org.junit.Test
 import org.openmined.syft.proto.SyftModel
+import org.openmined.syft.proto.SyftState
 import org.openmined.syft.proto.SyftTensor
 import org.openmined.syft.proto.toSyftTensor
 import org.pytorch.Tensor
+import java.lang.IllegalStateException
 
 @ExperimentalUnsignedTypes
 internal class SyftModelTest {
@@ -30,8 +34,8 @@ internal class SyftModelTest {
     @Test
     fun `given a model param file test it correctly serialises to SyftModel`() {
         cut.loadModelState(modelFilePath)
-        assert(cut.modelState?.syftTensors?.size == 4)
-        assert(cut.modelState?.placeholders?.size == 4)
+        assert(cut.modelSyftState?.syftTensors?.size == 4)
+        assert(cut.modelSyftState?.placeholders?.size == 4)
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -60,6 +64,24 @@ internal class SyftModelTest {
     }
 
     @Test
+    fun `createDiff calls the the diffing method of SyftState if modelState is not null`() {
+        val mockOldState = mockk<SyftState>()
+        val mockCurrentState = mockk<SyftState> {
+            every { createDiff(mockOldState, "script location") } returns mockk()
+        }
+        val cut = SyftModel("test", modelSyftState = mockCurrentState)
+        cut.createDiff(mockOldState, "script location")
+        verify { mockCurrentState.createDiff(mockOldState, "script location") }
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun `createDiff throws error if modelState is null`() {
+        val mockOldState = mockk<SyftState>()
+        val cut = SyftModel("test","1.0.0")
+        cut.createDiff(mockOldState, "script location")
+    }
+
+    @Test
     fun `Given a list of params when model is updated then model state is updated`() {
         // Given
         mockkStatic("org.openmined.syft.proto.SyftTensorKt")
@@ -67,7 +89,7 @@ internal class SyftModelTest {
         val syftTensor2 = mockk<SyftTensor>()
         val syftTensor3 = mockk<SyftTensor>()
         val syftTensor4 = mockk<SyftTensor>()
-        val syftTensors = mutableListOf(syftTensor1, syftTensor2, syftTensor3, syftTensor4)
+        val syftTensors = arrayOf(syftTensor1, syftTensor2, syftTensor3, syftTensor4)
         val tensor1 = mockk<Tensor> {
             every { toSyftTensor() } returns syftTensor1
         }
@@ -88,7 +110,7 @@ internal class SyftModelTest {
         cut.updateModel(params)
 
         // Then
-        assert(params.size == cut.modelState?.syftTensors?.size)
-        assert(cut.modelState?.syftTensors == syftTensors)
+        assert(params.size == cut.modelSyftState?.syftTensors?.size)
+        assert(cut.modelSyftState?.syftTensors?.contentEquals(syftTensors) == true)
     }
 }

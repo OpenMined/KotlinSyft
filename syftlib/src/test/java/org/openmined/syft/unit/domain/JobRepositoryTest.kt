@@ -1,4 +1,4 @@
-package org.openmined.syft.execution
+package org.openmined.syft.unit.domain
 
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
@@ -6,20 +6,27 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
+import io.mockk.mockk
 import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.processors.PublishProcessor
 import io.reactivex.schedulers.Schedulers
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
 import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.PLAN_OP_TYPE
 import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.execution.JobStatusMessage
+import org.openmined.syft.execution.Plan
+import org.openmined.syft.execution.Protocol
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.requests.HttpAPI
 import org.openmined.syft.proto.SyftModel
@@ -30,6 +37,10 @@ import java.util.concurrent.ConcurrentHashMap
 
 @ExperimentalUnsignedTypes
 class JobRepositoryTest {
+
+    @Rule
+    @JvmField
+    var tempFolder = TemporaryFolder()
 
     @Mock
     private lateinit var config: SyftConfiguration
@@ -81,6 +92,26 @@ class JobRepositoryTest {
     }
 
     @Test
+    fun `JobRepository forwards the call to persist by calling save of jobLocalDataSource when overwrite is true`(){
+        val input = mockk<InputStream>()
+        cut.persistToLocalStorage(input,config.filesDir.toString(), DIFF_SCRIPT_NAME,true)
+        verify(jobLocalDataSource).save(input,config.filesDir.toString(), DIFF_SCRIPT_NAME,true)
+    }
+
+    @Test
+    fun `JobRepository forwards the call to persist by calling save of jobLocalDataSource`(){
+        val input = mockk<InputStream>()
+        cut.persistToLocalStorage(input,config.filesDir.toString(), DIFF_SCRIPT_NAME)
+        verify(jobLocalDataSource).save(input,config.filesDir.toString(), DIFF_SCRIPT_NAME,false)
+    }
+
+    @Test
+    fun `JobRepository forwards the call to getDiffScript by calling jobLocalDataSource`(){
+        cut.getDiffScript(config)
+        verify(jobLocalDataSource).getDiffScript(config)
+    }
+
+    @Test
     fun `Given a model is provided when list of downloadables is requested then model is downloaded, saved locally and loaded`() {
         val workerId = "workerId"
         val requestKey = "request"
@@ -98,7 +129,7 @@ class JobRepositoryTest {
             jobRemoteDataSource.downloadModel(workerId, requestKey, modelId)
         ) doReturn Single.just(modelIS)
         whenever(
-            jobLocalDataSource.save(modelIS, "${config.filesDir}/models", "$modelId.pb")
+            jobLocalDataSource.saveAsync(modelIS, "${config.filesDir}/models", "$modelId.pb")
         ) doReturn Single.just(modelPath)
 
         cut.downloadData(
@@ -114,7 +145,7 @@ class JobRepositoryTest {
         )
 
         verify(jobRemoteDataSource).downloadModel(workerId, requestKey, modelId)
-        verify(jobLocalDataSource).save(modelIS, "${config.filesDir}/models", "$modelId.pb")
+        verify(jobLocalDataSource).saveAsync(modelIS, "${config.filesDir}/models", "$modelId.pb")
         verify(model).loadModelState(modelPath)
     }
 
@@ -143,7 +174,7 @@ class JobRepositoryTest {
             jobRemoteDataSource.downloadModel(workerId, requestKey, modelId)
         ) doReturn Single.just(modelIS)
         whenever(
-            jobLocalDataSource.save(modelIS, "${config.filesDir}/models", "$modelId.pb")
+            jobLocalDataSource.saveAsync(modelIS, "${config.filesDir}/models", "$modelId.pb")
         ) doReturn Single.just(modelPath)
 
 
@@ -151,7 +182,7 @@ class JobRepositoryTest {
             jobRemoteDataSource.downloadProtocol(eq(workerId), eq(requestKey), any())
         ) doReturn Single.just(protocolIS)
         whenever(
-            jobLocalDataSource.save(protocolIS, "${config.filesDir}/protocols", "$protocolId.pb")
+            jobLocalDataSource.saveAsync(protocolIS, "${config.filesDir}/protocols", "$protocolId.pb")
         ) doReturn Single.just(protocolPath)
 
         cut.downloadData(
@@ -168,9 +199,9 @@ class JobRepositoryTest {
 
         verify(jobRemoteDataSource).downloadModel(workerId, requestKey, modelId)
         verify(jobRemoteDataSource).downloadProtocol(workerId, requestKey, protocolId)
-        verify(jobLocalDataSource).save(modelIS, "${config.filesDir}/models", "$modelId.pb")
+        verify(jobLocalDataSource).saveAsync(modelIS, "${config.filesDir}/models", "$modelId.pb")
         verify(model).loadModelState(modelPath)
-        verify(jobLocalDataSource).save(
+        verify(jobLocalDataSource).saveAsync(
             protocolIS,
             "${config.filesDir}/protocols",
             "$protocolId.pb"
@@ -204,7 +235,7 @@ class JobRepositoryTest {
             jobRemoteDataSource.downloadModel(workerId, requestKey, modelId)
         ) doReturn Single.just(modelIS)
         whenever(
-            jobLocalDataSource.save(modelIS, "${config.filesDir}/models", "$modelId.pb")
+            jobLocalDataSource.saveAsync(modelIS, "${config.filesDir}/models", "$modelId.pb")
         ) doReturn Single.just(modelPath)
 
         whenever(
@@ -215,7 +246,7 @@ class JobRepositoryTest {
             )
         ) doReturn Single.just(planIS)
         whenever(
-            jobLocalDataSource.save(planIS, "${config.filesDir}/plans", "$planId.pb")
+            jobLocalDataSource.saveAsync(planIS, "${config.filesDir}/plans", "$planId.pb")
         ) doReturn Single.just(planPath)
 
         whenever(
@@ -240,7 +271,7 @@ class JobRepositoryTest {
 
         verify(jobRemoteDataSource).downloadModel(workerId, requestKey, modelId)
         verify(jobRemoteDataSource).downloadPlan(workerId, requestKey, planId, PLAN_OP_TYPE)
-        verify(jobLocalDataSource).save(planIS, "${config.filesDir}/plans", "$planId.pb")
+        verify(jobLocalDataSource).saveAsync(planIS, "${config.filesDir}/plans", "$planId.pb")
         verify(jobLocalDataSource).saveTorchScript(
             "${config.filesDir}/plans",
             planPath,

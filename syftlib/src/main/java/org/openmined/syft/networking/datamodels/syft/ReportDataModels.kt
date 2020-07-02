@@ -8,7 +8,8 @@ const val REPORT_TYPE = "federated/report"
 
 @Serializable
 data class ReportResponse(
-    val status: String
+    val status: String? = null,
+    val error: String? = null
 ) : NetworkModels()
 
 @Serializable

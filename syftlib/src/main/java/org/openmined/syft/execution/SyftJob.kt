@@ -1,10 +1,14 @@
 package org.openmined.syft.execution
 
+import android.accounts.NetworkErrorException
+import android.util.Base64
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.Syft
+import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
 import org.openmined.syft.domain.DownloadStatus
@@ -13,8 +17,8 @@ import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.datamodels.syft.ReportRequest
 import org.openmined.syft.networking.datamodels.syft.ReportResponse
-import org.openmined.syft.proto.State
 import org.openmined.syft.proto.SyftModel
+import org.openmined.syft.proto.SyftState
 import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -75,7 +79,10 @@ class SyftJob internal constructor(
 
     private val plans = ConcurrentHashMap<String, Plan>()
     private val protocols = ConcurrentHashMap<String, Protocol>()
-    private val model = SyftModel(modelName, version)
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val model = SyftModel(modelName, version)
+
     private val networkDisposable = CompositeDisposable()
     private val statusDisposable = CompositeDisposable()
     private var requestKey = ""
@@ -195,11 +202,22 @@ class SyftJob internal constructor(
         }
     }
 
+    fun createDiff(): SyftState {
+        val modulePath = jobRepository.persistToLocalStorage(
+            jobRepository.getDiffScript(config),
+            config.filesDir.toString(),
+            DIFF_SCRIPT_NAME
+        )
+        val oldState =
+                SyftState.loadSyftState("${config.filesDir}/models/${model.pyGridModelId}.pb")
+        return model.createDiff(oldState, modulePath)
+    }
+
     /**
      * Once training is finished submit the new model weights to PyGrid to complete the cycle
-     * @param diff the difference of the new and old model weights serialised into [State][org.openmined.syft.proto.State]
+     * @param diff the difference of the new and old model weights serialised into [State][org.openmined.syft.proto.SyftState]
      */
-    fun report(diff: State) {
+    fun report(diff: SyftState) {
         val workerId = worker.getSyftWorkerId()
         if (throwErrorIfNetworkInvalid() ||
             throwErrorIfBatteryInvalid()
@@ -212,12 +230,20 @@ class SyftJob internal constructor(
                             ReportRequest(
                                 workerId,
                                 requestKey,
-                                diff.serialize().toString()
+                                Base64.encodeToString(
+                                    diff.serialize().toByteArray(),
+                                    Base64.DEFAULT
+                                )
                             )
                         )
                         .compose(config.networkingSchedulers.applySingleSchedulers())
                         .subscribe { reportResponse: ReportResponse ->
-                            Log.i(TAG, reportResponse.status)
+                            if (reportResponse.error != null)
+                                throwError(NetworkErrorException(reportResponse.error))
+                            if (reportResponse.status != null) {
+                                Log.d(TAG, "report status ${reportResponse.status}")
+                                jobStatusProcessor.onComplete()
+                            }
                         })
     }
 
