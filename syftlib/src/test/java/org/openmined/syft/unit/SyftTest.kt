@@ -29,7 +29,8 @@ internal class SyftTest {
             on { authenticate(AuthenticationRequest("auth token")) }.thenReturn(
                 Single.just(
                     AuthenticationResponse.AuthenticationSuccess(
-                        "test id"
+                        "test id",
+                        true
                     )
                 )
             )

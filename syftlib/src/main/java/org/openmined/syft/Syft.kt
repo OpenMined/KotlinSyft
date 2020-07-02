@@ -51,6 +51,8 @@ class Syft internal constructor(
 
     @Volatile
     private var workerId: String? = null
+    @Volatile
+    private var requiresSpeedTest: Boolean? = null
 
     fun newJob(
         model: String,
@@ -83,14 +85,12 @@ class Syft internal constructor(
     internal fun getSyftWorkerId() = workerId
 
     internal fun executeCycleRequest(job: SyftJob) {
-        if (jobErrorIfBatteryInvalid(job) ||
-            jobErrorIfNetworkInvalid(job)
-        )
+        if (jobErrorIfBatteryInvalid(job) || jobErrorIfNetworkInvalid(job))
             return
 
         workerId?.let { id ->
             compositeDisposable.add(
-                deviceMonitor.getNetworkStatus(id)
+                deviceMonitor.getNetworkStatus(id, requiresSpeedTest!!)
                         .flatMap { networkState ->
                             requestCycle(
                                 id,
@@ -98,9 +98,9 @@ class Syft internal constructor(
                                 networkState.ping,
                                 networkState.downloadSpeed,
                                 networkState.uploadspeed
-                            )
+                            ).toMaybe()
                         }
-                        .compose(syftConfig.networkingSchedulers.applySingleSchedulers())
+                        .compose(syftConfig.networkingSchedulers.applyMaybeSchedulers())
                         .subscribe(
                             { response: CycleResponseData ->
                                 when (response) {
@@ -158,7 +158,8 @@ class Syft internal constructor(
                 Single.error(NetworkErrorException("unable to verify upload speed"))
             else -> syftConfig.getSignallingClient().getCycle(
                 CycleRequest(
-                    id, job.jobId.modelName,
+                    id,
+                    job.jobId.modelName,
                     job.jobId.version,
                     ping,
                     downloadSpeed,
@@ -201,16 +202,18 @@ class Syft internal constructor(
         compositeDisposable.add(
             syftConfig.getSignallingClient().authenticate(AuthenticationRequest(authToken))
                     .compose(syftConfig.networkingSchedulers.applySingleSchedulers())
-                    .subscribe({ t: AuthenticationResponse ->
-                        when (t) {
+                    .subscribe({ response: AuthenticationResponse ->
+                        when (response) {
                             is AuthenticationResponse.AuthenticationSuccess -> {
-                                if (workerId == null)
-                                    setSyftWorkerId(t.workerId)
+                                if (workerId == null) {
+                                    setSyftWorkerId(response.workerId)
+                                    requiresSpeedTest = response.requiresSpeedTest
+                                }
                                 executeCycleRequest(job)
                             }
                             is AuthenticationResponse.AuthenticationError -> {
-                                job.throwError(SecurityException(t.errorMessage))
-                                Log.d(TAG, t.errorMessage)
+                                job.throwError(SecurityException(response.errorMessage))
+                                Log.d(TAG, response.errorMessage)
                             }
                         }
                     }, {

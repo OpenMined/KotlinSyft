@@ -1,6 +1,7 @@
 package org.openmined.syft.monitor.network
 
 import io.reactivex.Flowable
+import io.reactivex.Maybe
 import io.reactivex.Single
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.monitor.BroadCastListener
@@ -31,9 +32,14 @@ class NetworkStatusRepository internal constructor(
         }
     }
 
-    fun getNetworkStatus(workerId: String): Single<NetworkStatusModel> {
-        return cacheService.getNetworkStatusCache()
-                .switchIfEmpty(getNetworkStatusUncached(workerId))
+    fun getNetworkStatus(workerId: String, requiresSpeedTest: Boolean): Maybe<NetworkStatusModel> {
+        return if (requiresSpeedTest) {
+            cacheService.getNetworkStatusCache()
+                    .switchIfEmpty(getNetworkStatusUncached(workerId))
+                    .toMaybe()
+        } else {
+            Maybe.empty<NetworkStatusModel>()
+        }
     }
 
     fun getNetworkValidity() = realTimeDataService.getNetworkValidity(networkConstraints)
@@ -48,6 +54,7 @@ class NetworkStatusRepository internal constructor(
 
     private fun getNetworkStatusUncached(workerId: String): Single<NetworkStatusModel> {
         val networkStatus = NetworkStatusModel()
+        // TODO Must ping be excluded if requiresSpeedTest is false?
         return realTimeDataService.updatePing(workerId, networkStatus)
                 .andThen(realTimeDataService.updateDownloadSpeed(workerId, networkStatus))
                 .andThen(realTimeDataService.updateUploadSpeed(workerId, networkStatus))
