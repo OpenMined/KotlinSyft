@@ -37,8 +37,10 @@ class JobLocalDataSourceTest {
         val config = mockk<SyftConfiguration>()
         every { config.context } answers { context }
         every { context.assets } answers { assets }
+
         val cut = JobLocalDataSource()
         cut.getDiffScript(config)
+
         io.mockk.verify {
             assets.open("torchscripts/$DIFF_SCRIPT_NAME")
         }
