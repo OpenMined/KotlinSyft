@@ -12,6 +12,7 @@ import org.openmined.syft.proto.SyftState
 import org.openmined.syft.proto.SyftTensor
 import org.openmined.syft.proto.toSyftTensor
 import org.pytorch.Tensor
+import java.lang.IllegalStateException
 
 @ExperimentalUnsignedTypes
 internal class SyftModelTest {
@@ -71,6 +72,13 @@ internal class SyftModelTest {
         val cut = SyftModel("test", modelSyftState = mockCurrentState)
         cut.createDiff(mockOldState, "script location")
         verify { mockCurrentState.createDiff(mockOldState, "script location") }
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun `createDiff throws error if modelState is null`() {
+        val mockOldState = mockk<SyftState>()
+        val cut = SyftModel("test","1.0.0")
+        cut.createDiff(mockOldState, "script location")
     }
 
     @Test
