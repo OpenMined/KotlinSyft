@@ -7,6 +7,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.work.Constraints
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
@@ -17,8 +22,11 @@ import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityMnistBinding
 import org.openmined.syft.demo.federated.datasource.LocalMNISTDataDataSource
 import org.openmined.syft.demo.federated.domain.MNISTDataRepository
+import org.openmined.syft.demo.service.FederatedWorker
 import org.openmined.syft.domain.SyftConfiguration
 
+const val AUTH_TOKEN = "authToken"
+const val BASE_URL = "baseUrl"
 private const val TAG = "MnistActivity"
 
 @ExperimentalUnsignedTypes
@@ -33,10 +41,13 @@ class MnistActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_mnist)
         binding.lifecycleOwner = this
         setSupportActionBar(toolbar)
-        viewModel = initiateViewModel(
-            intent.getStringExtra("baseURL"),
-            intent.getStringExtra("authToken")
-        )
+        val baseUrl = intent.getStringExtra("baseURL")
+        val authToken = intent.getStringExtra("authToken")
+
+        viewModel = initiateViewModel(baseUrl, authToken)
+        binding.buttonSecond.setOnClickListener {
+            launchFederatedService(authToken, baseUrl)
+        }
 
         binding.viewModel = viewModel
 
@@ -59,6 +70,20 @@ class MnistActivity : AppCompatActivity() {
         super.onBackPressed()
         viewModel.disposeTraining()
         finish()
+    }
+
+    private fun launchFederatedService(authToken: String?, baseUrl: String?) {
+        val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.UNMETERED)
+                .setRequiresCharging(true).setRequiresDeviceIdle(true)
+                .build()
+
+        val oneTimeRequest = OneTimeWorkRequestBuilder<FederatedWorker>()
+                .setInputData(workDataOf(AUTH_TOKEN to authToken, BASE_URL to baseUrl))
+                .setConstraints(constraints)
+                .addTag("trainer")
+                .build()
+        WorkManager.getInstance(this).enqueue(oneTimeRequest)
     }
 
     private fun onProcessData(it: ProcessData?) {

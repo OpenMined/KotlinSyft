@@ -4,9 +4,10 @@ import android.content.Context
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.runBlocking
-import org.openmined.syft.demo.TrainingTask
 import org.openmined.syft.demo.federated.datasource.LocalMNISTDataDataSource
 import org.openmined.syft.demo.federated.domain.MNISTDataRepository
+import org.openmined.syft.demo.federated.ui.AUTH_TOKEN
+import org.openmined.syft.demo.federated.ui.BASE_URL
 import org.openmined.syft.domain.SyftConfiguration
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
@@ -33,7 +34,13 @@ class FederatedWorker(
         val dataRepository = MNISTDataRepository(localMNISTDataDataSource)
 
         runBlocking {
-            status = awaitTask(TrainingTask(config, authToken, dataRepository))
+            status = awaitTask(
+                TrainingTask(
+                    config,
+                    authToken,
+                    dataRepository
+                )
+            )
         }
         return status
     }

@@ -1,4 +1,4 @@
-package org.openmined.syft.demo
+package org.openmined.syft.demo.service
 
 import androidx.work.ListenableWorker.Result
 import androidx.work.workDataOf
