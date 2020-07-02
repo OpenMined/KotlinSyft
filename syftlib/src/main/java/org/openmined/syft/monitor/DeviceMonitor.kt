@@ -15,7 +15,8 @@ private const val TAG = "device monitor"
 class DeviceMonitor(
     private val networkStatusRepository: NetworkStatusRepository,
     private val batteryStatusRepository: BatteryStatusRepository,
-    private val processSchedulers: ProcessSchedulers
+    private val processSchedulers: ProcessSchedulers,
+    subscribe: Boolean
 ) : Disposable {
 
     companion object {
@@ -25,7 +26,8 @@ class DeviceMonitor(
             return DeviceMonitor(
                 NetworkStatusRepository.initialize(syftConfig),
                 BatteryStatusRepository.initialize(syftConfig),
-                syftConfig.networkingSchedulers
+                syftConfig.networkingSchedulers,
+                syftConfig.monitorDevice
             )
         }
     }
@@ -40,7 +42,8 @@ class DeviceMonitor(
     private val compositeDisposable = CompositeDisposable()
 
     init {
-        subscribe()
+        if (subscribe)
+            subscribe()
     }
 
     fun isNetworkStateValid(): Boolean {
