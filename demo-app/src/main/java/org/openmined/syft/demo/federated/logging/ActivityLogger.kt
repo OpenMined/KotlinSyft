@@ -1,4 +1,4 @@
-package org.openmined.syft.demo.federated.ui.logging
+package org.openmined.syft.demo.federated.logging
 
 import org.openmined.syft.demo.federated.ui.ContentState
 import org.openmined.syft.demo.federated.ui.ProcessData

@@ -56,6 +56,8 @@ dependencies {
     implementation DemoAppDependencies.workGCM
     implementation DemoAppDependencies.workRX
     implementation DemoAppDependencies.coroutines
+    implementation DemoAppDependencies.lifecycle
+    implementation DemoAppDependencies.lifeCycleProcess
 
     // TODO During the first stages of the project, include the library here. Later on we should use the library from the repository
     implementation project(path: ':syftlib')

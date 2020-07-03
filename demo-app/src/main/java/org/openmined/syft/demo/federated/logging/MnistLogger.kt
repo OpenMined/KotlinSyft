@@ -1,4 +1,4 @@
-package org.openmined.syft.demo.federated.ui.logging
+package org.openmined.syft.demo.federated.logging
 
 import androidx.lifecycle.MutableLiveData
 import org.openmined.syft.demo.federated.ui.ContentState

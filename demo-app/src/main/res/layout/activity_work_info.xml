@@ -12,7 +12,7 @@
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".federated.ui.MnistActivity">
+        tools:context=".service.WorkInfoActivity">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -29,16 +29,16 @@
                     android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
-                    android:background="@color/colorPrimary"
+                    android:background="?attr/colorPrimary"
                     app:popupTheme="@style/AppTheme.PopupOverlay" />
 
             </com.google.android.material.appbar.AppBarLayout>
 
+
             <LinearLayout
-                android:layout_width="match_parent"
                 android:id="@+id/contentPanel"
+                android:layout_width="match_parent"
                 android:layout_height="0dp"
-                app:layout_constraintBottom_toTopOf="@id/scrollArea"
                 android:layout_gravity="center_horizontal"
                 android:orientation="vertical"
                 app:layout_constraintTop_toBottomOf="@+id/toolbar_wrapper">
@@ -53,9 +53,9 @@
 
                     <TextView
                         android:id="@+id/step"
-                        android:layout_marginVertical="20dp"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginVertical="20dp"
                         android:textAlignment="center"
                         android:textSize="24sp" />
 
@@ -63,7 +63,7 @@
                         android:id="@+id/chart"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
-                        android:layout_weight="1"/>
+                        android:layout_weight="1" />
                 </LinearLayout>
 
                 <ProgressBar
@@ -76,68 +76,22 @@
 
             </LinearLayout>
 
-            <LinearLayout
+
+            <ScrollView
+                android:id="@+id/logger_wrapper"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
-                android:id="@+id/scrollArea"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="10dp"
                 app:layout_constraintBottom_toBottomOf="parent">
 
-                <ScrollView
-                    android:id="@+id/logger_wrapper"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginEnd="20dp"
-                    android:layout_weight="1">
-
-                    <TextView
-                        android:id="@+id/log_area"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="10dp"
-                        android:text="@{viewModel.logger.logText}"
-                        android:textAlignment="viewStart"
-                        app:contentPadding="2dp" />
-                </ScrollView>
-                <LinearLayout
+                <TextView
+                    android:id="@+id/log_area"
                     android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
-                    android:orientation="vertical">
-
-                    <Button
-                        android:id="@+id/button_first"
-                        style="@android:style/Widget.DeviceDefault.Button"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/button_solid"
-                        android:onClick="@{() -> viewModel.launchForegroundCycle()}"
-                        android:padding="10dp"
-                        android:text="@string/start_foreground"
-                        android:textColor="@color/white"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                    <Button
-                        android:id="@+id/button_second"
-                        style="@android:style/Widget.DeviceDefault.Button"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
-                        android:background="@drawable/button_solid"
-                        android:onClick="@{() -> viewModel.launchBackgroundCycle()}"
-                        android:padding="10dp"
-                        android:text="@string/start_background"
-                        android:textColor="@color/white"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-            </LinearLayout>
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:text="@{viewModel.logger.logText}"
+                    android:textAlignment="viewStart" />
+            </ScrollView>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
-
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

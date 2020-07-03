@@ -1,6 +1,8 @@
 package org.openmined.syft.demo.federated.ui
 
 import android.app.Application
+import android.content.Context
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 
@@ -8,7 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class MnistViewModelFactory(
-    private val application: Application,
+    private val activity: AppCompatActivity,
     private val baseURL: String,
     private val authToken: String
 ) : ViewModelProvider.Factory {
@@ -16,7 +18,7 @@ class MnistViewModelFactory(
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MnistViewModel::class.java))
             return MnistViewModel(
-                application,
+                activity,
                 baseURL,
                 authToken
             ) as T

@@ -13,13 +13,13 @@ object Versions {
     const val buildTools = "29.0.2"
 
     // Android libraries
-    const val appCompat = "1.1.0"
+    const val appCompat = "1.1.0-alpha04"
     const val constraintLayout = "1.1.3"
     const val coreKtx = "1.2.0"
     const val kotlinSerialization = "0.14.0"
     const val material="1.1.0"
     const val workManagerVersion = "2.3.4"
-
+    const val lifecycleVersion = "2.2.0"
     // Tools
     const val rxJava = "2.2.12"
     const val rxAndroid = "2.1.1"
@@ -93,6 +93,8 @@ object DemoAppDependencies {
     const val materialAndroid = "com.google.android.material:material:${Versions.material}"
     const val mpAndroidChart = "com.github.PhilJay:MPAndroidChart:${Versions.mpAndroidChart}"
     const val coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutines}"
+    const val lifecycle = "androidx.lifecycle:lifecycle-livedata-ktx:${Versions.lifecycleVersion}"
+    const val lifeCycleProcess = "androidx.lifecycle:lifecycle-process:${Versions.lifecycleVersion}"
 
     const val workKtx = "androidx.work:work-runtime-ktx:${Versions.workManagerVersion}"
     const val workRX = "androidx.work:work-rxjava2:${Versions.workManagerVersion}"

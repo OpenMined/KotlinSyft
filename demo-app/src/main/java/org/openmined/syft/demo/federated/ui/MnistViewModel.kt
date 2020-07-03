@@ -1,63 +1,55 @@
 package org.openmined.syft.demo.federated.ui
 
-import android.app.Application
-import androidx.lifecycle.LifecycleOwner
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
-import androidx.work.Constraints
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
-import androidx.work.WorkManager
-import androidx.work.WorkRequest
-import androidx.work.workDataOf
 import io.reactivex.disposables.CompositeDisposable
 import org.openmined.syft.demo.federated.datasource.LocalMNISTDataDataSource
 import org.openmined.syft.demo.federated.domain.MNISTDataRepository
 import org.openmined.syft.demo.federated.domain.TrainingTask
-import org.openmined.syft.demo.federated.ui.logging.ActivityLogger
+import org.openmined.syft.demo.federated.logging.ActivityLogger
 import org.openmined.syft.demo.service.EPOCH
-import org.openmined.syft.demo.service.FederatedWorker
 import org.openmined.syft.demo.service.LOG
 import org.openmined.syft.demo.service.LOSS_LIST
 import org.openmined.syft.demo.service.STATUS
+import org.openmined.syft.demo.service.WorkerRepository
 import org.openmined.syft.domain.SyftConfiguration
+import java.util.UUID
 
 private const val TAG = "FederatedCycleViewModel"
 
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class MnistViewModel(
-    private val application: Application,
+    private val activity: AppCompatActivity,
     private val baseURL: String,
     private val authToken: String
 ) : ViewModel() {
 
     val logger = ActivityLogger.getInstance()
-    private val workManager = WorkManager.getInstance(application)
+    private val workerRepository =
+            WorkerRepository(activity)
     private val compositeDisposable = CompositeDisposable()
     private var trainingTask: TrainingTask? = null
 
-    fun launchBackgroundCycle() {
-        val constraints = Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.UNMETERED)
-                .setRequiresCharging(true).setRequiresDeviceIdle(false)
-                .build()
+    fun initializeUI(){
+        workerRepository.getRunningWorkStatus()?.let {
+            attachMnistLogger(it)
+        }
+    }
 
-        val oneTimeRequest = OneTimeWorkRequestBuilder<FederatedWorker>()
-                .setInputData(workDataOf(AUTH_TOKEN to authToken, BASE_URL to baseURL))
-                .setConstraints(constraints)
-                .addTag("trainer")
-                .build()
-        workManager.enqueue(oneTimeRequest)
-        attachMnistLogger(oneTimeRequest)
+    fun launchBackgroundCycle() {
+        val requestId = workerRepository.getRunningWorkStatus()
+                        ?: workerRepository.submitJob(authToken, baseURL)
+        attachMnistLogger(requestId)
     }
 
     fun launchForegroundCycle() {
-        val config = SyftConfiguration.builder(application, baseURL)
+        val config = SyftConfiguration.builder(activity, baseURL)
                 .setCacheTimeout(0L)
                 .build()
-        val localMNISTDataDataSource = LocalMNISTDataDataSource(application.resources)
+        val localMNISTDataDataSource = LocalMNISTDataDataSource(activity.resources)
         val dataRepository = MNISTDataRepository(localMNISTDataDataSource)
 
         trainingTask = TrainingTask(
@@ -69,27 +61,29 @@ class MnistViewModel(
     }
 
     fun disposeTraining() {
-        workManager.cancelAllWorkByTag("trainer")
+        workerRepository.cancelAllWork()
         compositeDisposable.clear()
         trainingTask?.disposeTraining()
     }
 
-    private fun attachMnistLogger(workRequest: WorkRequest) {
-        workManager.getWorkInfoByIdLiveData(workRequest.id)
-                .observe(application.applicationContext as LifecycleOwner, Observer { workInfo: WorkInfo? ->
-                    if (workInfo != null) {
-                        val progress = workInfo.progress
-                        logger.postData(
-                            progress.getFloatArray(LOSS_LIST)?.toList() ?: emptyList()
-                        )
-                        logger.postEpoch(progress.getInt(EPOCH, -1))
-                        logger.postLog(progress.getString(LOG) ?: "empty log")
-                        logger.postState(
-                            ContentState.getObjectFromString(
-                                progress.getString(STATUS)
-                            ) ?: ContentState.Loading
-                        )
-                    }
-                })
+    fun attachMnistLogger(workRequestId: UUID) {
+        workerRepository.getWorkObserver(workRequestId)
+                .observe(
+                    activity,
+                    Observer { workInfo: WorkInfo? ->
+                        if (workInfo != null) {
+                            val progress = workInfo.progress
+                            logger.postData(
+                                progress.getFloatArray(LOSS_LIST)?.toList() ?: emptyList()
+                            )
+                            logger.postEpoch(progress.getInt(EPOCH, -1))
+                            logger.postLog(progress.getString(LOG) ?: "empty log")
+                            logger.postState(
+                                ContentState.getObjectFromString(
+                                    progress.getString(STATUS)
+                                ) ?: ContentState.Training
+                            )
+                        }
+                    })
     }
 }

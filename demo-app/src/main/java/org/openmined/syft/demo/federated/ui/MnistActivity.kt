@@ -15,8 +15,7 @@ import kotlinx.android.synthetic.main.activity_mnist.progressBar
 import kotlinx.android.synthetic.main.activity_mnist.toolbar
 import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityMnistBinding
-import org.openmined.syft.demo.federated.ui.logging.ActivityLogger
-
+import org.openmined.syft.demo.federated.logging.ActivityLogger
 const val AUTH_TOKEN = "authToken"
 const val BASE_URL = "baseUrl"
 private const val TAG = "MnistActivity"
@@ -39,6 +38,7 @@ class MnistActivity : AppCompatActivity() {
             intent.getStringExtra("authToken")
         )
 
+        viewModel.initializeUI()
         binding.viewModel = viewModel
 
         logger.processState.observe(
@@ -102,7 +102,7 @@ class MnistActivity : AppCompatActivity() {
             throw IllegalArgumentException("Mnist trainer called without proper arguments")
         return ViewModelProvider(
             this, MnistViewModelFactory(
-                application,
+                this,
                 baseUrl,
                 authToken
             )
