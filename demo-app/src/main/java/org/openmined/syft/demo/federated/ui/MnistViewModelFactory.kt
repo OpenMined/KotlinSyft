@@ -1,7 +1,5 @@
 package org.openmined.syft.demo.federated.ui
 
-import android.app.Application
-import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

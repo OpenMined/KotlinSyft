@@ -38,7 +38,9 @@ class MnistActivity : AppCompatActivity() {
             intent.getStringExtra("authToken")
         )
 
-        viewModel.initializeUI()
+        viewModel.workerRepository.getRunningWorkStatus()?.let {
+            viewModel.attachMnistLogger(it)
+        }
         binding.viewModel = viewModel
 
         logger.processState.observe(

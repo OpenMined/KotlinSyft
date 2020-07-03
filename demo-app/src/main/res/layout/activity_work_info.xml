@@ -6,7 +6,7 @@
     <data>
         <variable
             name="viewModel"
-            type="org.openmined.syft.demo.federated.ui.MnistViewModel" />
+            type="org.openmined.syft.demo.service.WorkInfoViewModel" />
     </data>
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout

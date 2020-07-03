@@ -28,16 +28,9 @@ class MnistViewModel(
 ) : ViewModel() {
 
     val logger = ActivityLogger.getInstance()
-    private val workerRepository =
-            WorkerRepository(activity)
+    val workerRepository = WorkerRepository(activity)
     private val compositeDisposable = CompositeDisposable()
     private var trainingTask: TrainingTask? = null
-
-    fun initializeUI(){
-        workerRepository.getRunningWorkStatus()?.let {
-            attachMnistLogger(it)
-        }
-    }
 
     fun launchBackgroundCycle() {
         val requestId = workerRepository.getRunningWorkStatus()
@@ -61,7 +54,6 @@ class MnistViewModel(
     }
 
     fun disposeTraining() {
-        workerRepository.cancelAllWork()
         compositeDisposable.clear()
         trainingTask?.disposeTraining()
     }

@@ -41,12 +41,14 @@ class WorkerRepository(private val workManager: WorkManager) {
 
     fun getRunningWorkStatus(): UUID? {
         val prevWork = workManager.getWorkInfosByTag("trainer").get()
+                .filter { it.state == WorkInfo.State.RUNNING }
         if (prevWork.size > 1)
-            prevWork.subList(1, prevWork.size).forEach {
-                workManager.cancelWorkById(it.id)
-                Log.d(TAG, "background worker id ${it.id} status ${it.state}")
-            }
-        return if (prevWork.size > 0 && prevWork[0].state == WorkInfo.State.RUNNING)
+            prevWork.subList(1, prevWork.size)
+                    .forEach {
+                        workManager.cancelWorkById(it.id)
+                        Log.d(TAG, "background worker id ${it.id} status ${it.state}")
+                    }
+        return if (prevWork.isNotEmpty())
             prevWork[0].id
         else null
     }
