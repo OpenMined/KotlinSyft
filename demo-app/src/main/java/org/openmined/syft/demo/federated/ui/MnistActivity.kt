@@ -33,10 +33,10 @@ class MnistActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_mnist)
         binding.lifecycleOwner = this
         setSupportActionBar(toolbar)
-        val baseUrl = intent.getStringExtra("baseURL")
-        val authToken = intent.getStringExtra("authToken")
-
-        viewModel = initiateViewModel(baseUrl, authToken)
+        viewModel = initiateViewModel(
+            intent.getStringExtra("baseURL"),
+            intent.getStringExtra("authToken")
+        )
 
         binding.viewModel = viewModel
 
@@ -69,6 +69,7 @@ class MnistActivity : AppCompatActivity() {
             )
         )
     }
+
     private fun onProcessStateChanged(contentState: ContentState?) {
         when (contentState) {
             ContentState.Training -> {

@@ -10,9 +10,7 @@ import org.openmined.syft.demo.federated.domain.TrainingTask
 import org.openmined.syft.demo.federated.ui.AUTH_TOKEN
 import org.openmined.syft.demo.federated.ui.BASE_URL
 import org.openmined.syft.domain.SyftConfiguration
-import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 @ExperimentalUnsignedTypes
@@ -46,10 +44,7 @@ class FederatedWorker(
         return status
     }
 
-    private suspend fun awaitTask(task: TrainingTask) =
-            suspendCoroutine { continuation: Continuation<Result> ->
-                task.runTask().subscribe(
-                    { continuation.resume(it) },
-                    { continuation.resumeWithException(it) })
-            }
+    private suspend fun awaitTask(task: TrainingTask) = suspendCoroutine<Result> { continuation ->
+        task.runTask().subscribe { result: Result -> continuation.resume(result) }
+    }
 }

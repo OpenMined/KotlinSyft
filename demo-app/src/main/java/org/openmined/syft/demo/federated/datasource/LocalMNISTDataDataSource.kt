@@ -5,7 +5,6 @@ import org.openmined.syft.demo.R
 import org.openmined.syft.demo.federated.domain.Batch
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.lang.Exception
 import java.security.InvalidKeyException
 
 private const val FEATURESIZE = 784

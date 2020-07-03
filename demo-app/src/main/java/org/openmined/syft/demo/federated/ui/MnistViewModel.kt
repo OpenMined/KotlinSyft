@@ -10,8 +10,8 @@ import androidx.work.workDataOf
 import io.reactivex.disposables.CompositeDisposable
 import org.openmined.syft.demo.federated.datasource.LocalMNISTDataDataSource
 import org.openmined.syft.demo.federated.domain.MNISTDataRepository
-import org.openmined.syft.demo.service.FederatedWorker
 import org.openmined.syft.demo.federated.domain.TrainingTask
+import org.openmined.syft.demo.service.FederatedWorker
 import org.openmined.syft.domain.SyftConfiguration
 
 private const val TAG = "FederatedCycleViewModel"

@@ -14,8 +14,6 @@ import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
 import java.util.concurrent.ConcurrentHashMap
 
-const val LOSS_LIST = "loss"
-
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class TrainingTask(
@@ -23,7 +21,7 @@ class TrainingTask(
     private val authToken: String,
     private val mnistDataRepository: MNISTDataRepository
 ) {
-    private var syftWorker : Syft? = null
+    private var syftWorker: Syft? = null
     private val logger = MnistLogger.getInstance()
 
     fun runTask(): Single<Result> {
@@ -56,13 +54,14 @@ class TrainingTask(
 
             override fun onError(throwable: Throwable) {
                 logger.postLog("There was an error $throwable")
+                statusPublisher.offer(Result.failure())
             }
         }
         mnistJob.start(jobStatusSubscriber)
         return statusPublisher.onBackpressureBuffer().firstOrError()
     }
 
-    fun disposeTraining(){
+    fun disposeTraining() {
         syftWorker?.dispose()
     }
 
