@@ -11,7 +11,7 @@ import io.reactivex.disposables.CompositeDisposable
 import org.openmined.syft.demo.federated.datasource.LocalMNISTDataDataSource
 import org.openmined.syft.demo.federated.domain.MNISTDataRepository
 import org.openmined.syft.demo.service.FederatedWorker
-import org.openmined.syft.demo.service.TrainingTask
+import org.openmined.syft.demo.federated.domain.TrainingTask
 import org.openmined.syft.domain.SyftConfiguration
 
 private const val TAG = "FederatedCycleViewModel"
@@ -45,13 +45,16 @@ class MnistViewModel(
 
     fun launchForegroundCycle() {
         val config = SyftConfiguration.builder(application, baseURL)
-                .enableBackgroundServiceExecution()
                 .setCacheTimeout(0L)
                 .build()
         val localMNISTDataDataSource = LocalMNISTDataDataSource(application.resources)
         val dataRepository = MNISTDataRepository(localMNISTDataDataSource)
 
-        trainingTask = TrainingTask(config, authToken, dataRepository)
+        trainingTask = TrainingTask(
+            config,
+            authToken,
+            dataRepository
+        )
         compositeDisposable.add(trainingTask!!.runTask().subscribe())
     }
 

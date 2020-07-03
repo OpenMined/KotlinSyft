@@ -1,11 +1,9 @@
-package org.openmined.syft.demo.service
+package org.openmined.syft.demo.federated.domain
 
 import androidx.work.ListenableWorker.Result
-import androidx.work.workDataOf
 import io.reactivex.Single
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.Syft
-import org.openmined.syft.demo.federated.domain.MNISTDataRepository
 import org.openmined.syft.demo.federated.ui.ContentState
 import org.openmined.syft.demo.federated.ui.Logger
 import org.openmined.syft.domain.SyftConfiguration
@@ -37,7 +35,6 @@ class TrainingTask(
         logger.postLog("MNIST job started \n\nChecking for download and upload speeds")
         logger.postState(ContentState.Loading)
         val jobStatusSubscriber = object : JobStatusSubscriber() {
-
             override fun onReady(
                 model: SyftModel,
                 plans: ConcurrentHashMap<String, Plan>,
@@ -49,8 +46,7 @@ class TrainingTask(
 
             override fun onComplete() {
                 syftWorker?.dispose()
-                val outputData = workDataOf(LOSS_LIST to result)
-                statusPublisher.offer(Result.success(outputData))
+                statusPublisher.offer(Result.success())
             }
 
             override fun onRejected(timeout: String) {
@@ -81,6 +77,7 @@ class TrainingTask(
 
         plans.values.first().let { plan ->
             repeat(clientConfig.maxUpdates) { step ->
+                logger.postEpoch(step + 1)
                 val batchData = mnistDataRepository.loadDataBatch(clientConfig.batchSize.toInt())
                 val output = plan.execute(
                     model,
@@ -98,6 +95,8 @@ class TrainingTask(
                     logger.postLog("the model returned empty array due to invalid device state")
                     return
                 }
+                logger.postState(ContentState.Training)
+                logger.postData(result)
             }
             logger.postLog("Training done!\n reporting diff")
             val diff = mnistJob.createDiff()

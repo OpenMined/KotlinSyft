@@ -6,6 +6,7 @@ import androidx.work.WorkerParameters
 import kotlinx.coroutines.runBlocking
 import org.openmined.syft.demo.federated.datasource.LocalMNISTDataDataSource
 import org.openmined.syft.demo.federated.domain.MNISTDataRepository
+import org.openmined.syft.demo.federated.domain.TrainingTask
 import org.openmined.syft.demo.federated.ui.AUTH_TOKEN
 import org.openmined.syft.demo.federated.ui.BASE_URL
 import org.openmined.syft.domain.SyftConfiguration
