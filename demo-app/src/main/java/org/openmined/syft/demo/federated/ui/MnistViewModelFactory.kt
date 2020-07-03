@@ -1,26 +1,26 @@
 package org.openmined.syft.demo.federated.ui
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import org.openmined.syft.demo.federated.domain.MNISTDataRepository
 import org.openmined.syft.domain.SyftConfiguration
-import java.lang.IllegalArgumentException
 
 @Suppress("UNCHECKED_CAST")
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class MnistViewModelFactory(
+    private val application: Application,
     private val authToken: String,
-    private val config: SyftConfiguration,
-    private val mnistDataRepository: MNISTDataRepository
+    private val baseURL: String
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MnistViewModel::class.java))
             return MnistViewModel(
+                application,
                 authToken,
-                config,
-                mnistDataRepository
+                baseURL
             ) as T
         throw IllegalArgumentException("unknown view model class")
     }

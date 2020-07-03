@@ -6,6 +6,8 @@ import io.reactivex.Single
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.Syft
 import org.openmined.syft.demo.federated.domain.MNISTDataRepository
+import org.openmined.syft.demo.federated.ui.ContentState
+import org.openmined.syft.demo.federated.ui.Logger
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.Plan
@@ -23,12 +25,17 @@ class TrainingTask(
     private val authToken: String,
     private val mnistDataRepository: MNISTDataRepository
 ) {
+    private var syftWorker : Syft? = null
+    private val logger = Logger.getInstance()
 
     fun runTask(): Single<Result> {
-        val syftWorker = Syft.getInstance(configuration, authToken)
-        val mnistJob = syftWorker.newJob("mnist", "1.0.0")
+        syftWorker = Syft.getInstance(configuration, authToken)
+        val mnistJob = syftWorker!!.newJob("mnist", "1.0.0")
         val result = mutableListOf<Float>()
         val statusPublisher = PublishProcessor.create<Result>()
+
+        logger.postLog("MNIST job started \n\nChecking for download and upload speeds")
+        logger.postState(ContentState.Loading)
         val jobStatusSubscriber = object : JobStatusSubscriber() {
 
             override fun onReady(
@@ -36,20 +43,23 @@ class TrainingTask(
                 plans: ConcurrentHashMap<String, Plan>,
                 clientConfig: ClientConfig
             ) {
+                logger.postLog("Model ${model.modelName} received.\n\nStarting training process")
                 trainingProcess(mnistJob, model, plans, clientConfig, result)
             }
 
             override fun onComplete() {
-                syftWorker.dispose()
+                syftWorker?.dispose()
                 val outputData = workDataOf(LOSS_LIST to result)
                 statusPublisher.offer(Result.success(outputData))
             }
 
             override fun onRejected(timeout: String) {
+                logger.postLog("We've been rejected $timeout")
                 statusPublisher.offer(Result.retry())
             }
 
             override fun onError(throwable: Throwable) {
+                logger.postLog("There was an error $throwable")
                 statusPublisher.onError(throwable)
             }
         }
@@ -57,7 +67,11 @@ class TrainingTask(
         return statusPublisher.onBackpressureBuffer().firstOrError()
     }
 
-    fun trainingProcess(
+    fun disposeTraining(){
+        syftWorker?.dispose()
+    }
+
+    private fun trainingProcess(
         mnistJob: SyftJob,
         model: SyftModel,
         plans: ConcurrentHashMap<String, Plan>,
@@ -81,11 +95,14 @@ class TrainingTask(
                     model.updateModel(updatedParams.map { it.toTensor() })
                     result.add(outputResult[1].toTensor().dataAsFloatArray.last())
                 } ?: run {
+                    logger.postLog("the model returned empty array due to invalid device state")
                     return
                 }
             }
+            logger.postLog("Training done!\n reporting diff")
             val diff = mnistJob.createDiff()
             mnistJob.report(diff)
+            logger.postLog("reported the model to PyGrid")
         }
     }
 }
