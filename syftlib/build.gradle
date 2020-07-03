@@ -53,6 +53,7 @@ android {
             testCoverageEnabled = true
         }
         release {
+            buildConfigField("Boolean", "REQUIRE_SPEED_TESTS_ENABLED", featureFlagsProperties.getProperty("requiresSpeedTest"))
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
