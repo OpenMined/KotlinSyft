@@ -1,6 +1,7 @@
 package org.openmined.syft.unit.monitor
 
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.stub
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
@@ -22,7 +23,8 @@ import org.openmined.syft.threading.ProcessSchedulers
 @ExperimentalUnsignedTypes
 internal class DeviceMonitorTest {
 
-    private lateinit var deviceMonitor: DeviceMonitor
+    private lateinit var deviceMonitorSubscribed: DeviceMonitor
+    private lateinit var deviceMonitorUnsubscribed: DeviceMonitor
 
     private val processor = PublishProcessor.create<StateChangeMessage>()
     private val networkingSchedulers = object : ProcessSchedulers {
@@ -49,20 +51,28 @@ internal class DeviceMonitorTest {
         )
     }
 
-    @Before
-    fun setup() {
-        deviceMonitor = DeviceMonitor(
+    @Test
+    fun `subscribed device monitor automatically subscribes to statusProcessor on initialization`() {
+        deviceMonitorSubscribed = DeviceMonitor(
             networkStatusRepository,
             batteryStatusRepository,
             networkingSchedulers,
             true
         )
+        verify(networkStatusRepository).subscribeStateChange()
+        verify(batteryStatusRepository).subscribeStateChange()
     }
 
     @Test
-    fun `device monitor automatically subscribes to statusProcessor on initialization`() {
-        verify(networkStatusRepository).subscribeStateChange()
-        verify(batteryStatusRepository).subscribeStateChange()
+    fun `unsubscribed device monitor never subscribes to statusProcessor on initialization`() {
+        deviceMonitorUnsubscribed = DeviceMonitor(
+            networkStatusRepository,
+            batteryStatusRepository,
+            networkingSchedulers,
+            false
+        )
+        verify(networkStatusRepository, never()).subscribeStateChange()
+        verify(batteryStatusRepository, never()).subscribeStateChange()
     }
 
     @Test
@@ -85,75 +95,141 @@ internal class DeviceMonitorTest {
 
     @Test
     fun `isDisposed sets to true after disposing DeviceMonitor`() {
-        assert(!deviceMonitor.isDisposed)
-        deviceMonitor.dispose()
-        assert(deviceMonitor.isDisposed)
-    }
-
-    @Test
-    fun `networkStatusRepository stops registering network changes on dispose`() {
-        deviceMonitor.dispose()
-        verify(networkStatusRepository).unsubscribeStateChange()
-        verify(batteryStatusRepository).unsubscribeStateChange()
-    }
-
-    @Test
-    fun `device monitor does not subscribe if already listening`() {
-        deviceMonitor.isNetworkStateValid()
-        verify(networkStatusRepository, times(1)).subscribeStateChange()
-        deviceMonitor.isBatteryStateValid()
-        verify(batteryStatusRepository, times(1)).subscribeStateChange()
-    }
-
-    @Test
-    fun `disposed device monitor resubscribes on checking network validity`() {
-        deviceMonitor.dispose()
-        deviceMonitor.isNetworkStateValid()
-        verify(networkStatusRepository, times(2)).subscribeStateChange()
-    }
-
-    @Test
-    fun `device monitor does not subscribe if already listening to battery`() {
-        deviceMonitor.isBatteryStateValid()
-        verify(batteryStatusRepository, times(1)).subscribeStateChange()
-    }
-
-    @Test
-    fun `disposed device monitor resubscribes on checking battery validity`() {
-        deviceMonitor.dispose()
-        deviceMonitor.isBatteryStateValid()
-        verify(batteryStatusRepository, times(2)).subscribeStateChange()
-    }
-
-    @Test
-    fun `device monitor does not subscribe if already listening to user activity`() {
-        deviceMonitor.isActivityStateValid()
-        verify(networkStatusRepository, times(1)).subscribeStateChange()
-    }
-
-    @Test
-    fun `disposed device monitor resubscribes on checking user activity `() {
-        deviceMonitor.dispose()
-        deviceMonitor.isActivityStateValid()
-        verify(networkStatusRepository, times(2)).subscribeStateChange()
-    }
-
-    @Test
-    fun `check if networkStatus is delegated to networkStatusRepository`() {
-        val deviceMonitor = DeviceMonitor(
+        deviceMonitorSubscribed = DeviceMonitor(
             networkStatusRepository,
             batteryStatusRepository,
             networkingSchedulers,
             true
         )
-        deviceMonitor.getNetworkStatus("test id", true)
-        verify(networkStatusRepository).getNetworkStatus("test id", true)
+        assert(!deviceMonitorSubscribed.isDisposed)
+        deviceMonitorSubscribed.dispose()
+        assert(deviceMonitorSubscribed.isDisposed)
+    }
 
+    @Test
+    fun `networkStatusRepository stops registering network changes on dispose when subscribed`() {
+        deviceMonitorSubscribed = DeviceMonitor(
+            networkStatusRepository,
+            batteryStatusRepository,
+            networkingSchedulers,
+            true
+        )
+        deviceMonitorSubscribed.dispose()
+        verify(networkStatusRepository).unsubscribeStateChange()
+        verify(batteryStatusRepository).unsubscribeStateChange()
+    }
+
+    @Test
+    fun `networkStatusRepository does not unsubscribe on dispose when Device monitor has subscribe false`() {
+        deviceMonitorUnsubscribed = DeviceMonitor(
+            networkStatusRepository,
+            batteryStatusRepository,
+            networkingSchedulers,
+            false
+        )
+        deviceMonitorUnsubscribed.dispose()
+        verify(networkStatusRepository, never()).unsubscribeStateChange()
+        verify(batteryStatusRepository, never()).unsubscribeStateChange()
+    }
+
+    @Test
+    fun `device monitor does not subscribe if already listening`() {
+        deviceMonitorSubscribed = DeviceMonitor(
+            networkStatusRepository,
+            batteryStatusRepository,
+            networkingSchedulers,
+            true
+        )
+        deviceMonitorSubscribed.isNetworkStateValid()
+        verify(networkStatusRepository, times(1)).subscribeStateChange()
+        deviceMonitorSubscribed.isBatteryStateValid()
+        verify(batteryStatusRepository, times(1)).subscribeStateChange()
+    }
+
+    @Test
+    fun `disposed device monitor resubscribes on checking network validity`() {
+        deviceMonitorSubscribed = DeviceMonitor(
+            networkStatusRepository,
+            batteryStatusRepository,
+            networkingSchedulers,
+            true
+        )
+        deviceMonitorSubscribed.dispose()
+        deviceMonitorSubscribed.isNetworkStateValid()
+        verify(networkStatusRepository, times(2)).subscribeStateChange()
+    }
+
+    @Test
+    fun `device monitor does not subscribe if already listening to battery`() {
+        deviceMonitorSubscribed = DeviceMonitor(
+            networkStatusRepository,
+            batteryStatusRepository,
+            networkingSchedulers,
+            true
+        )
+        deviceMonitorSubscribed.isBatteryStateValid()
+        verify(batteryStatusRepository, times(1)).subscribeStateChange()
+    }
+
+    @Test
+    fun `disposed device monitor resubscribes on checking battery validity`() {
+        deviceMonitorSubscribed = DeviceMonitor(
+            networkStatusRepository,
+            batteryStatusRepository,
+            networkingSchedulers,
+            true
+        )
+        deviceMonitorSubscribed.dispose()
+        deviceMonitorSubscribed.isBatteryStateValid()
+        verify(batteryStatusRepository, times(2)).subscribeStateChange()
+    }
+
+    @Test
+    fun `device monitor does not subscribe if already listening to user activity`() {
+        deviceMonitorSubscribed = DeviceMonitor(
+            networkStatusRepository,
+            batteryStatusRepository,
+            networkingSchedulers,
+            true
+        )
+        deviceMonitorSubscribed.isActivityStateValid()
+        verify(networkStatusRepository, times(1)).subscribeStateChange()
+    }
+
+    @Test
+    fun `disposed device monitor resubscribes on checking user activity `() {
+        deviceMonitorSubscribed = DeviceMonitor(
+            networkStatusRepository,
+            batteryStatusRepository,
+            networkingSchedulers,
+            true
+        )
+        deviceMonitorSubscribed.dispose()
+        deviceMonitorSubscribed.isActivityStateValid()
+        verify(networkStatusRepository, times(2)).subscribeStateChange()
+    }
+
+    @Test
+    fun `check if networkStatus is delegated to networkStatusRepository`() {
+        deviceMonitorSubscribed = DeviceMonitor(
+            networkStatusRepository,
+            batteryStatusRepository,
+            networkingSchedulers,
+            true
+        )
+        deviceMonitorSubscribed.getNetworkStatus("test id", true)
+        verify(networkStatusRepository).getNetworkStatus("test id", true)
     }
 
     @Test
     fun `check if batteryStatus is delegated to BatteryStatusRepository`() {
-        deviceMonitor.getBatteryStatus()
+        deviceMonitorSubscribed = DeviceMonitor(
+            networkStatusRepository,
+            batteryStatusRepository,
+            networkingSchedulers,
+            true
+        )
+        deviceMonitorSubscribed.getBatteryStatus()
         verify(batteryStatusRepository).getBatteryState()
     }
 
