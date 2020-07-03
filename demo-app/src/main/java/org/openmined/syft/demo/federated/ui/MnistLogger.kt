@@ -2,13 +2,13 @@ package org.openmined.syft.demo.federated.ui
 
 import androidx.lifecycle.MutableLiveData
 
-class Logger {
+class MnistLogger {
     companion object {
-        private var INSTANCE: Logger? = null
+        private var INSTANCE: MnistLogger? = null
 
-        fun getInstance(): Logger {
-            return Logger.INSTANCE ?: synchronized(this) {
-                Logger.INSTANCE ?: Logger().also { Logger.INSTANCE = it }
+        fun getInstance(): MnistLogger {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: MnistLogger().also { INSTANCE = it }
             }
         }
     }
@@ -36,7 +36,7 @@ class Logger {
     fun postData(result: List<Float>) {
         _processData.postValue(
             ProcessData(
-                result
+                (_processData.value?.data ?: emptyList()) + result
             )
         )
     }

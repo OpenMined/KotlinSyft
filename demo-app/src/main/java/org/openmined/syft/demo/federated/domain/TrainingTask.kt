@@ -5,7 +5,7 @@ import io.reactivex.Single
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.Syft
 import org.openmined.syft.demo.federated.ui.ContentState
-import org.openmined.syft.demo.federated.ui.Logger
+import org.openmined.syft.demo.federated.ui.MnistLogger
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.Plan
@@ -24,7 +24,7 @@ class TrainingTask(
     private val mnistDataRepository: MNISTDataRepository
 ) {
     private var syftWorker : Syft? = null
-    private val logger = Logger.getInstance()
+    private val logger = MnistLogger.getInstance()
 
     fun runTask(): Single<Result> {
         syftWorker = Syft.getInstance(configuration, authToken)
@@ -56,7 +56,6 @@ class TrainingTask(
 
             override fun onError(throwable: Throwable) {
                 logger.postLog("There was an error $throwable")
-                statusPublisher.onError(throwable)
             }
         }
         mnistJob.start(jobStatusSubscriber)

@@ -24,7 +24,7 @@ class MnistViewModel(
     private val authToken: String
 ) : ViewModel() {
 
-    val logger = Logger.getInstance()
+    val logger = MnistLogger.getInstance()
     private val workManager = WorkManager.getInstance(application)
     private val compositeDisposable = CompositeDisposable()
     private var trainingTask: TrainingTask? = null
