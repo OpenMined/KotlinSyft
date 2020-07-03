@@ -104,8 +104,8 @@ class MnistActivity : AppCompatActivity() {
         return ViewModelProvider(
             this, MnistViewModelFactory(
                 application,
-                authToken,
-                baseUrl
+                baseUrl,
+                authToken
             )
         ).get(MnistViewModel::class.java)
     }
