@@ -1,5 +1,6 @@
 package org.openmined.syft
 
+import Either
 import android.accounts.NetworkErrorException
 import android.util.Log
 import io.reactivex.Single
@@ -23,7 +24,7 @@ class Syft internal constructor(
     private val syftConfig: SyftConfiguration,
     private val deviceMonitor: DeviceMonitor,
     private val authToken: String?
-    ) : Disposable {
+) : Disposable {
     companion object {
         @Volatile
         private var INSTANCE: Syft? = null
@@ -51,6 +52,7 @@ class Syft internal constructor(
 
     @Volatile
     private var workerId: String? = null
+
     @Volatile
     private var requiresSpeedTest: Boolean? = null
 
@@ -98,9 +100,9 @@ class Syft internal constructor(
                                 networkState.ping,
                                 networkState.downloadSpeed,
                                 networkState.uploadspeed
-                            ).toMaybe()
+                            )
                         }
-                        .compose(syftConfig.networkingSchedulers.applyMaybeSchedulers())
+                        .compose(syftConfig.networkingSchedulers.applySingleSchedulers())
                         .subscribe(
                             { response: CycleResponseData ->
                                 when (response) {
@@ -135,10 +137,10 @@ class Syft internal constructor(
     }
 
     internal fun jobErrorIfBatteryInvalid(job: SyftJob): Boolean {
-        if (!deviceMonitor.isBatteryStateValid()) {
-            job.throwError(IllegalStateException("Battery constraints failed"))
-            return true
-        }
+//        if (!deviceMonitor.isBatteryStateValid()) {
+//            job.throwError(IllegalStateException("Battery constraints failed"))
+//            return true
+//        }
         return false
     }
 
@@ -149,23 +151,35 @@ class Syft internal constructor(
         downloadSpeed: String?,
         uploadSpeed: String?
     ): Single<CycleResponseData> {
-        return when {
-            ping == null ->
-                Single.error(NetworkErrorException("unable to get ping"))
-            downloadSpeed == null ->
-                Single.error(NetworkErrorException("unable to verify download speed"))
-            uploadSpeed == null ->
-                Single.error(NetworkErrorException("unable to verify upload speed"))
-            else -> syftConfig.getSignallingClient().getCycle(
+
+        return when (val check = checkConditions(ping, downloadSpeed, uploadSpeed)) {
+            is Either.Left -> Single.error(NetworkErrorException(check.a))
+            is Either.Right -> syftConfig.getSignallingClient().getCycle(
                 CycleRequest(
                     id,
                     job.jobId.modelName,
                     job.jobId.version,
-                    ping,
-                    downloadSpeed,
-                    uploadSpeed
+                    ping!!,
+                    downloadSpeed!!,
+                    uploadSpeed!!
                 )
             )
+        }
+    }
+
+    private fun checkConditions(
+        ping: String?,
+        downloadSpeed: String?,
+        uploadSpeed: String?
+    ): Either<String, Boolean> {
+        return when {
+            ping == null ->
+                Either.Left("unable to get ping")
+            downloadSpeed == null ->
+                Either.Left("unable to verify download speed")
+            uploadSpeed == null ->
+                Either.Left("unable to verify upload speed")
+            else -> Either.Right(true)
         }
     }
 

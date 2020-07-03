@@ -32,13 +32,12 @@ class NetworkStatusRepository internal constructor(
         }
     }
 
-    fun getNetworkStatus(workerId: String, requiresSpeedTest: Boolean): Maybe<NetworkStatusModel> {
+    fun getNetworkStatus(workerId: String, requiresSpeedTest: Boolean): Single<NetworkStatusModel> {
         return if (requiresSpeedTest) {
             cacheService.getNetworkStatusCache()
                     .switchIfEmpty(getNetworkStatusUncached(workerId))
-                    .toMaybe()
         } else {
-            Maybe.empty<NetworkStatusModel>()
+            Single.just(NetworkStatusModel("", "", ""))
         }
     }
 

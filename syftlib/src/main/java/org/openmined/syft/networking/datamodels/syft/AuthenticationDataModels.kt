@@ -23,7 +23,7 @@ sealed class AuthenticationResponse : NetworkModels() {
         @SerialName("worker_id")
         val workerId: String,
         @SerialName("requires_speed_test")
-        val requiresSpeedTest: Boolean
+        val requiresSpeedTest: Boolean = true
     ) : AuthenticationResponse()
 
     @SerialName(AUTH_FAILURE)

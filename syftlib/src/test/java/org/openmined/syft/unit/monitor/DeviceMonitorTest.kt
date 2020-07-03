@@ -31,7 +31,7 @@ internal class DeviceMonitorTest {
     private val networkStatusRepository = mock<NetworkStatusRepository> {
         on { subscribeStateChange() }.thenReturn(processor.onBackpressureLatest())
         on { getNetworkStatus("test id", true) }.thenReturn(
-            Maybe.just(NetworkStatusModel())
+            Single.just(NetworkStatusModel())
         )
     }
     private val batteryStatusRepository = mock<BatteryStatusRepository> {
