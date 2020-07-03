@@ -89,9 +89,12 @@ class Syft internal constructor(
         if (jobErrorIfBatteryInvalid(job) || jobErrorIfNetworkInvalid(job))
             return
 
+        val isRequiresSpeedTestEnabled = BuildConfig.REQUIRE_SPEED_TESTS_ENABLED and requiresSpeedTest
+        Log.d(TAG, "isRequiresSpeedTestEnabled $isRequiresSpeedTestEnabled")
+
         workerId?.let { id ->
             compositeDisposable.add(
-                deviceMonitor.getNetworkStatus(id, requiresSpeedTest)
+                deviceMonitor.getNetworkStatus(id, isRequiresSpeedTestEnabled)
                         .flatMap { networkState ->
                             requestCycle(
                                 id,
@@ -136,10 +139,10 @@ class Syft internal constructor(
     }
 
     internal fun jobErrorIfBatteryInvalid(job: SyftJob): Boolean {
-//        if (!deviceMonitor.isBatteryStateValid()) {
-//            job.throwError(IllegalStateException("Battery constraints failed"))
-//            return true
-//        }
+        if (!deviceMonitor.isBatteryStateValid()) {
+            job.throwError(IllegalStateException("Battery constraints failed"))
+            return true
+        }
         return false
     }
 
@@ -158,9 +161,9 @@ class Syft internal constructor(
                     id,
                     job.jobId.modelName,
                     job.jobId.version,
-                    ping!!,
-                    downloadSpeed!!,
-                    uploadSpeed!!
+                    "10",
+                    "10",
+                    "10"
                 )
             )
         }

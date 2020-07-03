@@ -29,6 +29,10 @@ task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'crea
     ])
 }
 
+def featureFlags = rootProject.file("syftlib/feature_flag.properties")
+def featureFlagsProperties = new Properties()
+featureFlagsProperties.load(new FileInputStream(featureFlags))
+
 android {
     compileSdkVersion Versions.compileSdk
     buildToolsVersion Versions.buildTools
@@ -45,6 +49,7 @@ android {
 
     buildTypes {
         debug {
+            buildConfigField("Boolean", "REQUIRE_SPEED_TESTS_ENABLED", featureFlagsProperties.getProperty("requiresSpeedTest"))
             testCoverageEnabled = true
         }
         release {
