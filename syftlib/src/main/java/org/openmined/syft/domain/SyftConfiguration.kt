@@ -131,7 +131,7 @@ class SyftConfiguration internal constructor(
             this.maxConcurrentJobs = numJobs
             return this
         }
-        
+
         fun disableBackgroundServiceExecution(): SyftConfigBuilder {
             this.monitorDevice = true
             return this

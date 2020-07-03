@@ -5,7 +5,7 @@ import io.reactivex.Single
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.Syft
 import org.openmined.syft.demo.federated.ui.ContentState
-import org.openmined.syft.demo.federated.ui.MnistLogger
+import org.openmined.syft.demo.federated.ui.logging.MnistLogger
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.Plan
@@ -22,12 +22,10 @@ class TrainingTask(
     private val mnistDataRepository: MNISTDataRepository
 ) {
     private var syftWorker: Syft? = null
-    private val logger = MnistLogger.getInstance()
 
-    fun runTask(): Single<Result> {
+    fun runTask(logger: MnistLogger): Single<Result> {
         syftWorker = Syft.getInstance(configuration, authToken)
         val mnistJob = syftWorker!!.newJob("mnist", "1.0.0")
-        val result = mutableListOf<Float>()
         val statusPublisher = PublishProcessor.create<Result>()
 
         logger.postLog("MNIST job started \n\nChecking for download and upload speeds")
@@ -39,7 +37,7 @@ class TrainingTask(
                 clientConfig: ClientConfig
             ) {
                 logger.postLog("Model ${model.modelName} received.\n\nStarting training process")
-                trainingProcess(mnistJob, model, plans, clientConfig, result)
+                trainingProcess(mnistJob, model, plans, clientConfig, logger)
             }
 
             override fun onComplete() {
@@ -70,9 +68,9 @@ class TrainingTask(
         model: SyftModel,
         plans: ConcurrentHashMap<String, Plan>,
         clientConfig: ClientConfig,
-        result: MutableList<Float>
+        logger: MnistLogger
     ) {
-
+        val result = mutableListOf<Float>()
         plans.values.first().let { plan ->
             repeat(clientConfig.maxUpdates) { step ->
                 logger.postEpoch(step + 1)

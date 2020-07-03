@@ -15,6 +15,7 @@ import kotlinx.android.synthetic.main.activity_mnist.progressBar
 import kotlinx.android.synthetic.main.activity_mnist.toolbar
 import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityMnistBinding
+import org.openmined.syft.demo.federated.ui.logging.ActivityLogger
 
 const val AUTH_TOKEN = "authToken"
 const val BASE_URL = "baseUrl"
@@ -26,7 +27,7 @@ class MnistActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMnistBinding
     private lateinit var viewModel: MnistViewModel
-    private val logger = MnistLogger.getInstance()
+    private val logger = ActivityLogger.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
