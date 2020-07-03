@@ -76,7 +76,7 @@ class MnistViewModel(
 
     private fun attachMnistLogger(workRequest: WorkRequest) {
         workManager.getWorkInfoByIdLiveData(workRequest.id)
-                .observe(application as LifecycleOwner, Observer { workInfo: WorkInfo? ->
+                .observe(application.applicationContext as LifecycleOwner, Observer { workInfo: WorkInfo? ->
                     if (workInfo != null) {
                         val progress = workInfo.progress
                         logger.postData(
