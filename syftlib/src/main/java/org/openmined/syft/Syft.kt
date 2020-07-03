@@ -53,8 +53,7 @@ class Syft internal constructor(
     @Volatile
     private var workerId: String? = null
 
-    @Volatile
-    private var requiresSpeedTest: Boolean? = null
+    private var requiresSpeedTest: Boolean = true
 
     fun newJob(
         model: String,
@@ -92,7 +91,7 @@ class Syft internal constructor(
 
         workerId?.let { id ->
             compositeDisposable.add(
-                deviceMonitor.getNetworkStatus(id, requiresSpeedTest!!)
+                deviceMonitor.getNetworkStatus(id, requiresSpeedTest)
                         .flatMap { networkState ->
                             requestCycle(
                                 id,
