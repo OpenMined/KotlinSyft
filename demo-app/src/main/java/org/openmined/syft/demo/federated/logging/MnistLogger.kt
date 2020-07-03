@@ -23,7 +23,7 @@ abstract class MnistLogger {
 
     abstract fun postState(status: ContentState)
 
-    abstract fun postData(result: List<Float>)
+    abstract fun postData(result: Float)
 
     abstract fun postEpoch(epoch: Int)
 

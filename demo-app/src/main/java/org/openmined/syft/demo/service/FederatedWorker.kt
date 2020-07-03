@@ -32,6 +32,7 @@ const val STATUS = "status"
 const val EPOCH = "epoch"
 const val LOG = "log"
 const val NOTIFICATION_ID = 1
+private const val CHANNEL_ID = "worker"
 
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
@@ -65,11 +66,8 @@ class FederatedWorker(
     }
 
     private fun createForegroundInfo(progress: Int): ForegroundInfo {
-        val id = "worker"
-        val title = "trainer"
-        val cancel = "cancel training"
         val intent = WorkManager.getInstance(applicationContext)
-                .createCancelPendingIntent(getId())
+                .createCancelPendingIntent(id)
         val notifyIntent = Intent(serviceContext, WorkInfoActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -80,15 +78,15 @@ class FederatedWorker(
             createChannel()
         }
 
-        val notification = NotificationCompat.Builder(applicationContext, id)
-                .setContentTitle(title)
+        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+                .setContentTitle("Federated Trainer")
                 .setProgress(100, progress, false)
-                .setTicker(title)
+                .setTicker("Federated Trainer")
                 .setContentIntent(notifyPendingIntent)
                 .setContentText("running epoch $progress")
                 .setSmallIcon(android.R.drawable.ic_menu_manage)
                 .setOngoing(true)
-                .addAction(android.R.drawable.ic_delete, cancel, intent)
+                .addAction(android.R.drawable.ic_delete, "cancel training", intent)
                 .build()
 
         return ForegroundInfo(NOTIFICATION_ID, notification)
@@ -107,44 +105,33 @@ class FederatedWorker(
     }
 
     inner class WorkLogger : MnistLogger() {
-        private val state = mutableMapOf<String, Any>()
+        //        private val state = mutableMapOf<String, Any>()
         private val workManager = WorkManager.getInstance(serviceContext)
 
         override fun postState(status: ContentState) {
-            state[STATUS] = status.toString()
-            publish()
+            publish(STATUS to status.toString())
         }
 
-        override fun postData(result: List<Float>) {
-            state[LOSS_LIST] = result.toFloatArray()
-            publish()
+        override fun postData(result: Float) {
+            publish(LOSS_LIST to result)
         }
 
         override fun postEpoch(epoch: Int) {
-            state[EPOCH] = epoch
             if (epoch % 10 == 0 && getState() == WorkInfo.State.RUNNING)
                 setForegroundAsync(createForegroundInfo(epoch))
-            publish()
+            publish(EPOCH to epoch)
         }
 
         override fun postLog(message: String) {
-            state[LOG] = message
-            publish()
+            publish(LOG to message)
         }
 
         private fun getState() = workManager.getWorkInfoById(id).get().state
 
-        private fun publish() {
+        private fun publish(pair: Pair<String, Any>) {
             if (getState() == WorkInfo.State.RUNNING)
-                setProgressAsync(getWorkData())
+                setProgressAsync(workDataOf(pair))
         }
 
-        private fun getWorkData(): Data {
-            return workDataOf(
-                *(state.map { (key, value) ->
-                    key to value
-                }.toTypedArray())
-            )
-        }
     }
 }

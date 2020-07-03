@@ -21,7 +21,7 @@ class ActivityLogger : MnistLogger() {
         processStateInternal.postValue(status)
     }
 
-    override fun postData(result: List<Float>) {
+    override fun postData(result: Float) {
         processDataInternal.postValue(
             ProcessData(
                 (processDataInternal.value?.data ?: emptyList()) + result

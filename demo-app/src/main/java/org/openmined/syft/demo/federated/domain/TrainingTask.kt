@@ -70,7 +70,7 @@ class TrainingTask(
         clientConfig: ClientConfig,
         logger: MnistLogger
     ) {
-        val result = mutableListOf<Float>()
+        var result = -0.0f
         plans.values.first().let { plan ->
             repeat(clientConfig.maxUpdates) { step ->
                 logger.postEpoch(step + 1)
@@ -86,7 +86,7 @@ class TrainingTask(
                     val updatedParams =
                             outputResult.slice(beginIndex until outputResult.size)
                     model.updateModel(updatedParams.map { it.toTensor() })
-                    result.add(outputResult[1].toTensor().dataAsFloatArray.last())
+                    result= outputResult[1].toTensor().dataAsFloatArray.last()
                 } ?: run {
                     logger.postLog("the model returned empty array due to invalid device state")
                     return

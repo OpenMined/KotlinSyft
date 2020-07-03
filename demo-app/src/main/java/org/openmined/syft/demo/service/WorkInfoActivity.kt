@@ -60,13 +60,6 @@ class WorkInfoActivity : AppCompatActivity() {
             this,
             Observer { binding.step.text = it })
     }
-//
-//    override fun onStop() {
-//        Log.d(TAG,"closing activity")
-//        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-//        viewModel.workerRepository.getRunningWorkStatus() ?: manager.cancel(NOTIFICATION_ID)
-//        super.onStop()
-//    }
 
     private fun onProcessData(it: ProcessData?) {
         processData(

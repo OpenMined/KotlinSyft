@@ -21,11 +21,15 @@ class WorkInfoViewModel(private val activity: AppCompatActivity) : ViewModel() {
                     Observer { workInfo: WorkInfo? ->
                         if (workInfo != null) {
                             val progress = workInfo.progress
-                            logger.postData(
-                                progress.getFloatArray(LOSS_LIST)?.toList() ?: emptyList()
-                            )
-                            logger.postEpoch(progress.getInt(EPOCH, -1))
-                            logger.postLog(progress.getString(LOG) ?: "empty log")
+                            progress.getFloat(LOSS_LIST, -2.0f).takeIf { it > -1 }?.let {
+                                logger.postData(it)
+                            }
+                            progress.getInt(EPOCH, -2).takeIf { it > -1 }?.let {
+                                logger.postEpoch(it)
+                            }
+                            progress.getString(LOG)?.let {
+                                logger.postLog(it)
+                            }
                             logger.postState(
                                 ContentState.getObjectFromString(
                                     progress.getString(STATUS)

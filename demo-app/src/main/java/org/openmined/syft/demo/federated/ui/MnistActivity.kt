@@ -64,7 +64,6 @@ class MnistActivity : AppCompatActivity() {
         finish()
     }
 
-
     private fun onProcessData(it: ProcessData?) {
         processData(
             it ?: ProcessData(
