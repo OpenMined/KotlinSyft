@@ -68,7 +68,7 @@ internal class SyftTest {
             SyftConfiguration.NetworkingClients.SOCKET
         )
         val workerTest = spy(
-            Syft( config, deviceMonitor,"auth token")
+            Syft( config, deviceMonitor,"auth token", true)
         )
         val syftJob = SyftJob.create(
             "model name",
@@ -127,7 +127,7 @@ internal class SyftTest {
         )
 
         val workerTest = spy(
-            Syft( config, deviceMonitor,"auth token")
+            Syft( config, deviceMonitor,"auth token", true)
         )
         val modelName = "model name"
         val version = "1.0.0"

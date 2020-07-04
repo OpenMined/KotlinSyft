@@ -23,7 +23,8 @@ private const val TAG = "Syft"
 class Syft internal constructor(
     private val syftConfig: SyftConfiguration,
     private val deviceMonitor: DeviceMonitor,
-    private val authToken: String?
+    private val authToken: String?,
+    private val isSpeedTestEnable: Boolean
 ) : Disposable {
     companion object {
         @Volatile
@@ -40,7 +41,8 @@ class Syft internal constructor(
                 } ?: Syft(
                     syftConfiguration,
                     DeviceMonitor.construct(syftConfiguration),
-                    authToken
+                    authToken,
+                    true
                 ).also { INSTANCE = it }
             }
         }
@@ -89,7 +91,7 @@ class Syft internal constructor(
         if (jobErrorIfBatteryInvalid(job) || jobErrorIfNetworkInvalid(job))
             return
 
-        val isRequiresSpeedTestEnabled = BuildConfig.REQUIRE_SPEED_TESTS_ENABLED and requiresSpeedTest
+        val isRequiresSpeedTestEnabled = isSpeedTestEnable and requiresSpeedTest
         Log.d(TAG, "isRequiresSpeedTestEnabled $isRequiresSpeedTestEnabled")
 
         workerId?.let { id ->
