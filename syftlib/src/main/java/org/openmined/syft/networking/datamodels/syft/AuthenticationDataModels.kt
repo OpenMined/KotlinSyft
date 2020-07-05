@@ -21,7 +21,9 @@ sealed class AuthenticationResponse : NetworkModels() {
     @Serializable
     data class AuthenticationSuccess(
         @SerialName("worker_id")
-        val workerId: String
+        val workerId: String,
+        @SerialName("requires_speed_test")
+        val requiresSpeedTest: Boolean = true
     ) : AuthenticationResponse()
 
     @SerialName(AUTH_FAILURE)

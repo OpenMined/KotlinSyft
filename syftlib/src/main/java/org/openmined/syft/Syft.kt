@@ -1,5 +1,6 @@
 package org.openmined.syft
 
+import org.openmined.syft.fp.Either
 import android.accounts.NetworkErrorException
 import android.util.Log
 import io.reactivex.Single
@@ -22,8 +23,9 @@ private const val TAG = "Syft"
 class Syft internal constructor(
     private val syftConfig: SyftConfiguration,
     private val deviceMonitor: DeviceMonitor,
-    private val authToken: String?
-    ) : Disposable {
+    private val authToken: String?,
+    private val isSpeedTestEnable: Boolean
+) : Disposable {
     companion object {
         @Volatile
         private var INSTANCE: Syft? = null
@@ -37,9 +39,10 @@ class Syft internal constructor(
                     if (it.syftConfig == syftConfiguration && it.authToken == authToken) it
                     else throw ExceptionInInitializerError("syft worker initialised with different parameters. Dispose previous worker")
                 } ?: Syft(
-                    syftConfiguration,
-                    DeviceMonitor.construct(syftConfiguration),
-                    authToken
+                    syftConfig = syftConfiguration,
+                    deviceMonitor = DeviceMonitor.construct(syftConfiguration),
+                    authToken = authToken,
+                    isSpeedTestEnable = true
                 ).also { INSTANCE = it }
             }
         }
@@ -51,6 +54,8 @@ class Syft internal constructor(
 
     @Volatile
     private var workerId: String? = null
+
+    private var requiresSpeedTest: Boolean = true
 
     fun newJob(
         model: String,
@@ -83,21 +88,22 @@ class Syft internal constructor(
     internal fun getSyftWorkerId() = workerId
 
     internal fun executeCycleRequest(job: SyftJob) {
-        if (jobErrorIfBatteryInvalid(job) ||
-            jobErrorIfNetworkInvalid(job)
-        )
+        if (jobErrorIfBatteryInvalid(job) || jobErrorIfNetworkInvalid(job))
             return
+
+        val isRequiresSpeedTestEnabled = isSpeedTestEnable and requiresSpeedTest
+        Log.d(TAG, "isRequiresSpeedTestEnabled $isRequiresSpeedTestEnabled")
 
         workerId?.let { id ->
             compositeDisposable.add(
-                deviceMonitor.getNetworkStatus(id)
+                deviceMonitor.getNetworkStatus(id, isRequiresSpeedTestEnabled)
                         .flatMap { networkState ->
                             requestCycle(
                                 id,
                                 job,
                                 networkState.ping,
                                 networkState.downloadSpeed,
-                                networkState.uploadspeed
+                                networkState.uploadSpeed
                             )
                         }
                         .compose(syftConfig.networkingSchedulers.applySingleSchedulers())
@@ -149,22 +155,35 @@ class Syft internal constructor(
         downloadSpeed: String?,
         uploadSpeed: String?
     ): Single<CycleResponseData> {
-        return when {
-            ping == null ->
-                Single.error(NetworkErrorException("unable to get ping"))
-            downloadSpeed == null ->
-                Single.error(NetworkErrorException("unable to verify download speed"))
-            uploadSpeed == null ->
-                Single.error(NetworkErrorException("unable to verify upload speed"))
-            else -> syftConfig.getSignallingClient().getCycle(
+
+        return when (val check = checkConditions(ping, downloadSpeed, uploadSpeed)) {
+            is Either.Left -> Single.error(NetworkErrorException(check.a))
+            is Either.Right -> syftConfig.getSignallingClient().getCycle(
                 CycleRequest(
-                    id, job.jobId.modelName,
+                    id,
+                    job.jobId.modelName,
                     job.jobId.version,
-                    ping,
-                    downloadSpeed,
-                    uploadSpeed
+                    if (ping.isNullOrEmpty()) "10" else ping,
+                    if (downloadSpeed.isNullOrEmpty()) "10" else downloadSpeed,
+                    if (uploadSpeed.isNullOrEmpty()) "10" else uploadSpeed
                 )
             )
+        }
+    }
+
+    private fun checkConditions(
+        ping: String?,
+        downloadSpeed: String?,
+        uploadSpeed: String?
+    ): Either<String, Boolean> {
+        return when {
+            ping == null ->
+                Either.Left("unable to get ping")
+            downloadSpeed == null ->
+                Either.Left("unable to verify download speed")
+            uploadSpeed == null ->
+                Either.Left("unable to verify upload speed")
+            else -> Either.Right(true)
         }
     }
 
@@ -201,16 +220,18 @@ class Syft internal constructor(
         compositeDisposable.add(
             syftConfig.getSignallingClient().authenticate(AuthenticationRequest(authToken))
                     .compose(syftConfig.networkingSchedulers.applySingleSchedulers())
-                    .subscribe({ t: AuthenticationResponse ->
-                        when (t) {
+                    .subscribe({ response: AuthenticationResponse ->
+                        when (response) {
                             is AuthenticationResponse.AuthenticationSuccess -> {
-                                if (workerId == null)
-                                    setSyftWorkerId(t.workerId)
+                                if (workerId == null) {
+                                    setSyftWorkerId(response.workerId)
+                                    requiresSpeedTest = response.requiresSpeedTest
+                                }
                                 executeCycleRequest(job)
                             }
                             is AuthenticationResponse.AuthenticationError -> {
-                                job.throwError(SecurityException(t.errorMessage))
-                                Log.d(TAG, t.errorMessage)
+                                job.throwError(SecurityException(response.errorMessage))
+                                Log.d(TAG, response.errorMessage)
                             }
                         }
                     }, {

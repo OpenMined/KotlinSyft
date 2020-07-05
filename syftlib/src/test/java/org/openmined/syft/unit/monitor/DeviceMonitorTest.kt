@@ -4,6 +4,7 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.stub
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
+import io.reactivex.Maybe
 import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.processors.PublishProcessor
@@ -29,7 +30,7 @@ internal class DeviceMonitorTest {
 
     private val networkStatusRepository = mock<NetworkStatusRepository> {
         on { subscribeStateChange() }.thenReturn(processor.onBackpressureLatest())
-        on { getNetworkStatus("test id") }.thenReturn(
+        on { getNetworkStatus("test id", true) }.thenReturn(
             Single.just(NetworkStatusModel())
         )
     }
@@ -174,8 +175,8 @@ internal class DeviceMonitorTest {
             batteryStatusRepository,
             networkingSchedulers
         )
-        deviceMonitor.getNetworkStatus("test id")
-        verify(networkStatusRepository).getNetworkStatus("test id")
+        deviceMonitor.getNetworkStatus("test id", true)
+        verify(networkStatusRepository).getNetworkStatus("test id", true)
     }
 
     @Test

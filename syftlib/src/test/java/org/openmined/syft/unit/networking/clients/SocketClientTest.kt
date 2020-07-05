@@ -71,6 +71,7 @@ internal class SocketClientTest {
             DATA to json {
                 "status" to "success"
                 "worker_id" to "test_id"
+                "requires_speed_test" to true
             }
         }
         webSocket.stub {
@@ -85,7 +86,7 @@ internal class SocketClientTest {
         testScheduler.advanceTimeBy(1L, TimeUnit.SECONDS)
         processor.offer(NetworkMessage.MessageReceived(authenticationResponse.toString()))
         testScheduler.advanceTimeBy(1L, TimeUnit.SECONDS)
-        testAuthenticate.assertValue(AuthenticationResponse.AuthenticationSuccess("test_id"))
+        testAuthenticate.assertValue(AuthenticationResponse.AuthenticationSuccess("test_id", true))
         testAuthenticate.dispose()
     }
 

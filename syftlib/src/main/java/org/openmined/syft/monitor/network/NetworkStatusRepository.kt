@@ -31,9 +31,13 @@ class NetworkStatusRepository internal constructor(
         }
     }
 
-    fun getNetworkStatus(workerId: String): Single<NetworkStatusModel> {
-        return cacheService.getNetworkStatusCache()
-                .switchIfEmpty(getNetworkStatusUncached(workerId))
+    fun getNetworkStatus(workerId: String, requiresSpeedTest: Boolean): Single<NetworkStatusModel> {
+        return if (requiresSpeedTest) {
+            cacheService.getNetworkStatusCache()
+                    .switchIfEmpty(getNetworkStatusUncached(workerId))
+        } else {
+            Single.just(NetworkStatusModel("", "", ""))
+        }
     }
 
     fun getNetworkValidity() = realTimeDataService.getNetworkValidity(networkConstraints)
@@ -48,6 +52,7 @@ class NetworkStatusRepository internal constructor(
 
     private fun getNetworkStatusUncached(workerId: String): Single<NetworkStatusModel> {
         val networkStatus = NetworkStatusModel()
+        // TODO Must ping be excluded if requiresSpeedTest is false?
         return realTimeDataService.updatePing(workerId, networkStatus)
                 .andThen(realTimeDataService.updateDownloadSpeed(workerId, networkStatus))
                 .andThen(realTimeDataService.updateUploadSpeed(workerId, networkStatus))
