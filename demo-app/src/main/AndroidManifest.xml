@@ -14,7 +14,7 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true" >
         <activity
-            android:name=".service.WorkInfoActivity"
+            android:name=".federated.ui.work.WorkInfoActivity"
             android:label="@string/title_activity_work_info"
             android:taskAffinity=""
             android:excludeFromRecents="true"
@@ -31,7 +31,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".federated.ui.MnistActivity"
+            android:name=".federated.ui.main.MnistActivity"
             android:label="MNIST Trainer"
             android:theme="@style/AppTheme.NoActionBar" />
     </application>

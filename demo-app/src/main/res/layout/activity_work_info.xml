@@ -6,13 +6,13 @@
     <data>
         <variable
             name="viewModel"
-            type="org.openmined.syft.demo.service.WorkInfoViewModel" />
+            type="org.openmined.syft.demo.federated.ui.work.WorkInfoViewModel" />
     </data>
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".service.WorkInfoActivity">
+        tools:context=".federated.ui.work.WorkInfoActivity">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -89,7 +89,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="10dp"
-                    android:text="@{viewModel.logger.logText}"
+                    android:text="@{viewModel.logText}"
                     android:textAlignment="viewStart" />
             </ScrollView>
 

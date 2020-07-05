@@ -1,4 +1,4 @@
-package org.openmined.syft.demo.service
+package org.openmined.syft.demo.federated.service
 
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -8,8 +8,8 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import org.openmined.syft.demo.federated.ui.AUTH_TOKEN
-import org.openmined.syft.demo.federated.ui.BASE_URL
+import org.openmined.syft.demo.federated.ui.main.AUTH_TOKEN
+import org.openmined.syft.demo.federated.ui.main.BASE_URL
 import java.util.UUID
 
 private const val TAG = "WorkerRepository"
@@ -53,7 +53,7 @@ class WorkerRepository(private val workManager: WorkManager) {
         else null
     }
 
-    fun getWorkObserver(workRequestId: UUID) = workManager.getWorkInfoByIdLiveData(workRequestId)
+    fun getWorkInfo(workRequestId: UUID) = workManager.getWorkInfoByIdLiveData(workRequestId)
 
     fun cancelAllWork() {
         workManager.cancelAllWork()

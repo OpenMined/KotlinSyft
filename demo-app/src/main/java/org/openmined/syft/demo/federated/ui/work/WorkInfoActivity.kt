@@ -1,9 +1,6 @@
-package org.openmined.syft.demo.service
+package org.openmined.syft.demo.federated.ui.work
 
-import android.app.NotificationManager
-import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
@@ -18,7 +15,7 @@ import kotlinx.android.synthetic.main.activity_mnist.progressBar
 import kotlinx.android.synthetic.main.activity_mnist.toolbar
 import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityWorkInfoBinding
-import org.openmined.syft.demo.federated.logging.ActivityLogger
+import org.openmined.syft.demo.federated.service.WorkerRepository
 import org.openmined.syft.demo.federated.ui.ContentState
 import org.openmined.syft.demo.federated.ui.ProcessData
 
@@ -29,34 +26,31 @@ private const val TAG = "WorkInfoActivity"
 class WorkInfoActivity : AppCompatActivity() {
     private lateinit var binding: ActivityWorkInfoBinding
     private lateinit var viewModel: WorkInfoViewModel
-    private val logger = ActivityLogger.getInstance()
+
+    private val workerRepository = WorkerRepository(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_work_info)
         binding.lifecycleOwner = this
         setSupportActionBar(toolbar)
-        viewModel = ViewModelProvider(
-            this,
-            WorkInfoViewModelFactory(this)
-        ).get(WorkInfoViewModel::class.java)
+        viewModel = initiateViewModel()
 
-        viewModel.workerRepository.getRunningWorkStatus()?.let {
-            viewModel.attachMnistLogger(it)
-        }
         binding.viewModel = viewModel
 
-        logger.processState.observe(
+        viewModel.getRunningWorkInfo()?.observe(this, viewModel.getWorkInfoObserver())
+
+        viewModel.processState.observe(
             this,
             Observer { onProcessStateChanged(it) }
         )
 
-        logger.processData.observe(
+        viewModel.processData.observe(
             this,
             Observer { onProcessData(it) }
         )
 
-        logger.steps.observe(
+        viewModel.steps.observe(
             this,
             Observer { binding.step.text = it })
     }
@@ -95,4 +89,12 @@ class WorkInfoActivity : AppCompatActivity() {
         chart.invalidate()
     }
 
+    private fun initiateViewModel(): WorkInfoViewModel {
+        return ViewModelProvider(
+            this,
+            WorkInfoViewModelFactory(
+                WorkerRepository(this)
+            )
+        ).get(WorkInfoViewModel::class.java)
+    }
 }

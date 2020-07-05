@@ -1,4 +1,4 @@
-package org.openmined.syft.demo.service
+package org.openmined.syft.demo.federated.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -9,8 +9,8 @@ import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.MutableLiveData
 import androidx.work.CoroutineWorker
-import androidx.work.Data
 import androidx.work.ForegroundInfo
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
@@ -20,9 +20,11 @@ import org.openmined.syft.demo.federated.datasource.LocalMNISTDataDataSource
 import org.openmined.syft.demo.federated.domain.MNISTDataRepository
 import org.openmined.syft.demo.federated.domain.TrainingTask
 import org.openmined.syft.demo.federated.logging.MnistLogger
-import org.openmined.syft.demo.federated.ui.AUTH_TOKEN
-import org.openmined.syft.demo.federated.ui.BASE_URL
+import org.openmined.syft.demo.federated.ui.main.AUTH_TOKEN
+import org.openmined.syft.demo.federated.ui.main.BASE_URL
 import org.openmined.syft.demo.federated.ui.ContentState
+import org.openmined.syft.demo.federated.ui.ProcessData
+import org.openmined.syft.demo.federated.ui.work.WorkInfoActivity
 import org.openmined.syft.domain.SyftConfiguration
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -78,7 +80,9 @@ class FederatedWorker(
             createChannel()
         }
 
-        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+        val notification = NotificationCompat.Builder(applicationContext,
+            CHANNEL_ID
+        )
                 .setContentTitle("Federated Trainer")
                 .setProgress(100, progress, false)
                 .setTicker("Federated Trainer")
@@ -104,8 +108,24 @@ class FederatedWorker(
         notificationManager.createNotificationChannel(mChannel)
     }
 
-    inner class WorkLogger : MnistLogger() {
-        //        private val state = mutableMapOf<String, Any>()
+    inner class WorkLogger : MnistLogger {
+
+        override val logText
+            get() = logTextInternal
+        private val logTextInternal = MutableLiveData<String>()
+
+        override val steps
+            get() = stepsInternal
+        private val stepsInternal = MutableLiveData<String>()
+
+        override val processState
+            get() = processStateInternal
+        private val processStateInternal = MutableLiveData<ContentState>()
+
+        override val processData
+            get() = processDataInternal
+        private val processDataInternal = MutableLiveData<ProcessData>()
+
         private val workManager = WorkManager.getInstance(serviceContext)
 
         override fun postState(status: ContentState) {

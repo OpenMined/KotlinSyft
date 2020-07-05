@@ -9,7 +9,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityLoginBinding
-import org.openmined.syft.demo.federated.ui.MnistActivity
+import org.openmined.syft.demo.federated.ui.main.MnistActivity
 
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
