@@ -61,7 +61,7 @@ class Plan(val job: SyftJob, val planId: String) {
             Tensor.fromBlob(longArrayOf(clientConfig.batchSize), longArrayOf(1))
         )
 
-        // lr is the pytorch IValue tensor containing the learning rate specificed in the client configs.
+        // lr is the pytorch IValue tensor containing the learning rate specified in the client configs.
         val lr = IValue.from(
             Tensor.fromBlob(floatArrayOf(clientConfig.lr), longArrayOf(1))
         )

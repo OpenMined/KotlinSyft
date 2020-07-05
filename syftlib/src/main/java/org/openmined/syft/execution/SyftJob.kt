@@ -250,7 +250,7 @@ class SyftJob internal constructor(
     /**
      * Throw an error when network constraints fail
      */
-    internal fun throwErrorIfNetworkInvalid(): Boolean {
+    private fun throwErrorIfNetworkInvalid(): Boolean {
         if (worker.jobErrorIfNetworkInvalid(this)) {
             //todo save model to a file here
             return true

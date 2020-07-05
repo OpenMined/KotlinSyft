@@ -39,10 +39,10 @@ class Syft internal constructor(
                     if (it.syftConfig == syftConfiguration && it.authToken == authToken) it
                     else throw ExceptionInInitializerError("syft worker initialised with different parameters. Dispose previous worker")
                 } ?: Syft(
-                    syftConfiguration,
-                    DeviceMonitor.construct(syftConfiguration),
-                    authToken,
-                    true
+                    syftConfig = syftConfiguration,
+                    deviceMonitor = DeviceMonitor.construct(syftConfiguration),
+                    authToken = authToken,
+                    isSpeedTestEnable = true
                 ).also { INSTANCE = it }
             }
         }
@@ -103,7 +103,7 @@ class Syft internal constructor(
                                 job,
                                 networkState.ping,
                                 networkState.downloadSpeed,
-                                networkState.uploadspeed
+                                networkState.uploadSpeed
                             )
                         }
                         .compose(syftConfig.networkingSchedulers.applySingleSchedulers())
@@ -163,9 +163,9 @@ class Syft internal constructor(
                     id,
                     job.jobId.modelName,
                     job.jobId.version,
-                    "10",
-                    "10",
-                    "10"
+                    if (ping.isNullOrEmpty()) "10" else ping,
+                    if (downloadSpeed.isNullOrEmpty()) "10" else downloadSpeed,
+                    if (uploadSpeed.isNullOrEmpty()) "10" else uploadSpeed
                 )
             )
         }

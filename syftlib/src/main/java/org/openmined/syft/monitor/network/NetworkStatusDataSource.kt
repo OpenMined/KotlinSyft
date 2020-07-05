@@ -127,8 +127,8 @@ class NetworkStatusRealTimeDataSource internal constructor(
                         if (speed > 100000)
                         //capping infinity
                             speed = 100000.0f
-                        networkStatusModel.uploadspeed = speed.toString()
-                        Log.d(TAG, "Upload Speed is ${networkStatusModel.uploadspeed} KBps")
+                        networkStatusModel.uploadSpeed = speed.toString()
+                        Log.d(TAG, "Upload Speed is ${networkStatusModel.uploadSpeed} KBps")
                         file.delete()
                         Completable.complete()
 

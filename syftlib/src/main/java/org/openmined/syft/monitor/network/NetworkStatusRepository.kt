@@ -1,7 +1,6 @@
 package org.openmined.syft.monitor.network
 
 import io.reactivex.Flowable
-import io.reactivex.Maybe
 import io.reactivex.Single
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.monitor.BroadCastListener
