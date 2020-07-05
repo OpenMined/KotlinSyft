@@ -118,13 +118,14 @@ internal class SyftTest {
             schedulers,
             mock(),
             true,
-            listOf(),
-            NetworkCapabilities.TRANSPORT_WIFI,
-            0L,
-            1,
-            socketClient,
-            httpClient,
-            SyftConfiguration.NetworkingClients.SOCKET
+            batteryCheckEnabled = true,
+            networkConstraints = listOf(),
+            transportMedium = NetworkCapabilities.TRANSPORT_WIFI,
+            cacheTimeOut = 0L,
+            maxConcurrentJobs = 1,
+            socketClient = socketClient,
+            httpClient = httpClient,
+            messagingClient = SyftConfiguration.NetworkingClients.SOCKET
         )
 
         val workerTest = spy(
