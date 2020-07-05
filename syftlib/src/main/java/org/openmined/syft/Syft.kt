@@ -1,6 +1,6 @@
 package org.openmined.syft
 
-import Either
+import org.openmined.syft.fp.Either
 import android.accounts.NetworkErrorException
 import android.util.Log
 import io.reactivex.Single

@@ -1,3 +1,5 @@
+package org.openmined.syft.fp
+
 /**
  * Copyright (C) 2019 Fernando Cejas Open Source Project
  *
@@ -46,14 +48,14 @@ sealed class Either<out L, out R> {
      * Creates a Left type.
      * @see Left
      */
-    fun <L> left(a: L) = Either.Left(a)
+    fun <L> left(a: L) = Left(a)
 
 
     /**
      * Creates a Left type.
      * @see Right
      */
-    fun <R> right(b: R) = Either.Right(b)
+    fun <R> right(b: R) = Right(b)
 
     /**
      * Applies fnL if this is a Left or fnR if this is a Right.
@@ -67,32 +69,32 @@ sealed class Either<out L, out R> {
             }
 }
 
-/**
- * Composes 2 functions
- * See <a href="https://proandroiddev.com/kotlins-nothing-type-946de7d464fb">Credits to Alex Hart.</a>
- */
-fun <A, B, C> ((A) -> B).c(f: (B) -> C): (A) -> C = {
-    f(this(it))
-}
-
-/**
- * Right-biased flatMap() FP convention which means that Right is assumed to be the default case
- * to operate on. If it is Left, operations like map, flatMap, ... return the Left value unchanged.
- */
-fun <T, L, R> Either<L, R>.flatMap(fn: (R) -> Either<L, T>): Either<L, T> =
-        when (this) {
-            is Either.Left -> Either.Left(a)
-            is Either.Right -> fn(b)
-        }
-
-/**
- * Right-biased map() FP convention which means that Right is assumed to be the default case
- * to operate on. If it is Left, operations like map, flatMap, ... return the Left value unchanged.
- */
-fun <T, L, R> Either<L, R>.map(fn: (R) -> (T)): Either<L, T> = this.flatMap(fn.c(::right))
-
+///**
+// * Composes 2 functions
+// * See <a href="https://proandroiddev.com/kotlins-nothing-type-946de7d464fb">Credits to Alex Hart.</a>
+// */
+//fun <A, B, C> ((A) -> B).c(f: (B) -> C): (A) -> C = {
+//    f(this(it))
+//}
+//
+///**
+// * Right-biased flatMap() FP convention which means that Right is assumed to be the default case
+// * to operate on. If it is Left, operations like map, flatMap, ... return the Left value unchanged.
+// */
+//fun <T, L, R> org.openmined.syft.fp.Either<L, R>.flatMap(fn: (R) -> org.openmined.syft.fp.Either<L, T>): org.openmined.syft.fp.Either<L, T> =
+//        when (this) {
+//            is org.openmined.syft.fp.Either.Left -> org.openmined.syft.fp.Either.Left(a)
+//            is org.openmined.syft.fp.Either.Right -> fn(b)
+//        }
+//
+///**
+// * Right-biased map() FP convention which means that Right is assumed to be the default case
+// * to operate on. If it is Left, operations like map, flatMap, ... return the Left value unchanged.
+// */
+//fun <T, L, R> org.openmined.syft.fp.Either<L, R>.map(fn: (R) -> (T)): org.openmined.syft.fp.Either<L, T> = this.flatMap(fn.c(::right))
+//
 /** Returns the value from this `Right` or the given argument if this is a `Left`.
- *  Right(12).getOrElse(17) RETURNS 12 and Left(12).getOrElse(17) RETURNS 17
+ *  Right(12).org.openmined.syft.fp.getOrElse(17) RETURNS 12 and Left(12).org.openmined.syft.fp.getOrElse(17) RETURNS 17
  */
 fun <L, R> Either<L, R>.getOrElse(value: R): R =
         when (this) {
