@@ -140,16 +140,6 @@ internal class SyftTest {
             config
         )
 
-        val cycleRequest = CycleRequest(
-            workerId,
-            modelName,
-            version,
-            "10",
-            "10",
-            "10"
-        )
-
-
         workerTest.executeCycleRequest(syftJob)
         verify(socketClient).authenticate(AuthenticationRequest("auth token"))
         verifyNoMoreInteractions(socketClient)
