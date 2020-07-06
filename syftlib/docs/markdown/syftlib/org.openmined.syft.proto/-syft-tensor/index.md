@@ -1,0 +1,27 @@
+[syftlib](../../index.md) / [org.openmined.syft.proto](../index.md) / [SyftTensor](./index.md)
+
+# SyftTensor
+
+`@ExperimentalUnsignedTypes data class SyftTensor`
+
+### Constructors
+
+| [&lt;init&gt;](-init-.md) | `SyftTensor(id: Id, contents: TensorData, shape: `[`MutableList`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-list/index.html)`<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`>, dtype: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, chain: `[`SyftTensor`](./index.md)`? = null, grad_chain: `[`SyftTensor`](./index.md)`? = null, tags: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>, description: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)` |
+
+### Properties
+
+| [chain](chain.md) | `val chain: `[`SyftTensor`](./index.md)`?` |
+| [contents](contents.md) | `val contents: TensorData` |
+| [description](description.md) | `val description: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [dtype](dtype.md) | `val dtype: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [grad_chain](grad_chain.md) | `val grad_chain: `[`SyftTensor`](./index.md)`?` |
+| [id](id.md) | `val id: Id` |
+| [shape](shape.md) | `val shape: `[`MutableList`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-list/index.html)`<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`>` |
+| [tags](tags.md) | `val tags: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>` |
+
+### Functions
+
+| [applyOperation](apply-operation.md) | `fun applyOperation(scriptModuleLocation: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, vararg operands: `[`SyftTensor`](./index.md)`): `[`SyftTensor`](./index.md) |
+| [getTorchTensor](get-torch-tensor.md) | `fun getTorchTensor(): Tensor` |
+| [serialize](serialize.md) | `fun serialize(): TorchTensor` |
+
