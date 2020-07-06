@@ -36,7 +36,7 @@ dokka {
     outputDirectory = "$buildDir/html"
     doLast {
         ant.move file: "$outputDirectory",
-                todir: "./docs"
+                todir: "$rootDir/docs"
     }
 }
 
@@ -45,7 +45,7 @@ task dokkaMarkdown(type: org.jetbrains.dokka.gradle.DokkaTask) {
     outputDirectory = "$buildDir/markdown"
     doLast {
         ant.move file: "$outputDirectory",
-                todir: "./docs"
+                todir: "$rootDir/docs"
     }
 }
 
