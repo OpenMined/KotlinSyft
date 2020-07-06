@@ -59,13 +59,14 @@ internal class SyftTest {
             schedulers,
             mock(),
             true,
-            listOf(),
-            NetworkCapabilities.TRANSPORT_WIFI,
-            0L,
-            1,
-            socketClient,
-            httpClient,
-            SyftConfiguration.NetworkingClients.SOCKET
+            batteryCheckEnabled = true,
+            networkConstraints = listOf(),
+            transportMedium = NetworkCapabilities.TRANSPORT_WIFI,
+            cacheTimeOut = 0L,
+            maxConcurrentJobs = 1,
+            socketClient = socketClient,
+            httpClient = httpClient,
+            messagingClient = SyftConfiguration.NetworkingClients.SOCKET
         )
         val workerTest = spy(
             Syft( config, deviceMonitor,"auth token", true)
@@ -117,13 +118,14 @@ internal class SyftTest {
             schedulers,
             mock(),
             true,
-            listOf(),
-            NetworkCapabilities.TRANSPORT_WIFI,
-            0L,
-            1,
-            socketClient,
-            httpClient,
-            SyftConfiguration.NetworkingClients.SOCKET
+            batteryCheckEnabled = true,
+            networkConstraints = listOf(),
+            transportMedium = NetworkCapabilities.TRANSPORT_WIFI,
+            cacheTimeOut = 0L,
+            maxConcurrentJobs = 1,
+            socketClient = socketClient,
+            httpClient = httpClient,
+            messagingClient = SyftConfiguration.NetworkingClients.SOCKET
         )
 
         val workerTest = spy(
@@ -137,16 +139,6 @@ internal class SyftTest {
             workerTest,
             config
         )
-
-        val cycleRequest = CycleRequest(
-            workerId,
-            modelName,
-            version,
-            "10",
-            "10",
-            "10"
-        )
-
 
         workerTest.executeCycleRequest(syftJob)
         verify(socketClient).authenticate(AuthenticationRequest("auth token"))

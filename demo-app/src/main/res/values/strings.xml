@@ -3,7 +3,18 @@
     <string name="log_message_hint">Syft will tell you what happens in this area</string>
     <string name="title_activity_base_u_r_l">FullscreenActivity</string>
     <string name="submit">Submit</string>
-    <string name="start">Start Cycle</string>
+    <string name="start_background">Start Background</string>
+    <string name="close_background">Close Background</string>
+    <string name="start_foreground">Start Foreground</string>
     <string name="enter_url">Enter PyGrid server URL:</string>
     <string name="error_url">url is not valid</string>
+    <string name="title_activity_work_info">Running Job Info</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <string name="hello_first_fragment">Hello first fragment</string>
+    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
 </resources>

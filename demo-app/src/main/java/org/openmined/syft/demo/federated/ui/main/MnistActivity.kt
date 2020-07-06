@@ -1,4 +1,4 @@
-package org.openmined.syft.demo.federated.ui
+package org.openmined.syft.demo.federated.ui.main
 
 import android.os.Bundle
 import android.view.View
@@ -17,8 +17,13 @@ import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityMnistBinding
 import org.openmined.syft.demo.federated.datasource.LocalMNISTDataDataSource
 import org.openmined.syft.demo.federated.domain.MNISTDataRepository
+import org.openmined.syft.demo.federated.service.WorkerRepository
+import org.openmined.syft.demo.federated.ui.ContentState
+import org.openmined.syft.demo.federated.ui.ProcessData
 import org.openmined.syft.domain.SyftConfiguration
 
+const val AUTH_TOKEN = "authToken"
+const val BASE_URL = "baseUrl"
 private const val TAG = "MnistActivity"
 
 @ExperimentalUnsignedTypes
@@ -26,19 +31,24 @@ private const val TAG = "MnistActivity"
 class MnistActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMnistBinding
-    private lateinit var viewModel: MnistViewModel
+    private lateinit var viewModel: MnistActivityViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_mnist)
         binding.lifecycleOwner = this
         setSupportActionBar(toolbar)
-        viewModel = initiateViewModel(
+
+        this.viewModel = initiateViewModel(
             intent.getStringExtra("baseURL"),
             intent.getStringExtra("authToken")
         )
+        binding.viewModel = this.viewModel
 
-        binding.viewModel = viewModel
+        viewModel.getRunningWorkInfo()?.observe(this, viewModel.getWorkInfoObserver())
+
+        binding.buttonFirst.setOnClickListener { launchForegroundCycle() }
+        binding.buttonSecond.setOnClickListener { launchBackgroundCycle() }
 
         viewModel.processState.observe(
             this,
@@ -53,6 +63,20 @@ class MnistActivity : AppCompatActivity() {
         viewModel.steps.observe(
             this,
             Observer { binding.step.text = it })
+    }
+
+
+    private fun launchBackgroundCycle() {
+        viewModel.submitJob().observe(this, viewModel.getWorkInfoObserver())
+    }
+
+    private fun launchForegroundCycle() {
+        val config = SyftConfiguration.builder(this, viewModel.baseUrl)
+                .setCacheTimeout(0L)
+                .build()
+        val localMNISTDataDataSource = LocalMNISTDataDataSource(resources)
+        val dataRepository = MNISTDataRepository(localMNISTDataDataSource)
+        viewModel.launchForegroundTrainer(config, dataRepository)
     }
 
     override fun onBackPressed() {
@@ -95,18 +119,16 @@ class MnistActivity : AppCompatActivity() {
         chart.invalidate()
     }
 
-    private fun initiateViewModel(baseUrl: String?, authToken: String?): MnistViewModel {
+    private fun initiateViewModel(baseUrl: String?, authToken: String?): MnistActivityViewModel {
         if (baseUrl == null || authToken == null)
             throw IllegalArgumentException("Mnist trainer called without proper arguments")
-        val config = SyftConfiguration.builder(this, baseUrl).setCacheTimeout(0L).build()
-        val localMNISTDataDataSource = LocalMNISTDataDataSource(resources)
-        val dataRepository = MNISTDataRepository(localMNISTDataDataSource)
         return ViewModelProvider(
-            this, MnistViewModelFactory(
+            this,
+            MnistViewModelFactory(
+                baseUrl,
                 authToken,
-                config,
-                dataRepository
+                WorkerRepository(this)
             )
-        ).get(MnistViewModel::class.java)
+        ).get(MnistActivityViewModel::class.java)
     }
 }

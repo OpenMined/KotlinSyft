@@ -17,6 +17,7 @@ class SyftConfiguration internal constructor(
     val networkingSchedulers: ProcessSchedulers,
     val computeSchedulers: ProcessSchedulers,
     val filesDir: File,
+    val monitorDevice : Boolean,
     val batteryCheckEnabled: Boolean,
     val networkConstraints: List<Int>,
     val transportMedium: Int,
@@ -61,6 +62,7 @@ class SyftConfiguration internal constructor(
         private var maxConcurrentJobs: Int = 1
         private var messagingClient: NetworkingClients = NetworkingClients.SOCKET
         private var cacheTimeOut: Long = 100000
+        private var monitorDevice: Boolean = true
 
         private val networkConstraints = mutableMapOf(
             NetworkCapabilities.NET_CAPABILITY_INTERNET to true,
@@ -76,6 +78,7 @@ class SyftConfiguration internal constructor(
                 networkingSchedulers,
                 computeSchedulers,
                 filesDir,
+                monitorDevice,
                 batteryCheckEnabled,
                 constraintList,
                 networkTransportMedium,
@@ -126,6 +129,16 @@ class SyftConfiguration internal constructor(
 
         fun setMaxConcurrentJobs(numJobs: Int): SyftConfigBuilder {
             this.maxConcurrentJobs = numJobs
+            return this
+        }
+
+        fun disableBackgroundServiceExecution(): SyftConfigBuilder {
+            this.monitorDevice = true
+            return this
+        }
+
+        fun enableBackgroundServiceExecution(): SyftConfigBuilder {
+            this.monitorDevice = false
             return this
         }
 

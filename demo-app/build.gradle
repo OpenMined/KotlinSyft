@@ -20,6 +20,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
+    }
+
     dataBinding {
         enabled true
     }
@@ -47,7 +52,12 @@ dependencies {
     implementation DemoAppDependencies.mpAndroidChart
     implementation DemoAppDependencies.materialAndroid
     implementation DemoAppDependencies.kotlinJDK
-
+    implementation DemoAppDependencies.workKtx
+    implementation DemoAppDependencies.workGCM
+    implementation DemoAppDependencies.workRX
+    implementation DemoAppDependencies.coroutines
+    implementation DemoAppDependencies.lifecycle
+    implementation DemoAppDependencies.lifeCycleProcess
 
     // TODO During the first stages of the project, include the library here. Later on we should use the library from the repository
     implementation project(path: ':syftlib')
@@ -56,6 +66,7 @@ dependencies {
     implementation SyftlibDependencies.pytorchAndroid
     implementation SyftlibDependencies.torchVisionAndroid
 
+    androidTestImplementation DemoAppDependencies.workTest
     androidTestImplementation CommonDependencies.adxExtJunit
     androidTestImplementation CommonDependencies.espresso
 }

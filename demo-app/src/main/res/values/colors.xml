@@ -6,4 +6,5 @@
     <color name="black_overlay">#66000000</color>
     <color name="green_tint">#9E11C553</color>
     <color name="white">#FFFFFF</color>
+    <color name="red">#F14242</color>
 </resources>

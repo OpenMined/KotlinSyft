@@ -4,20 +4,20 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <variable
             name="viewModel"
-            type="org.openmined.syft.demo.federated.ui.MnistViewModel" />
+            type="org.openmined.syft.demo.federated.ui.main.MnistActivityViewModel" />
     </data>
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".federated.ui.MnistActivity">
+        tools:context=".federated.ui.main.MnistActivity">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:context=".FederatedCycleFragment">
+            android:layout_height="match_parent">
 
             <com.google.android.material.appbar.AppBarLayout
                 android:id="@+id/toolbar_wrapper"
@@ -36,12 +36,12 @@
             </com.google.android.material.appbar.AppBarLayout>
 
             <LinearLayout
-                android:layout_width="match_parent"
                 android:id="@+id/contentPanel"
+                android:layout_width="match_parent"
                 android:layout_height="0dp"
-                app:layout_constraintBottom_toTopOf="@id/scrollArea"
                 android:layout_gravity="center_horizontal"
                 android:orientation="vertical"
+                app:layout_constraintBottom_toTopOf="@id/scrollArea"
                 app:layout_constraintTop_toBottomOf="@+id/toolbar_wrapper">
 
                 <LinearLayout
@@ -54,9 +54,9 @@
 
                     <TextView
                         android:id="@+id/step"
-                        android:layout_marginVertical="20dp"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginVertical="20dp"
                         android:textAlignment="center"
                         android:textSize="24sp" />
 
@@ -64,7 +64,7 @@
                         android:id="@+id/chart"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
-                        android:layout_weight="1"/>
+                        android:layout_weight="1" />
                 </LinearLayout>
 
                 <ProgressBar
@@ -78,9 +78,9 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/scrollArea"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
-                android:id="@+id/scrollArea"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:padding="10dp"
@@ -98,22 +98,58 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="10dp"
-                        android:text="@{viewModel.logger}"
+                        android:text="@{viewModel.logText}"
                         android:textAlignment="viewStart"
                         app:contentPadding="2dp" />
                 </ScrollView>
 
-                <Button
-                    android:id="@+id/button_first"
-                    style="@android:style/Widget.DeviceDefault.Button"
+                <LinearLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/button_solid"
-                    android:onClick="@{() -> viewModel.startCycle()}"
-                    android:padding="10dp"
-                    android:text="@string/start"
-                    android:textColor="@color/white"
-                    android:textStyle="bold" />
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical">
+
+                    <Button
+                        android:id="@+id/button_first"
+                        style="@android:style/Widget.DeviceDefault.Button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/button_solid"
+                        android:padding="10dp"
+                        android:text="@string/start_foreground"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/button_second"
+                        style="@android:style/Widget.DeviceDefault.Button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/button_solid"
+                        android:padding="10dp"
+                        android:text="@string/start_background"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/button_cancel"
+                        style="@android:style/Widget.DeviceDefault.Button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/button_solid"
+                        android:backgroundTint="@color/red"
+                        android:onClick="@{() -> viewModel.cancelAllJobs()}"
+                        android:padding="10dp"
+                        android:text="@string/close_background"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
             </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>

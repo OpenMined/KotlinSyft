@@ -29,13 +29,14 @@ class MultipleSyftJobsTest : AbstractSyftWorkerTest() {
         computeSchedulers,
         context.filesDir,
         true,
-        networkConstraints,
-        NetworkCapabilities.TRANSPORT_WIFI,
-        0,
-        2,
-        socketClient.getMockedClient(),
-        httpClient.getMockedClient(),
-        SyftConfiguration.NetworkingClients.SOCKET
+        batteryCheckEnabled = true,
+        networkConstraints = networkConstraints,
+        transportMedium = NetworkCapabilities.TRANSPORT_WIFI,
+        cacheTimeOut = 0,
+        maxConcurrentJobs = 2,
+        socketClient = socketClient.getMockedClient(),
+        httpClient = httpClient.getMockedClient(),
+        messagingClient = SyftConfiguration.NetworkingClients.SOCKET
     )
 
     @Test
