@@ -30,7 +30,7 @@ private const val MAX_SPEED_TESTING_BYTES = MB * 8
 private const val TAG = "NetworkStateEvaluator"
 
 @ExperimentalUnsignedTypes
-class NetworkStatusRealTimeDataSource internal constructor(
+internal class NetworkStatusRealTimeDataSource internal constructor(
     private val downloader: HttpAPI,
     private val filesDir: File,
     private val networkRequest: NetworkRequest,

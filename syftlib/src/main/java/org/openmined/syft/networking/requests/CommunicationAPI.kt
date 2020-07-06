@@ -9,7 +9,7 @@ import org.openmined.syft.networking.datamodels.syft.ReportRequest
 import org.openmined.syft.networking.datamodels.syft.ReportResponse
 
 
-interface CommunicationAPI {
+internal interface CommunicationAPI {
     fun authenticate(authRequest: AuthenticationRequest): Single<AuthenticationResponse>
 
     fun getCycle(cycleRequest: CycleRequest): Single<CycleResponseData>

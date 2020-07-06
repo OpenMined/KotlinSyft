@@ -296,8 +296,19 @@ class SyftJob internal constructor(
             Log.d(TAG, "job $jobId already disposed")
     }
 
-
+    /**
+     * A uniquer identifier class for the job
+     * @property modelName The name of the model used in the job while querying PyGrid
+     * @property version The model version in PyGrid
+     */
     data class JobID(val modelName: String, val version: String? = null) {
+        /**
+         * Check if two [JobID] are same. Matches both model names and version if [version] is not null for param and current jobId.
+         * @param modelName the modelName of the jobId which has to be compared with the current object
+         * @param version the version of the jobID which ahs to be compared with the current jobId
+         * @return true if JobId match
+         * @return false otherwise
+         */
         fun matchWithResponse(modelName: String, version: String? = null) =
                 if (version.isNullOrEmpty() || this.version.isNullOrEmpty())
                     this.modelName == modelName
@@ -305,7 +316,7 @@ class SyftJob internal constructor(
                     (this.modelName == modelName) && (this.version == version)
     }
 
-    enum class CycleStatus {
+    internal enum class CycleStatus {
         APPLY, REJECT, ACCEPTED
     }
 }

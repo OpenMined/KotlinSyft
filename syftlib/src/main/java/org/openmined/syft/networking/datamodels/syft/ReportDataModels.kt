@@ -7,13 +7,13 @@ import org.openmined.syft.networking.datamodels.NetworkModels
 const val REPORT_TYPE = "federated/report"
 
 @Serializable
-data class ReportResponse(
+internal data class ReportResponse(
     val status: String? = null,
     val error: String? = null
 ) : NetworkModels()
 
 @Serializable
-data class ReportRequest(
+internal data class ReportRequest(
     @SerialName("worker_id")
     val workerId: String,
     @SerialName("request_key")

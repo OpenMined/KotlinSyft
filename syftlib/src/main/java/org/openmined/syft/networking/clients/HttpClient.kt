@@ -11,7 +11,7 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 /**
  * @property apiClient the retrofit api client
  */
-class HttpClient(val apiClient: HttpAPI) {
+internal class HttpClient(val apiClient: HttpAPI) {
     companion object {
         /**
          * Creates a retrofit api client for PyGrid endpoints.

@@ -28,7 +28,7 @@ import retrofit2.http.Streaming
  *
  * @See org.openmined.syft.networking.clients.HttpClient
  */
-interface HttpAPI : CommunicationAPI {
+internal interface HttpAPI : CommunicationAPI {
 
     /**
      * Check connection speed by ping to PyGrid Server.

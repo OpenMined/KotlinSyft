@@ -7,7 +7,7 @@ import org.openmined.syft.networking.datamodels.NetworkModels
 const val NEW_PEER_TYPE = "peer"
 
 @Serializable
-data class NewPeer(
+internal data class NewPeer(
     @SerialName("worker_id")
     val workerId: String
 ) : NetworkModels()

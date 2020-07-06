@@ -15,7 +15,7 @@ open class JobStatusSubscriber {
     open fun onRejected(timeout: String) {}
     open fun onError(throwable: Throwable) {}
 
-    fun onJobStatusMessage(jobStatusMessage: JobStatusMessage) {
+    internal fun onJobStatusMessage(jobStatusMessage: JobStatusMessage) {
         when (jobStatusMessage) {
             is JobStatusMessage.JobReady -> {
                 if (jobStatusMessage.clientConfig != null)

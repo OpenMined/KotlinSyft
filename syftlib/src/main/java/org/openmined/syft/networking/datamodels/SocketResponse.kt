@@ -19,7 +19,7 @@ import org.openmined.syft.networking.requests.ResponseMessageTypes
 private const val TAG = "SocketSerializer"
 
 @Serializable(with = SocketSerializer::class)
-data class SocketResponse(
+internal data class SocketResponse(
     @SerialName("type")
     val typesResponse: ResponseMessageTypes,
     val data: NetworkModels
@@ -27,7 +27,7 @@ data class SocketResponse(
 
 @Suppress("UNCHECKED_CAST")
 @Serializer(forClass = SocketResponse::class)
-class SocketSerializer : KSerializer<SocketResponse> {
+internal class SocketSerializer : KSerializer<SocketResponse> {
     override val descriptor: SerialDescriptor
         get() = SerialClassDescImpl("SocketSerializer")
 

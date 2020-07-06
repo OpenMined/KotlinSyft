@@ -15,7 +15,7 @@ import java.io.InputStream
 
 private const val MB = 1024 * 1024
 
-class HttpClientMock(
+internal class HttpClientMock(
     private val pingSuccess: Boolean,
     private val downloadSpeedSuccess: Boolean,
     private val uploadSuccess: Boolean,

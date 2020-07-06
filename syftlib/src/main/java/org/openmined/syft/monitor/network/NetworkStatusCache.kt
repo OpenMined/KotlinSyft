@@ -2,7 +2,7 @@ package org.openmined.syft.monitor.network
 
 import io.reactivex.Maybe
 
-class NetworkStatusCache(private val cacheTimeOut: Long) {
+internal class NetworkStatusCache(private val cacheTimeOut: Long) {
 
     var networkStateCache = NetworkStatusModel()
     fun getNetworkStatusCache(): Maybe<NetworkStatusModel> {

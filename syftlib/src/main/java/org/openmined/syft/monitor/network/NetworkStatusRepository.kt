@@ -10,7 +10,7 @@ private const val TAG = "NetworkStateRepository"
 
 
 @ExperimentalUnsignedTypes
-class NetworkStatusRepository internal constructor(
+internal class NetworkStatusRepository (
     private val networkConstraints: List<Int>,
     private val cacheService: NetworkStatusCache,
     private val realTimeDataService: NetworkStatusRealTimeDataSource

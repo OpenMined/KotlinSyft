@@ -4,17 +4,17 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import org.openmined.syft.networking.datamodels.NetworkModels
 
-interface MessageTypes {
+internal interface MessageTypes {
     val value: String
 }
 
-interface ResponseMessageTypes : MessageTypes {
+internal interface ResponseMessageTypes : MessageTypes {
     val jsonParser: Json
     fun parseJson(jsonString: String): NetworkModels
     fun serialize(obj: NetworkModels): JsonElement
 }
 
-enum class DOWNLOAD(
+internal enum class DOWNLOAD(
     override val value: String
 ) : MessageTypes {
     TRAININGPLAN("federated/get-training-plan"),
@@ -22,7 +22,7 @@ enum class DOWNLOAD(
     MODEL("federated/get-model")
 }
 
-enum class WebRTCMessageTypes(override val value: String) : MessageTypes {
+internal enum class WebRTCMessageTypes(override val value: String) : MessageTypes {
     CANDIDATE("candidate"),
     OFFER("offer"),
     ANSWER("answer"),

@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 private const val TAG = "device monitor"
 
 @ExperimentalUnsignedTypes
-class DeviceMonitor(
+internal class DeviceMonitor(
     private val networkStatusRepository: NetworkStatusRepository,
     private val batteryStatusRepository: BatteryStatusRepository,
     private val processSchedulers: ProcessSchedulers,
