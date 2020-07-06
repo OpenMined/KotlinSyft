@@ -41,7 +41,7 @@ dokka {
 }
 
 task dokkaMarkdown(type: org.jetbrains.dokka.gradle.DokkaTask) {
-    outputFormat = 'markdown'
+    outputFormat = 'gfm'
     outputDirectory = "$buildDir/markdown"
     doLast {
         ant.move file: "$outputDirectory",
