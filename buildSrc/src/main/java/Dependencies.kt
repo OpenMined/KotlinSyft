@@ -38,6 +38,7 @@ object Versions {
     const val netflixRelease = "13.0.0"
     const val netflixBintray = "3.5.4"
     const val jacocoVersion = "0.8.2"
+    const val dokkaVersion = "0.10.1"
 
     // Test
     const val extJunit = "1.1.1"
@@ -58,13 +59,11 @@ object ProjectDependencies {
     const val androidGradlePlugin = "com.android.tools.build:gradle:${Versions.gradle}"
     const val kotlinGradlePlugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
     const val kotlinSerialization = "org.jetbrains.kotlin:kotlin-serialization:${Versions.kotlin}"
-    const val netflixPublishingPlugin = "com.netflix.nebula:nebula-publishing-plugin:" +
-                                        Versions.netflixPublishing
-    const val netflixReleasePlugin = "com.netflix.nebula:nebula-release-plugin:" +
-                                     Versions.netflixRelease
-    const val netflixBintrayPlugin = "com.netflix.nebula:nebula-bintray-plugin:" +
-                                     Versions.netflixBintray
-    const val jacoco = "org.jacoco:org.jacoco.core:" + Versions.jacocoVersion
+    const val netflixPublishingPlugin = "com.netflix.nebula:nebula-publishing-plugin:${Versions.netflixPublishing}"
+    const val netflixReleasePlugin = "com.netflix.nebula:nebula-release-plugin:${Versions.netflixRelease}"
+    const val netflixBintrayPlugin = "com.netflix.nebula:nebula-bintray-plugin:${Versions.netflixBintray}"
+    const val jacoco = "org.jacoco:org.jacoco.core:${Versions.jacocoVersion}"
+    const val dokka = "org.jetbrains.dokka:dokka-gradle-plugin:${Versions.dokkaVersion}"
 }
 
 object CommonDependencies {
