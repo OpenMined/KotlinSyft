@@ -33,5 +33,5 @@ jobs:
           git checkout -b "documentation_for_${{ github.event.pull_request.number }}"
           git add .
           git commit -m "Generated docs"
-          git push
+          git push --set-upstream origin "documentation_for_${{ github.event.pull_request.number }}"
 
