@@ -25,6 +25,7 @@ jobs:
       - name: Generate Markdown documentation
         run: ./gradlew :syftlib:dokka
       - name: Push docs
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.ref }}
