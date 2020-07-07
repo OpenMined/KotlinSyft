@@ -22,8 +22,12 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - name: Generate HTML documentation
-        run: ./gradlew :syftlib:dokka
       - name: Generate Markdown documentation
-        run: ./gradlew :syftlib:dokkaMarkdown
+        run: ./gradlew :syftlib:dokka
+      - name: Push docs
+        run: |
+          git add .
+          git commit -m "Generated docs"
+          git push
+        needs: Generate Markdown documentation
 
