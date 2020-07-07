@@ -20,12 +20,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 private const val TAG = "Syft"
 
 /**
- * The Syft Class is the main worker handling all the federated classes. 
- * You are only required a single instance of the syft worker running in Android.
- * @property syftConfig is  for the adjustable properties of the syft worker.
- * @property deviceMonitor is the job hosting this plan.
- * @property authToken is to request to an authentication token.
- * @property isSpeedTestEnable to check whether Speed tests have been enabled.
+ * The Syft Class is the main worker handling all the Federated Training Cycles. 
+ * You are only required a single instance of the Syft worker running in Android.
+ * @property syftConfig contains the allowed configuration parameters for syft worker. @see syftconfiguration.
+ * @property deviceMonitor listens to the current status of the device monitoring changes in network and battery.
+ * @property authToken is the third party JSON Web Token.
+ * @property isSpeedTestEnable feature that enables speed testing.
  */
 
 @ExperimentalUnsignedTypes
@@ -40,9 +40,9 @@ class Syft internal constructor(
         private var INSTANCE: Syft? = null
         
         /**
-        * Function to get the instance of the Syft Worker.
-        *
-        * Returns the instance of Syft worker provided no auth errors occur.
+        * method for Singleton syft worker instance. Only one syft worker should be running at a time in an application.
+        * @return the instance of Syft worker provided no JWT authentication Token Error.
+        * @throws ExceptionInInitializerError if the previous worker is not disposed off or Auth error occurs.
         */
         fun getInstance(
             syftConfiguration: SyftConfiguration,
@@ -72,9 +72,9 @@ class Syft internal constructor(
     private var requiresSpeedTest: Boolean = true
 
     /**
-    * Function to create a new Syft Worker Job.
-    *
-    * Returns the job.
+    * method to create a new Syft Worker Job.
+    * @throws IndexOutOfBoundsException if the there are too many jobs running.
+    * @return the job.
     */
     fun newJob(
         model: String,
@@ -91,10 +91,11 @@ class Syft internal constructor(
 
         workerJobs[job.jobId] = job
         job.subscribe(object : JobStatusSubscriber() {
+            // method to remove job once it has served its use.
             override fun onComplete() {
                 workerJobs.remove(job.jobId)
             }
-
+            // method that throws the error message should issues arise and removes the current job
             override fun onError(throwable: Throwable) {
                 Log.e(TAG, throwable.message.toString())
                 workerJobs.remove(job.jobId)
@@ -104,13 +105,12 @@ class Syft internal constructor(
         return job
     }
 
-    // Function to retrieve the Syft worker ID
+    // method to retrieve the Syft worker ID
     internal fun getSyftWorkerId() = workerId
 
     /**
-    * Function to execute each cycle per Syft Worker Job.
-    *
-    * Returns job execution.
+    * method to execute each cycle request or performs authentication not done already
+    * @return job execution.
     */
     internal fun executeCycleRequest(job: SyftJob) {
         if (jobErrorIfBatteryInvalid(job) || jobErrorIfNetworkInvalid(job))
@@ -146,10 +146,10 @@ class Syft internal constructor(
         } ?: executeAuthentication(job)
     }
     
-    // Function to get the state of the Syft Worker.
+    // method to get the state of the Syft Worker.
     override fun isDisposed() = isDisposed.get()
 
-   // Function to dispose of a Syft Worker.
+   // method to dispose of a Syft Worker.
     override fun dispose() {
         Log.d(TAG, "disposing syft worker")
         deviceMonitor.dispose()
@@ -159,9 +159,9 @@ class Syft internal constructor(
     }
     
     /**
-    * Function to check for Network Errors while performing Syft Worker Job.
-    *
-    * Returns the error.
+    * method to check for Network Errors while performing Syft Worker Job.
+    * @throws IllegalStateException should Network issues arise to job status subscriber.
+    * @return the error.
     */
     internal fun jobErrorIfNetworkInvalid(job: SyftJob): Boolean {
         if (!deviceMonitor.isNetworkStateValid()) {
@@ -173,9 +173,9 @@ class Syft internal constructor(
     }
 
     /**
-    * Function to check if Battery is Valid or not.
-    *
-    * Returns the error if job battery not valid.
+    * method to check if Battery is Valid or not.
+    * @throws IllegalStateException should Battery state be invalid to job status subscriber.
+    * @return the error if job battery not valid.
     */
     internal fun jobErrorIfBatteryInvalid(job: SyftJob): Boolean {
         if (!deviceMonitor.isBatteryStateValid()) {
@@ -186,9 +186,8 @@ class Syft internal constructor(
     }
 
     /**
-    * Function to request Syft Worker Job Cycle.
-    *
-    * Returns the Cycle request.
+    * method to request Syft Worker Job Cycle.
+    * @return the Cycle request.
     */
     private fun requestCycle(
         id: String,
@@ -215,9 +214,8 @@ class Syft internal constructor(
 
     
     /**
-     * Function to check Network availability.
-     *
-     * Returns errors when properties are null.
+     * method to check Network availability.
+     * @return errors when properties are null.
      */
     private fun checkConditions(
         ping: String?,
@@ -235,7 +233,7 @@ class Syft internal constructor(
         }
     }
 
-    // Function to handle rejected Syft Worker Job cycle.
+    // method to handle rejected Syft Worker Job cycle.
     private fun handleCycleReject(responseData: CycleResponseData.CycleReject) {
         val job = workerJobs.getValue(
             SyftJob.JobID(
@@ -247,9 +245,9 @@ class Syft internal constructor(
     }
 
     /**
-    * Function to handle accepted Syft Worker Job.
-    *
-    * Returns the valid Syft Worker ID.
+    * method to handle accepted Syft Worker Job.
+    * @throws IllegalStateException should the Worker not initialize.
+    * @return the valid Syft Worker ID.
     */
     private fun handleCycleAccept(responseData: CycleResponseData.CycleAccept) {
         val job = workerJobs.getValue(
@@ -270,7 +268,7 @@ class Syft internal constructor(
 
     }
 
-    // Function to execute Authentication of the Syft Worker Job
+    // method to execute Authentication of the Syft Worker Job
     private fun executeAuthentication(job: SyftJob) {
         compositeDisposable.add(
             syftConfig.getSignallingClient().authenticate(AuthenticationRequest(authToken))
@@ -295,7 +293,7 @@ class Syft internal constructor(
         )
     }
 
-    // Function to set the Syft Worker ID 
+    // method to set the Syft Worker ID 
     @Synchronized
     private fun setSyftWorkerId(workerId: String) {
         if (this.workerId == null)
@@ -304,7 +302,7 @@ class Syft internal constructor(
             this.workerId = workerId
     }
 
-    // Function to dispoe of the open RTC client
+    // method to dispoe of the open RTC client
     private fun disposeSocketClient() {
         syftConfig.getWebRTCSignallingClient().dispose()
     }
