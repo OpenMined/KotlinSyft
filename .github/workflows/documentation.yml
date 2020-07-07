@@ -29,5 +29,4 @@ jobs:
           git add .
           git commit -m "Generated docs"
           git push
-        needs: Generate Markdown documentation
 
