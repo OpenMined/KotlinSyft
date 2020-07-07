@@ -25,7 +25,7 @@ package org.openmined.syft.fp
  * @see Left
  * @see Right
  */
-sealed class Either<out L, out R> {
+internal sealed class Either<out L, out R> {
     /** * Represents the left side of [Either] class which by convention is a "Failure". */
     data class Left<out L>(val a: L) : Either<L, Nothing>()
 
@@ -96,7 +96,7 @@ sealed class Either<out L, out R> {
 /** Returns the value from this `Right` or the given argument if this is a `Left`.
  *  Right(12).org.openmined.syft.fp.getOrElse(17) RETURNS 12 and Left(12).org.openmined.syft.fp.getOrElse(17) RETURNS 17
  */
-fun <L, R> Either<L, R>.getOrElse(value: R): R =
+internal fun <L, R> Either<L, R>.getOrElse(value: R): R =
         when (this) {
             is Either.Left -> value
             is Either.Right -> b

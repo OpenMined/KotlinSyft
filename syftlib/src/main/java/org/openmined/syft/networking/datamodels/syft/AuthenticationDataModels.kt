@@ -9,13 +9,13 @@ const val AUTH_SUCCESS = "success"
 const val AUTH_FAILURE = "rejected"
 
 @Serializable
-data class AuthenticationRequest(
+internal data class AuthenticationRequest(
     @SerialName("auth_token")
     val authToken: String? = null
 ) : NetworkModels()
 
 @Serializable
-sealed class AuthenticationResponse : NetworkModels() {
+internal sealed class AuthenticationResponse : NetworkModels() {
 
     @SerialName(AUTH_SUCCESS)
     @Serializable

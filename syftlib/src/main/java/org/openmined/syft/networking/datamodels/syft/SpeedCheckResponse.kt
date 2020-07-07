@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import org.openmined.syft.networking.datamodels.NetworkModels
 
 @Serializable
-data class SpeedCheckResponse(
+internal data class SpeedCheckResponse(
     @SerialName("error")
     val error: String? = null
 ) : NetworkModels()

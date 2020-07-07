@@ -24,7 +24,7 @@ private const val SOCKET_CLOSE_CLIENT = 1000
  * @param keepAliveTimeout Timeout period
  * */
 @ExperimentalUnsignedTypes
-class SyftWebSocket(
+internal class SyftWebSocket(
     protocol: NetworkingProtocol,
     address: String,
     keepAliveTimeout: UInt

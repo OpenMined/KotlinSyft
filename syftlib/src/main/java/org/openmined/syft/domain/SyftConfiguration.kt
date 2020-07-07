@@ -31,14 +31,14 @@ class SyftConfiguration internal constructor(
         fun builder(context: Context, baseUrl: String) = SyftConfigBuilder(context, baseUrl)
     }
 
-    fun getDownloader() = httpClient.apiClient
+    internal fun getDownloader() = httpClient.apiClient
 
-    fun getSignallingClient(): CommunicationAPI = when (messagingClient) {
+    internal fun getSignallingClient(): CommunicationAPI = when (messagingClient) {
         NetworkingClients.HTTP -> httpClient.apiClient
         NetworkingClients.SOCKET -> socketClient
     }
 
-    fun getWebRTCSignallingClient(): SocketClient = socketClient
+    internal fun getWebRTCSignallingClient(): SocketClient = socketClient
 
     class SyftConfigBuilder(private val context: Context, baseUrl: String) {
 

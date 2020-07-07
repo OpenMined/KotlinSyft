@@ -19,7 +19,7 @@ import org.openmined.syft.networking.datamodels.webRTC.NEW_PEER_TYPE
 import org.openmined.syft.networking.datamodels.webRTC.NewPeer
 import org.openmined.syft.networking.datamodels.webRTC.WEBRTC_INTERNAL_TYPE
 
-enum class REQUESTS(override val value: String) : ResponseMessageTypes {
+internal enum class REQUESTS(override val value: String) : ResponseMessageTypes {
 
     AUTHENTICATION(AUTH_TYPE) {
         override val jsonParser = Json(JsonConfiguration.Stable.copy(classDiscriminator = "status"))

@@ -4,7 +4,7 @@ import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.monitor.BroadCastListener
 
 @ExperimentalUnsignedTypes
-class BatteryStatusRepository internal constructor(
+internal class BatteryStatusRepository internal constructor(
     private val batteryStatusDataSource: BatteryStatusDataSource
 ) : BroadCastListener{
     companion object {

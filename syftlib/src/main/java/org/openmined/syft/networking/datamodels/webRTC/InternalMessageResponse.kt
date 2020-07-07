@@ -7,7 +7,7 @@ import org.openmined.syft.networking.datamodels.NetworkModels
 const val WEBRTC_INTERNAL_TYPE = "webrtc_internal"
 
 @Serializable
-data class InternalMessageResponse(
+internal data class InternalMessageResponse(
     val type: String,
     @SerialName("worker_id")
     val newWorkerId: String,
@@ -16,7 +16,7 @@ data class InternalMessageResponse(
 ) : NetworkModels()
 
 @Serializable
-data class InternalMessageRequest(
+internal data class InternalMessageRequest(
     @SerialName("worker_id")
     val workerId: String,
     @SerialName("scope_id")

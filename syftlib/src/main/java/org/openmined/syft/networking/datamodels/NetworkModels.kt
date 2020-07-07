@@ -4,4 +4,4 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-abstract class NetworkModels
+internal abstract class NetworkModels

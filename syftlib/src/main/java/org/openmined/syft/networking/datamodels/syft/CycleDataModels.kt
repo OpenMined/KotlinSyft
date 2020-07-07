@@ -10,7 +10,7 @@ const val CYCLE_ACCEPT = "accepted"
 const val CYCLE_REJECT = "rejected"
 
 @Serializable
-sealed class CycleResponseData : NetworkModels() {
+internal sealed class CycleResponseData : NetworkModels() {
 
     abstract val modelName: String
     abstract val version: String?
@@ -42,7 +42,7 @@ sealed class CycleResponseData : NetworkModels() {
 }
 
 @Serializable
-data class CycleRequest(
+internal data class CycleRequest(
     @SerialName("worker_id")
     val workerId: String,
     @SerialName("model")

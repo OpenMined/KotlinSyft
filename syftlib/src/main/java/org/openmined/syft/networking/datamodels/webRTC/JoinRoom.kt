@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import org.openmined.syft.networking.datamodels.NetworkModels
 
 @Serializable
-data class JoinRoomRequest(
+internal data class JoinRoomRequest(
     @SerialName("worker_id")
     val workerId: String,
     @SerialName("scope_id")
@@ -13,7 +13,7 @@ data class JoinRoomRequest(
 ) : NetworkModels()
 
 @Serializable
-data class JoinRoomResponse(
+internal data class JoinRoomResponse(
     @SerialName("worker_id")
     val workerId: String,
     @SerialName("scope_id")
