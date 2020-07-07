@@ -25,6 +25,9 @@ jobs:
       - name: Generate Markdown documentation
         run: ./gradlew :syftlib:dokka
       - name: Push docs
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
         run: |
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git config --global user.name "Github Action"
