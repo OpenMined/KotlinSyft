@@ -34,6 +34,7 @@ jobs:
         run: |
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git config --global user.name "Github Action"
+          git checkout -b "documentation_for_${{ github.event.pull_request.number }}"
           git add .
           git commit -m "Generated docs"
           git push
