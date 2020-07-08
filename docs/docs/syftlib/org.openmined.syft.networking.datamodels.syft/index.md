@@ -2,18 +2,6 @@
 
 ## Package org.openmined.syft.networking.datamodels.syft
 
-### Types
-
-| Name | Summary |
-|---|---|
-| [AuthenticationRequest](-authentication-request/index.md) | `data class AuthenticationRequest : `[`NetworkModels`](../org.openmined.syft.networking.datamodels/-network-models/index.md) |
-| [AuthenticationResponse](-authentication-response/index.md) | `sealed class AuthenticationResponse : `[`NetworkModels`](../org.openmined.syft.networking.datamodels/-network-models/index.md) |
-| [CycleRequest](-cycle-request/index.md) | `data class CycleRequest : `[`NetworkModels`](../org.openmined.syft.networking.datamodels/-network-models/index.md) |
-| [CycleResponseData](-cycle-response-data/index.md) | `sealed class CycleResponseData : `[`NetworkModels`](../org.openmined.syft.networking.datamodels/-network-models/index.md) |
-| [ReportRequest](-report-request/index.md) | `data class ReportRequest : `[`NetworkModels`](../org.openmined.syft.networking.datamodels/-network-models/index.md) |
-| [ReportResponse](-report-response/index.md) | `data class ReportResponse : `[`NetworkModels`](../org.openmined.syft.networking.datamodels/-network-models/index.md) |
-| [SpeedCheckResponse](-speed-check-response/index.md) | `data class SpeedCheckResponse : `[`NetworkModels`](../org.openmined.syft.networking.datamodels/-network-models/index.md) |
-
 ### Properties
 
 | Name | Summary |

@@ -7,14 +7,10 @@
 This method is used to save/update SyftModel class.
 This function must be called after every gradient step to update the model state for further plan executions.
 
-``` kotlin
-//Unresolved: model.updateModel
-```
-
 ### Exceptions
 
 `IllegalArgumentException` - if the size newModelParams is not correct.
 
 ### Parameters
 
-`newModelParams` - a list of pytorch Tensor that would be converted to syftTensor
+`newModelParams` - a list of PyTorch Tensor that would be converted to syftTensor

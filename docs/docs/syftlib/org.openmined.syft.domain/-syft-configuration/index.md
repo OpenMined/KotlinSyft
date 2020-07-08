@@ -26,14 +26,6 @@
 | [networkingSchedulers](networking-schedulers.md) | `val networkingSchedulers: `[`ProcessSchedulers`](../../org.openmined.syft.threading/-process-schedulers/index.md) |
 | [transportMedium](transport-medium.md) | `val transportMedium: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 
-### Functions
-
-| Name | Summary |
-|---|---|
-| [getDownloader](get-downloader.md) | `fun getDownloader(): `[`HttpAPI`](../../org.openmined.syft.networking.requests/-http-a-p-i/index.md) |
-| [getSignallingClient](get-signalling-client.md) | `fun getSignallingClient(): `[`CommunicationAPI`](../../org.openmined.syft.networking.requests/-communication-a-p-i/index.md) |
-| [getWebRTCSignallingClient](get-web-r-t-c-signalling-client.md) | `fun getWebRTCSignallingClient(): `[`SocketClient`](../../org.openmined.syft.networking.clients/-socket-client/index.md) |
-
 ### Companion Object Functions
 
 | Name | Summary |

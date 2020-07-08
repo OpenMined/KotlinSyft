@@ -2,16 +2,6 @@
 
 ## Package org.openmined.syft.networking.datamodels.webRTC
 
-### Types
-
-| Name | Summary |
-|---|---|
-| [InternalMessageRequest](-internal-message-request/index.md) | `data class InternalMessageRequest : `[`NetworkModels`](../org.openmined.syft.networking.datamodels/-network-models/index.md) |
-| [InternalMessageResponse](-internal-message-response/index.md) | `data class InternalMessageResponse : `[`NetworkModels`](../org.openmined.syft.networking.datamodels/-network-models/index.md) |
-| [JoinRoomRequest](-join-room-request/index.md) | `data class JoinRoomRequest : `[`NetworkModels`](../org.openmined.syft.networking.datamodels/-network-models/index.md) |
-| [JoinRoomResponse](-join-room-response/index.md) | `data class JoinRoomResponse : `[`NetworkModels`](../org.openmined.syft.networking.datamodels/-network-models/index.md) |
-| [NewPeer](-new-peer/index.md) | `data class NewPeer : `[`NetworkModels`](../org.openmined.syft.networking.datamodels/-network-models/index.md) |
-
 ### Properties
 
 | Name | Summary |

@@ -6,14 +6,9 @@ $dokka.location:org.openmined.syft.proto$toSyftTensor(org.pytorch.Tensor)org.op
 org.openmined.syft
 org.openmined.syft.domain
 org.openmined.syft.execution
-org.openmined.syft.fp
-org.openmined.syft.monitor
-org.openmined.syft.monitor.battery
-org.openmined.syft.monitor.network
 org.openmined.syft.networking.clients
 org.openmined.syft.networking.datamodels
 org.openmined.syft.networking.datamodels.syft
 org.openmined.syft.networking.datamodels.webRTC
-org.openmined.syft.networking.requests
 org.openmined.syft.proto
 org.openmined.syft.threading

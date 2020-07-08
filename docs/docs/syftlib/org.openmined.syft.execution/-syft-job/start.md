@@ -5,7 +5,7 @@
 `fun start(subscriber: `[`JobStatusSubscriber`](../-job-status-subscriber/index.md)` = JobStatusSubscriber()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)
 
 Starts the job by asking syft worker to request for cycle.
-Sets up [Socket Client](../../org.openmined.syft.networking.clients/-socket-client/index.md) if not initialised already.
+Sets up [Socket Client](#) if not initialised already.
 
 ### Parameters
 
