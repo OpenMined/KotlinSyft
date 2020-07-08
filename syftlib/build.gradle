@@ -39,7 +39,7 @@ dokka {
     }
     doLast {
         ant.move file: "$outputDirectory",
-                todir: "$rootDir/docs"
+                todir: "$rootDir"
     }
 }
 
