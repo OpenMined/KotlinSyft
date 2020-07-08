@@ -31,21 +31,8 @@ task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'crea
 }
 
 dokka {
-    outputFormat = 'html'
-    outputDirectory = "$buildDir/html"
-    configuration {
-        // Use to include or exclude non public members.
-        includeNonPublic = false
-    }
-    doLast {
-        ant.move file: "$outputDirectory",
-                todir: "$rootDir/docs"
-    }
-}
-
-task dokkaMarkdown(type: org.jetbrains.dokka.gradle.DokkaTask) {
     outputFormat = 'gfm'
-    outputDirectory = "$buildDir/markdown"
+    outputDirectory = "$buildDir/docs"
     configuration {
         // Use to include or exclude non public members.
         includeNonPublic = false
