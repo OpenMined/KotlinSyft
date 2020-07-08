@@ -46,11 +46,6 @@ tensor after doing some computation.
 ##### [org.openmined.syft.execution.Protocol](../org.openmined.syft.execution/-protocol/index.md)
 
 
-|
-
-##### [org.openmined.syft.networking.clients.SDP_Type](../org.openmined.syft.networking.clients/-s-d-p_-type.md)
-
-
 | (extensions in package org.openmined.syft.proto)
 
 ##### [org.openmined.syftproto.execution.v1.StateOuterClass.State](../org.openmined.syft.proto/org.openmined.syftproto.execution.v1.-state-outer-class.-state/index.md)

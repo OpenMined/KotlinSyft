@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.openmined.syft.networking.datamodels.NetworkModels
 
-const val NEW_PEER_TYPE = "peer"
+internal const val NEW_PEER_TYPE = "peer"
 
 @Serializable
 internal data class NewPeer(

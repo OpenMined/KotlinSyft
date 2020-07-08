@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.NetworkModels
 
-const val CYCLE_TYPE = "federated/cycle-request"
-const val CYCLE_ACCEPT = "accepted"
-const val CYCLE_REJECT = "rejected"
+internal const val CYCLE_TYPE = "federated/cycle-request"
+internal const val CYCLE_ACCEPT = "accepted"
+internal const val CYCLE_REJECT = "rejected"
 
 @Serializable
 internal sealed class CycleResponseData : NetworkModels() {
