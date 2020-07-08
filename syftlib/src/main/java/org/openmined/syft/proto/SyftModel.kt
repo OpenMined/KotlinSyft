@@ -38,7 +38,7 @@ data class SyftModel(
      * This function must be called after every gradient step to update the model state for further plan executions.
      * @throws IllegalArgumentException if the size newModelParams is not correct.
      * @param newModelParams a list of pytorch Tensor that would be converted to syftTensor
-     * @sample model.updateModel(updatedParams.map { it.toTensor() })
+     * @sample updateModel(updatedParams.map { it.toTensor() })
      */
     fun updateModel(newModelParams: List<Tensor>) {
         modelSyftState?.let { state ->
