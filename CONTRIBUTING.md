@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-We would be happy to have more volunterers for the android worker. This library constitutes and important component of on-device machine learning and you will be a part of this huge community
+We would be happy to have more volunteers for the Android worker. This library constitutes and important component of on-device machine learning and you will be a part of this huge community
 You can always join us on slack if you find an issue in which you are interested.
 
 Here are some important resources:

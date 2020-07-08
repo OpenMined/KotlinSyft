@@ -4,9 +4,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.openmined.syft.networking.datamodels.NetworkModels
 
-const val AUTH_TYPE = "federated/authenticate"
-const val AUTH_SUCCESS = "success"
-const val AUTH_FAILURE = "rejected"
+internal const val AUTH_TYPE = "federated/authenticate"
+internal const val AUTH_SUCCESS = "success"
+internal const val AUTH_FAILURE = "rejected"
 
 @Serializable
 internal data class AuthenticationRequest(

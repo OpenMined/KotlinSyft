@@ -12,8 +12,8 @@ import org.openmined.syft.networking.requests.NetworkingProtocol
 import java.util.concurrent.TimeUnit
 
 // Used in serializing data to be passed over the network
-const val TYPE = "type"
-const val DATA = "data"
+internal const val TYPE = "type"
+internal const val DATA = "data"
 // Code used to close web socket connection
 private const val SOCKET_CLOSE_CLIENT = 1000
 

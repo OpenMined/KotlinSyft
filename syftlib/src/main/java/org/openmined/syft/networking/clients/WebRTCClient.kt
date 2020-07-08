@@ -18,7 +18,7 @@ import org.webrtc.SessionDescription
 import java.nio.ByteBuffer
 
 
-typealias SDP_Type = SessionDescription.Type
+internal typealias SDP_Type = SessionDescription.Type
 
 
 private const val TAG = "WebRTCClient"
