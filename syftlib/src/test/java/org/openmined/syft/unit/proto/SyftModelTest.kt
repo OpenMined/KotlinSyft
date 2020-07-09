@@ -84,7 +84,15 @@ internal class SyftModelTest {
         val cut = SyftModel("test",modelSyftState = state)
         val out = cut.getParamsIValueArray()
         verify { state.getIValueTensorArray() }
-        assert(out == returnIvalue)
+        assert(out?.contentEquals(returnIvalue) ?: false)
+    }
+
+
+    @Test
+    fun `getParamsIValueArray return null if state is null`(){
+        val cut = SyftModel("test")
+        val out = cut.getParamsIValueArray()
+        assert(out == null)
     }
 
     @Test(expected = IllegalStateException::class)
