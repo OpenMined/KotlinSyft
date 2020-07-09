@@ -26,5 +26,5 @@ tensor after doing some computation.
 
 | Name | Summary |
 |---|---|
-| [execute](execute.md) | Loads a serialized TorchScript module from the specified path on the disk.`fun execute(model: `[`SyftModel`](../../org.openmined.syft.proto/-syft-model/index.md)`, trainingBatch: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<IValue, IValue>, clientConfig: `[`ClientConfig`](../../org.openmined.syft.networking.datamodels/-client-config/index.md)`): IValue?` |
+| [execute](execute.md) | Loads a serialized TorchScript module from the specified path on the disk.`fun execute(vararg iValues: IValue): IValue?` |
 | [loadScriptModule](load-script-module.md) | Loads a TorchScript module from the specified path on the disk.`fun loadScriptModule(torchScriptLocation: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

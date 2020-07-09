@@ -8,6 +8,15 @@
 
 ##### [org.openmined.syft.networking.datamodels.ClientConfig](../org.openmined.syft.networking.datamodels/-client-config/index.md)
 
+All the user defined parameters will be serialised and sent by the PyGrid in the form of [ClientConfig](../org.openmined.syft.networking.datamodels/-client-config/index.md)
+
+
+|
+
+##### [org.openmined.syft.networking.datamodels.ClientProperties](../org.openmined.syft.networking.datamodels/-client-properties/index.md)
+
+Client properties specific to the job description
+
 
 |
 

@@ -1,6 +1,7 @@
 package org.openmined.syft.proto
 
 import android.util.Log
+import org.pytorch.IValue
 import org.pytorch.Tensor
 
 private const val TAG = "SyftModel"
@@ -52,6 +53,11 @@ data class SyftModel(
             }
         }
     }
+
+    /**
+     * @return The array of [IValue][https://pytorch.org/javadoc/org/pytorch/IValue.html] of model weights. This can be fed directly to the [org.openmined.syft.execution.Plan.execute]
+     */
+    fun getParamsIValueArray() = modelSyftState?.getIValueTensorArray()
 
     /**
      * This method is used to load SyftModel from file

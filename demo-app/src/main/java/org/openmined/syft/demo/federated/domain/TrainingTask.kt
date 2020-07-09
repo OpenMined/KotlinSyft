@@ -4,14 +4,16 @@ import androidx.work.ListenableWorker.Result
 import io.reactivex.Single
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.Syft
-import org.openmined.syft.demo.federated.ui.ContentState
 import org.openmined.syft.demo.federated.logging.MnistLogger
+import org.openmined.syft.demo.federated.ui.ContentState
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.Plan
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
+import org.pytorch.IValue
+import org.pytorch.Tensor
 import java.util.concurrent.ConcurrentHashMap
 
 @ExperimentalUnsignedTypes
@@ -72,13 +74,30 @@ class TrainingTask(
     ) {
         var result = -0.0f
         plans.values.first().let { plan ->
-            repeat(clientConfig.maxUpdates) { step ->
+            repeat(clientConfig.properties.maxUpdates) { step ->
                 logger.postEpoch(step + 1)
-                val batchData = mnistDataRepository.loadDataBatch(clientConfig.batchSize.toInt())
+                val batchSize = (clientConfig.planArgs["batch_size"]
+                                 ?: error("batch_size doesn't exist")).toInt()
+                val batchIValue = IValue.from(
+                    Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
+                )
+                val lr = IValue.from(
+                    Tensor.fromBlob(
+                        floatArrayOf(
+                            (clientConfig.planArgs["lr"] ?: error("lr doesn't exist")).toFloat()
+                        ),
+                        longArrayOf(1)
+                    )
+                )
+                val batchData =
+                        mnistDataRepository.loadDataBatch(batchSize)
+                val modelParams = model.getParamsIValueArray() ?: return
                 val output = plan.execute(
-                    model,
-                    batchData,
-                    clientConfig
+                    batchData.first,
+                    batchData.second,
+                    batchIValue,
+                    lr,
+                    *modelParams
                 )?.toTuple()
                 output?.let { outputResult ->
                     val paramSize = model.modelSyftState!!.syftTensors.size
@@ -86,7 +105,7 @@ class TrainingTask(
                     val updatedParams =
                             outputResult.slice(beginIndex until outputResult.size)
                     model.updateModel(updatedParams.map { it.toTensor() })
-                    result= outputResult[1].toTensor().dataAsFloatArray.last()
+                    result = outputResult[1].toTensor().dataAsFloatArray.last()
                 } ?: run {
                     logger.postLog("the model returned empty array due to invalid device state")
                     return

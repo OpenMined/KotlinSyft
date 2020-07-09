@@ -79,14 +79,34 @@ You can use KotlinSyft as a front-end or as a background service. The following 
             // eventually you would be able to use plan name here 
             val plan = plans["plan id"]
 
-            repeat(clientConfig.maxUpdates) { step ->
+            repeat(clientConfig.properties.maxUpdates) { step ->
+
+                // get relevant hyperparams from ClientConfig.planArgs
+                // All the planArgs will be string and it is upon the user to deserialize them into correct type
+                val batchSize = (clientConfig.planArgs["batch_size"]
+                                 ?: error("batch_size doesn't exist")).toInt()
+                val batchIValue = IValue.from(
+                    Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
+                )
+                val lr = IValue.from(
+                    Tensor.fromBlob(
+                        floatArrayOf(
+                            (clientConfig.planArgs["lr"] ?: error("lr doesn't exist")).toFloat()
+                        ),
+                        longArrayOf(1)
+                    )
+                )
                 // your custom implementation to read a databatch from your data
                 val batchData = dataRepository.loadDataBatch(clientConfig.batchSize)
+                //get Model weights and return if not set already
+                val modelParams = model.getParamsIValueArray() ?: return
                 // plan.execute runs a single gradient step and returns the output as PyTorch IValue
                 val output = plan.execute(
-                    model,
-                    batchData,
-                    clientConfig
+                    batchData.first,
+                    batchData.second,
+                    batchIValue,
+                    lr,
+                    *modelParams
                 )?.toTuple()
                 // The output is a tuple with outputs defined by the pysyft plan along with all the model params
                 output?.let { outputResult ->
@@ -105,6 +125,10 @@ You can use KotlinSyft as a front-end or as a background service. The following 
                 // Failing to return from onReady will crash the application.
                 // All error handling must be done with `onError` Listener
             }
+            // Once training finishes generate the model diff
+            val diff = mnistJob.createDiff()
+            // Report the diff to PyGrid and finish the cycle
+            mnistJob.report(diff)
         }
 
         override fun onRejected(timeout: String) {

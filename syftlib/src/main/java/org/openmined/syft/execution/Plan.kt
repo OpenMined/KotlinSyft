@@ -1,11 +1,8 @@
 package org.openmined.syft.execution
 
 import android.util.Log
-import org.openmined.syft.networking.datamodels.ClientConfig
-import org.openmined.syft.proto.SyftModel
 import org.pytorch.IValue
 import org.pytorch.Module
-import org.pytorch.Tensor
 
 private const val TAG = "syft.processes.Plan"
 
@@ -24,20 +21,14 @@ class Plan(val job: SyftJob, val planId: String) {
     /**
      * Loads a serialized TorchScript module from the specified path on the disk.
      *
-     * @param model Model hosting model parameters.
-     * @param trainingBatch Contains the training data at first position and the labels at second.
-     * @param clientConfig The hyper parameters for the model.
+     * @param iValues The input to the torchscript. The training batch, the hyper parameters and the model weights must be sent here
      * @return The output contains the loss, accuracy values as defined while creating plan. It also
      *         contains the updated parameters of the model. These parameters are then saved manually by user.
      * @throws IllegalStateException if the device state does not fulfill the constraints set for running the job
      */
     @Throws(IllegalStateException::class)
     @ExperimentalStdlibApi
-    fun execute(
-        model: SyftModel,
-        trainingBatch: Pair<IValue, IValue>,
-        clientConfig: ClientConfig
-    ): IValue? {
+    fun execute(vararg iValues: IValue): IValue? {
         if (job.throwErrorIfBatteryInvalid()) {
             //todo decide how we want to handle this. Throw an error or quietly skip execution
             return null
@@ -48,26 +39,9 @@ class Plan(val job: SyftJob, val planId: String) {
             Log.e(TAG, "pytorch module not initialized yet")
             return null
         }
-        val params = model.modelSyftState?.getIValueTensorArray()
-        if (params == null) {
-            Log.e(TAG, "model state not initialised yet")
-            return null
-        }
-        val x = trainingBatch.first
-        val y = trainingBatch.second
-
-        // batchSize is the pytorch IValue tensor containing the batchSize specified in the client configs.
-        val batchSize = IValue.from(
-            Tensor.fromBlob(longArrayOf(clientConfig.batchSize), longArrayOf(1))
-        )
-
-        // lr is the pytorch IValue tensor containing the learning rate specified in the client configs.
-        val lr = IValue.from(
-            Tensor.fromBlob(floatArrayOf(clientConfig.lr), longArrayOf(1))
-        )
 
         // We feed in the training data to the forward function of the pytorchModule.
-        return localModuleState.forward(x, y, batchSize, lr, *params)
+        return localModuleState.forward(*iValues)
     }
 
     /**
