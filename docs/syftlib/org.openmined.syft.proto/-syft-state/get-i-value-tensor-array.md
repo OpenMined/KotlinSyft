@@ -5,5 +5,5 @@
 `fun getIValueTensorArray(): `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<IValue!>`
 
 **Return**
-an array of pyTorch [org.pytorch.IValue](#) from the SyftTensors list
+an array of pyTorch [IValue](https://pytorch.org/javadoc/org/pytorch/IValue.html) from the SyftTensors list
 

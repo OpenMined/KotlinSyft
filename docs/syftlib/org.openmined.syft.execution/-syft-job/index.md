@@ -30,7 +30,7 @@
 | [dispose](dispose.md) | Dispose the job. Once disposed, a job cannot be resumed again.`fun dispose(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [isDisposed](is-disposed.md) | Identifies if the job is already disposed`fun isDisposed(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [report](report.md) | Once training is finished submit the new model weights to PyGrid to complete the cycle`fun report(diff: `[`SyftState`](../../org.openmined.syft.proto/-syft-state/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [start](start.md) | Starts the job by asking syft worker to request for cycle. Sets up [Socket Client](#) if not initialised already.`fun start(subscriber: `[`JobStatusSubscriber`](../-job-status-subscriber/index.md)` = JobStatusSubscriber()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [start](start.md) | Starts the job by asking syft worker to request for cycle. Initialises Socket connection if not initialised already.`fun start(subscriber: `[`JobStatusSubscriber`](../-job-status-subscriber/index.md)` = JobStatusSubscriber()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [subscribe](subscribe.md) | This method can be called when the user needs to attach a listener to the job but do not wish to start it`fun subscribe(subscriber: `[`JobStatusSubscriber`](../-job-status-subscriber/index.md)`, schedulers: `[`ProcessSchedulers`](../../org.openmined.syft.threading/-process-schedulers/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
 ### Companion Object Functions
