@@ -20,6 +20,12 @@ private const val NAME = "name"
 private const val VERSION = "version"
 private const val MAX_UPDATES = "max_updates"
 
+/**
+ * Client properties specific to the job description
+ * @property modelName The name of the model or [SyftJob][org.openmined.syft.execution.SyftJob]
+ * @property modelVersion The version of the model or [SyftJob][org.openmined.syft.execution.SyftJob]
+ * @property maxUpdates The number of training iterations per cycle
+ */
 @Serializable
 data class ClientProperties(
     @SerialName(NAME)
@@ -30,6 +36,11 @@ data class ClientProperties(
     val maxUpdates: Int
 )
 
+/**
+ * All the user defined parameters will be serialised and sent by the PyGrid in the form of [ClientConfig]
+ * @property properties Contains job specific descriptions. See [ClientProperties]
+ * @property planArgs A [Map] containing the keys and values of the hyper parameters of the model. All the values are serialized as string and the user must deserialize them at runtime.
+ */
 @Serializable(with = ClientConfigSerializer::class)
 data class ClientConfig(
     val properties: ClientProperties,
