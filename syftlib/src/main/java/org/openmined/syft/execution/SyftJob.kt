@@ -89,7 +89,7 @@ class SyftJob internal constructor(
 
     /**
      * Starts the job by asking syft worker to request for cycle.
-     * Sets up [Socket Client][org.openmined.syft.networking.clients.SocketClient] if not initialised already.
+     * Initialises Socket connection if not initialised already.
      * @param subscriber (Optional) Contains the methods overridden by the user to be called upon job success/error
      * @see org.openmined.syft.execution.JobStatusSubscriber for available methods
      *

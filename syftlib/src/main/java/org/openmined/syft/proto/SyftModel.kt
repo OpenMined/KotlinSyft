@@ -55,7 +55,7 @@ data class SyftModel(
     }
 
     /**
-     * @return The array of [IValue] of model weights. This can be fed directly to the [org.openmined.syft.execution.Plan.execute]
+     * @return The array of [IValue][https://pytorch.org/javadoc/org/pytorch/IValue.html] of model weights. This can be fed directly to the [org.openmined.syft.execution.Plan.execute]
      */
     fun getParamsIValueArray() = modelSyftState?.getIValueTensorArray()
 

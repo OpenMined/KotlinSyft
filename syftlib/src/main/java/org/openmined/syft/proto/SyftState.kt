@@ -47,7 +47,7 @@ data class SyftState(
     }
 
     /**
-     * @return an array of pyTorch [org.pytorch.IValue] from the SyftTensors list
+     * @return an array of pyTorch [IValue][https://pytorch.org/javadoc/org/pytorch/IValue.html] from the SyftTensors list
      */
     fun getIValueTensorArray() =
             syftTensors.map { IValue.from(it.getTorchTensor()) }.toTypedArray()

@@ -3,3 +3,9 @@
 # properties
 
 `val properties: `[`ClientProperties`](../-client-properties/index.md)
+
+Contains job specific descriptions. See [ClientProperties](../-client-properties/index.md)
+
+### Property
+
+`properties` - Contains job specific descriptions. See [ClientProperties](../-client-properties/index.md)
