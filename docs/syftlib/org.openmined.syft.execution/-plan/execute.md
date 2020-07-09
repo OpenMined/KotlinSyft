@@ -2,17 +2,13 @@
 
 # execute
 
-`@ExperimentalStdlibApi fun execute(model: `[`SyftModel`](../../org.openmined.syft.proto/-syft-model/index.md)`, trainingBatch: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<IValue, IValue>, clientConfig: `[`ClientConfig`](../../org.openmined.syft.networking.datamodels/-client-config/index.md)`): IValue?`
+`@ExperimentalStdlibApi fun execute(vararg iValues: IValue): IValue?`
 
 Loads a serialized TorchScript module from the specified path on the disk.
 
 ### Parameters
 
-`model` - Model hosting model parameters.
-
-`trainingBatch` - Contains the training data at first position and the labels at second.
-
-`clientConfig` - The hyper parameters for the model.
+`iValues` - The input to the torchscript. The training batch, the hyper parameters and the model weights must be sent here
 
 ### Exceptions
 

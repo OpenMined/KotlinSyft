@@ -80,13 +80,19 @@ You can use KotlinSyft as a front-end or as a background service. The following 
             val plan = plans["plan id"]
 
             repeat(clientConfig.properties.maxUpdates) { step ->
-                val batchSize = clientConfig.planArgs["batch_size"] as Long
+
+                // get relevant hyperparams from ClientConfig.planArgs
+                // All the planArgs will be string and it is upon the user to deserialize them into correct type
+                val batchSize = (clientConfig.planArgs["batch_size"]
+                                 ?: error("batch_size doesn't exist")).toInt()
                 val batchIValue = IValue.from(
-                    Tensor.fromBlob(longArrayOf(batchSize), longArrayOf(1))
+                    Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
                 )
                 val lr = IValue.from(
                     Tensor.fromBlob(
-                        floatArrayOf(clientConfig.planArgs["lr"] as Float),
+                        floatArrayOf(
+                            (clientConfig.planArgs["lr"] ?: error("lr doesn't exist")).toFloat()
+                        ),
                         longArrayOf(1)
                     )
                 )
@@ -119,6 +125,10 @@ You can use KotlinSyft as a front-end or as a background service. The following 
                 // Failing to return from onReady will crash the application.
                 // All error handling must be done with `onError` Listener
             }
+            // Once training finishes generate the model diff
+            val diff = mnistJob.createDiff()
+            // Report the diff to PyGrid and finish the cycle
+            mnistJob.report(diff)
         }
 
         override fun onRejected(timeout: String) {

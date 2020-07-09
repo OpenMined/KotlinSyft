@@ -11,6 +11,11 @@
 
 |
 
+##### [org.openmined.syft.networking.datamodels.ClientProperties](../org.openmined.syft.networking.datamodels/-client-properties/index.md)
+
+
+|
+
 ##### [org.openmined.syft.domain.DownloadStatus](../org.openmined.syft.domain/-download-status/index.md)
 
 

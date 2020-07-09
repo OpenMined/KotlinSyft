@@ -33,7 +33,7 @@ data class ClientProperties(
 @Serializable(with = ClientConfigSerializer::class)
 data class ClientConfig(
     val properties: ClientProperties,
-    val planArgs: Map<String, Any>
+    val planArgs: Map<String, String>
 )
 
 @Suppress("UNCHECKED_CAST")
@@ -50,9 +50,9 @@ internal class ClientConfigSerializer : KSerializer<ClientConfig> {
         val response = input.decodeJson() as? JsonObject
                        ?: throw SerializationException("Expected JsonObject")
         val properties = getClientProperties(response)
-        val map = mutableMapOf<String, Any>()
+        val map = mutableMapOf<String, String>()
         response.content.filterNot { it.key in propertiesList }.forEach { (key, value) ->
-            map[key] = deserialize(value.toString())
+            map[key] = value.toString()
         }
         return ClientConfig(properties, map)
     }
@@ -66,17 +66,9 @@ internal class ClientConfigSerializer : KSerializer<ClientConfig> {
             VERSION to obj.properties.modelVersion
             MAX_UPDATES to obj.properties.maxUpdates
             obj.planArgs.forEach{ (key, value) ->
-                key to value.stringify()
+                key to value
             }
         })
-    }
-
-    private fun deserialize(value: String): Any {
-        return when {
-            value.toLongOrNull() != null -> value.toLong()
-            value.toFloatOrNull() != null -> value.toFloat()
-            else -> throw SerializationException("Illegal IValue supplied $value")
-        }
     }
 
     private fun getClientProperties(response: JsonObject): ClientProperties {
@@ -89,13 +81,5 @@ internal class ClientConfigSerializer : KSerializer<ClientConfig> {
                          ?: throw SerializationException("key max_updates not present")
 
         return ClientProperties(modelName, modelVersion, maxUpdates)
-    }
-}
-
-private fun Any.stringify() : String {
-    return when (this) {
-        is Long -> this.toString()
-        is Float -> this.toString()
-        else -> throw SerializationException("unable to serialize IValue")
     }
 }

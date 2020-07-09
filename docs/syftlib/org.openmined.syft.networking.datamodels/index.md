@@ -7,3 +7,4 @@
 | Name | Summary |
 |---|---|
 | [ClientConfig](-client-config/index.md) | `data class ClientConfig` |
+| [ClientProperties](-client-properties/index.md) | `data class ClientProperties` |

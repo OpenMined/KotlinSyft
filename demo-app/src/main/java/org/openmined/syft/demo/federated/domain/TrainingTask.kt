@@ -76,18 +76,21 @@ class TrainingTask(
         plans.values.first().let { plan ->
             repeat(clientConfig.properties.maxUpdates) { step ->
                 logger.postEpoch(step + 1)
-                val batchSize = clientConfig.planArgs["batch_size"] as Long
+                val batchSize = (clientConfig.planArgs["batch_size"]
+                                 ?: error("batch_size doesn't exist")).toInt()
                 val batchIValue = IValue.from(
-                    Tensor.fromBlob(longArrayOf(batchSize), longArrayOf(1))
+                    Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
                 )
                 val lr = IValue.from(
                     Tensor.fromBlob(
-                        floatArrayOf(clientConfig.planArgs["lr"] as Float),
+                        floatArrayOf(
+                            (clientConfig.planArgs["lr"] ?: error("lr doesn't exist")).toFloat()
+                        ),
                         longArrayOf(1)
                     )
                 )
                 val batchData =
-                        mnistDataRepository.loadDataBatch(batchSize.toInt())
+                        mnistDataRepository.loadDataBatch(batchSize)
                 val modelParams = model.getParamsIValueArray() ?: return
                 val output = plan.execute(
                     batchData.first,
