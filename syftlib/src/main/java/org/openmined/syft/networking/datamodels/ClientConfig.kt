@@ -33,7 +33,7 @@ data class ClientProperties(
 @Serializable(with = ClientConfigSerializer::class)
 data class ClientConfig(
     val properties: ClientProperties,
-    val planArgs: Map<String, IValue>
+    val planArgs: Map<String, Any>
 )
 
 @Suppress("UNCHECKED_CAST")
@@ -50,9 +50,9 @@ internal class ClientConfigSerializer : KSerializer<ClientConfig> {
         val response = input.decodeJson() as? JsonObject
                        ?: throw SerializationException("Expected JsonObject")
         val properties = getClientProperties(response)
-        val map = mutableMapOf<String, IValue>()
+        val map = mutableMapOf<String, Any>()
         response.content.filterNot { it.key in propertiesList }.forEach { (key, value) ->
-            map[key] = createIValue(value.toString())
+            map[key] = deserialize(value.toString())
         }
         return ClientConfig(properties, map)
     }
@@ -71,10 +71,10 @@ internal class ClientConfigSerializer : KSerializer<ClientConfig> {
         })
     }
 
-    private fun createIValue(value: String): IValue {
+    private fun deserialize(value: String): Any {
         return when {
-            value.toLongOrNull() != null -> IValue.from(value.toLong())
-            value.toDoubleOrNull() != null -> IValue.from(value.toDouble())
+            value.toLongOrNull() != null -> value.toLong()
+            value.toFloatOrNull() != null -> value.toFloat()
             else -> throw SerializationException("Illegal IValue supplied $value")
         }
     }
@@ -92,10 +92,10 @@ internal class ClientConfigSerializer : KSerializer<ClientConfig> {
     }
 }
 
-private fun IValue.stringify() : String {
-    return when{
-        this.isLong -> this.toLong().toString()
-        this.isDouble -> this.toDouble().toString()
+private fun Any.stringify() : String {
+    return when (this) {
+        is Long -> this.toString()
+        is Float -> this.toString()
         else -> throw SerializationException("unable to serialize IValue")
     }
 }

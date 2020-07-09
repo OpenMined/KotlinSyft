@@ -79,14 +79,28 @@ You can use KotlinSyft as a front-end or as a background service. The following 
             // eventually you would be able to use plan name here 
             val plan = plans["plan id"]
 
-            repeat(clientConfig.maxUpdates) { step ->
+            repeat(clientConfig.properties.maxUpdates) { step ->
+                val batchSize = clientConfig.planArgs["batch_size"] as Long
+                val batchIValue = IValue.from(
+                    Tensor.fromBlob(longArrayOf(batchSize), longArrayOf(1))
+                )
+                val lr = IValue.from(
+                    Tensor.fromBlob(
+                        floatArrayOf(clientConfig.planArgs["lr"] as Float),
+                        longArrayOf(1)
+                    )
+                )
                 // your custom implementation to read a databatch from your data
                 val batchData = dataRepository.loadDataBatch(clientConfig.batchSize)
+                //get Model weights and return if not set already
+                val modelParams = model.getParamsIValueArray() ?: return
                 // plan.execute runs a single gradient step and returns the output as PyTorch IValue
                 val output = plan.execute(
-                    model,
-                    batchData,
-                    clientConfig
+                    batchData.first,
+                    batchData.second,
+                    batchIValue,
+                    lr,
+                    *modelParams
                 )?.toTuple()
                 // The output is a tuple with outputs defined by the pysyft plan along with all the model params
                 output?.let { outputResult ->
