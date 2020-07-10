@@ -77,7 +77,7 @@ You can use KotlinSyft as a front-end or as a background service. The following 
             
             // Plans are accessible by their plan Id used while hosting it on PyGrid.
             // eventually you would be able to use plan name here 
-            val plan = plans["plan id"]
+            val plan = plans["plan name"]
 
             repeat(clientConfig.properties.maxUpdates) { step ->
 

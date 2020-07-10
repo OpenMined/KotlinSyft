@@ -73,7 +73,7 @@ class TrainingTask(
         logger: MnistLogger
     ) {
         var result = -0.0f
-        plans.values.first().let { plan ->
+        plans["training_plan"]?.let { plan ->
             repeat(clientConfig.properties.maxUpdates) { step ->
                 logger.postEpoch(step + 1)
                 val batchSize = (clientConfig.planArgs["batch_size"]

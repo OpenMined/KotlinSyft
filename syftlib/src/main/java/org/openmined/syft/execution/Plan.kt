@@ -12,11 +12,12 @@ private const val TAG = "syft.processes.Plan"
  * to run training through the forward function of the PyTorch Module.
  * A PyTorch Module is simply a container that takes in tensors as input and returns
  * tensor after doing some computation.
- * @property planId is the unique id allotted to the plan by PyGrid
  * @property job is the job hosting this plan
+ * @property planId is the unique id allotted to the plan by PyGrid
+ * @property planName is the name of the plan
  */
 @ExperimentalUnsignedTypes
-class Plan(val job: SyftJob, val planId: String) {
+class Plan(val job: SyftJob, val planId: String, val planName : String) {
     private var pyTorchModule: Module? = null
 
     /**

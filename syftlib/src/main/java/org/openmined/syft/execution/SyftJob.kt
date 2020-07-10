@@ -156,9 +156,11 @@ class SyftJob internal constructor(
     @Synchronized
     internal fun cycleAccepted(responseData: CycleResponseData.CycleAccept) {
         Log.d(TAG, "setting Request Key")
-        responseData.plans.forEach { (_, planId) -> plans[planId] = Plan(this, planId) }
-        responseData.protocols.forEach { (_, protocolId) ->
-            protocols[protocolId] = Protocol(protocolId)
+        responseData.plans.forEach { (planName, planId) ->
+            plans[planName] = Plan(this, planId, planName)
+        }
+        responseData.protocols.forEach { (protocolName, protocolId) ->
+            protocols[protocolName] = Protocol(protocolId)
         }
         requestKey = responseData.requestKey
         model.pyGridModelId = responseData.modelId
