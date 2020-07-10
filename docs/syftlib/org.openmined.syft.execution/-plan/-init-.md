@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`Plan(job: `[`SyftJob`](../-syft-job/index.md)`, planId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`
+`Plan(job: `[`SyftJob`](../-syft-job/index.md)`, planId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, planName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`
 
 The Plan Class contains functions to load a PyTorch model from a TorchScript and
 to run training through the forward function of the PyTorch Module.

@@ -27,6 +27,6 @@ training or inference.
 | Name | Summary |
 |---|---|
 | [createDiff](create-diff.md) | Subtract the older state from the current state to generate the diff for Upload to PyGrid`fun createDiff(oldSyftState: `[`SyftState`](../-syft-state/index.md)`, diffScriptLocation: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`SyftState`](../-syft-state/index.md) |
-| [getParamsIValueArray](get-params-i-value-array.md) | `fun getParamsIValueArray(): `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<IValue!>?` |
+| [getParamArray](get-param-array.md) | `fun getParamArray(): `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<Tensor>?` |
 | [loadModelState](load-model-state.md) | This method is used to load SyftModel from file`fun loadModelState(modelFile: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [updateModel](update-model.md) | This method is used to save/update SyftModel class. This function must be called after every gradient step to update the model state for further plan executions.`fun updateModel(newModelParams: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<Tensor>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

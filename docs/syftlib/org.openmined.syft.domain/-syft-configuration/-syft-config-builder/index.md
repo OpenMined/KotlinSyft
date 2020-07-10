@@ -25,4 +25,5 @@
 | [setComputeScheduler](set-compute-scheduler.md) | `fun setComputeScheduler(computeSchedulers: `[`ProcessSchedulers`](../../../org.openmined.syft.threading/-process-schedulers/index.md)`): SyftConfigBuilder` |
 | [setFilesDir](set-files-dir.md) | `fun setFilesDir(filesDir: `[`File`](https://docs.oracle.com/javase/6/docs/api/java/io/File.html)`): SyftConfigBuilder` |
 | [setMaxConcurrentJobs](set-max-concurrent-jobs.md) | `fun setMaxConcurrentJobs(numJobs: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): SyftConfigBuilder` |
+| [setMessagingClient](set-messaging-client.md) | `fun setMessagingClient(messagingClient: NetworkingClients): SyftConfigBuilder` |
 | [setNetworkingScheduler](set-networking-scheduler.md) | `fun setNetworkingScheduler(scheduler: `[`ProcessSchedulers`](../../../org.openmined.syft.threading/-process-schedulers/index.md)`): SyftConfigBuilder` |
