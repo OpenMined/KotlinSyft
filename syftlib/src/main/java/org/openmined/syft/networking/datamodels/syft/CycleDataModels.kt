@@ -49,7 +49,7 @@ internal sealed class CycleResponseData : NetworkModels() {
     data class CycleReject(
         @SerialName("model")
         override val modelName: String,
-        override val version: String,
+        override val version: String? = null,
         val timeout: String
     ) : CycleResponseData()
 }

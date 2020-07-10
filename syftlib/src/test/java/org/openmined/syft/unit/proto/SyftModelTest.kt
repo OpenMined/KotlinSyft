@@ -76,11 +76,11 @@ internal class SyftModelTest {
 
     @Test
     fun `getParamsIValueArray calls syftState's getIValueTensorArray`(){
-        val returnIvalue = arrayOf(IValue.from(0L))
+        val returnIvalue = arrayOf(Tensor.fromBlob(longArrayOf(0L), longArrayOf(1)))
         val state = mockk<SyftState>{
             every { getTensorArray() } returns returnIvalue
         }
-        val cut = SyftModel("test",modelSyftState = state)
+        val cut = SyftModel("model name",modelSyftState = state)
         val out = cut.getParamArray()
         verify { state.getTensorArray() }
         assert(out?.contentEquals(returnIvalue) ?: false)

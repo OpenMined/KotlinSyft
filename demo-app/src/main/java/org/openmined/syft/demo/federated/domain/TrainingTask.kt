@@ -92,12 +92,12 @@ class TrainingTask(
                 val batchData =
                         mnistDataRepository.loadDataBatch(batchSize)
                 val modelParams = model.getParamArray() ?: return
+                val paramIValue = IValue.listFrom(*modelParams)
                 val output = plan.execute(
-                    modelParams,
                     batchData.first,
                     batchData.second,
                     batchIValue,
-                    lr
+                    lr, paramIValue
                 )?.toTuple()
                 output?.let { outputResult ->
                     val paramSize = model.modelSyftState!!.syftTensors.size
