@@ -100,6 +100,10 @@ class SyftConfiguration internal constructor(
             return this
         }
 
+        fun setMessagingClient(messagingClient : NetworkingClients) : SyftConfigBuilder {
+            this.messagingClient = messagingClient
+            return this
+        }
 
         fun enableCellularData(): SyftConfigBuilder {
             networkTransportMedium = NetworkCapabilities.TRANSPORT_CELLULAR

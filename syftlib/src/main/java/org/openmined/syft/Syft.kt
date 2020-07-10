@@ -1,6 +1,5 @@
 package org.openmined.syft
 
-import org.openmined.syft.fp.Either
 import android.accounts.NetworkErrorException
 import android.util.Log
 import io.reactivex.Single
@@ -9,6 +8,7 @@ import io.reactivex.disposables.Disposable
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
+import org.openmined.syft.fp.Either
 import org.openmined.syft.monitor.DeviceMonitor
 import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
@@ -218,7 +218,13 @@ class Syft internal constructor(
 
     private fun executeAuthentication(job: SyftJob) {
         compositeDisposable.add(
-            syftConfig.getSignallingClient().authenticate(AuthenticationRequest(authToken))
+            syftConfig.getSignallingClient().authenticate(
+                AuthenticationRequest(
+                    authToken,
+                    job.jobId.modelName,
+                    job.jobId.version
+                )
+            )
                     .compose(syftConfig.networkingSchedulers.applySingleSchedulers())
                     .subscribe({ response: AuthenticationResponse ->
                         when (response) {

@@ -36,8 +36,7 @@ internal class SocketSerializer : KSerializer<SocketResponse> {
                     ?: throw SerializationException("This class can be loaded only by Json")
         val response = input.decodeJson() as? JsonObject
                        ?: throw SerializationException("Expected JsonObject")
-        val type = enumValues<REQUESTS>().find { it.value == response.getPrimitive("type").content }
-                   ?: throw SerializationException("$TAG : Unidentified type in serialization")
+        val type = REQUESTS.getObjectFromString(response.getPrimitive("type").content)
         val data = type.parseJson(response["data"].toString())
         return SocketResponse(type, data)
     }

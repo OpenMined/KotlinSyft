@@ -1,6 +1,5 @@
 package org.openmined.syft.unit.proto
 
-import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -79,11 +78,11 @@ internal class SyftModelTest {
     fun `getParamsIValueArray calls syftState's getIValueTensorArray`(){
         val returnIvalue = arrayOf(IValue.from(0L))
         val state = mockk<SyftState>{
-            every { getIValueTensorArray() } returns returnIvalue
+            every { getTensorArray() } returns returnIvalue
         }
         val cut = SyftModel("test",modelSyftState = state)
-        val out = cut.getParamsIValueArray()
-        verify { state.getIValueTensorArray() }
+        val out = cut.getParamArray()
+        verify { state.getTensorArray() }
         assert(out?.contentEquals(returnIvalue) ?: false)
     }
 
@@ -91,7 +90,7 @@ internal class SyftModelTest {
     @Test
     fun `getParamsIValueArray return null if state is null`(){
         val cut = SyftModel("test")
-        val out = cut.getParamsIValueArray()
+        val out = cut.getParamArray()
         assert(out == null)
     }
 

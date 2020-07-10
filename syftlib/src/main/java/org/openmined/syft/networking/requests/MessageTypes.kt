@@ -1,6 +1,7 @@
 package org.openmined.syft.networking.requests
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.json.JsonElement
 import org.openmined.syft.networking.datamodels.NetworkModels
 
@@ -8,10 +9,10 @@ internal interface MessageTypes {
     val value: String
 }
 
-internal interface ResponseMessageTypes : MessageTypes {
-    val jsonParser: Json
-    fun parseJson(jsonString: String): NetworkModels
-    fun serialize(obj: NetworkModels): JsonElement
+internal abstract class ResponseMessageTypes() : MessageTypes {
+    val jsonParser: Json = Json(JsonConfiguration.Stable)
+    abstract fun parseJson(jsonString: String): NetworkModels
+    abstract fun serialize(obj: NetworkModels): JsonElement
 }
 
 internal enum class DOWNLOAD(

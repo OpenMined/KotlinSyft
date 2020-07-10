@@ -109,7 +109,7 @@ data class SyftTensor(
                 contents.contentsBfloat16List.toFloatArray(),
                 shape.map { it.toLong() }.toLongArray()
             )
-            else -> throw Exception("Invalid Tensor type")
+            else -> throw Exception("Invalid Tensor type $dtype")
         }
     }
 

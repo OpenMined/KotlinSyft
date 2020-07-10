@@ -3,6 +3,7 @@ package org.openmined.syft.execution
 import android.util.Log
 import org.pytorch.IValue
 import org.pytorch.Module
+import org.pytorch.Tensor
 
 private const val TAG = "syft.processes.Plan"
 
@@ -21,6 +22,7 @@ class Plan(val job: SyftJob, val planId: String) {
     /**
      * Loads a serialized TorchScript module from the specified path on the disk.
      *
+     * @param params The model params as an array of pyTorch tensors
      * @param iValues The input to the torchscript. The training batch, the hyper parameters and the model weights must be sent here
      * @return The output contains the loss, accuracy values as defined while creating plan. It also
      *         contains the updated parameters of the model. These parameters are then saved manually by user.
@@ -28,7 +30,7 @@ class Plan(val job: SyftJob, val planId: String) {
      */
     @Throws(IllegalStateException::class)
     @ExperimentalStdlibApi
-    fun execute(vararg iValues: IValue): IValue? {
+    fun execute(params: Array<Tensor>, vararg iValues: IValue): IValue? {
         if (job.throwErrorIfBatteryInvalid()) {
             //todo decide how we want to handle this. Throw an error or quietly skip execution
             return null
@@ -39,9 +41,9 @@ class Plan(val job: SyftJob, val planId: String) {
             Log.e(TAG, "pytorch module not initialized yet")
             return null
         }
-
-        // We feed in the training data to the forward function of the pytorchModule.
-        return localModuleState.forward(*iValues)
+        val paramIValue = IValue.listFrom(*params)
+        // We feed in the training data to the forward function of the pyTorchModule.
+        return localModuleState.forward(*iValues, paramIValue)
     }
 
     /**

@@ -49,8 +49,8 @@ data class SyftState(
     /**
      * @return an array of pyTorch [IValue][https://pytorch.org/javadoc/org/pytorch/IValue.html] from the SyftTensors list
      */
-    fun getIValueTensorArray() =
-            syftTensors.map { IValue.from(it.getTorchTensor()) }.toTypedArray()
+    fun getTensorArray() =
+            syftTensors.map { it.getTorchTensor() }.toTypedArray()
 
     /**
      * Generate StateOuterClass.State object using Placeholders list and syftTensor list

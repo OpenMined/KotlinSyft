@@ -1,7 +1,6 @@
 package org.openmined.syft.networking.requests
 
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonElement
 import org.openmined.syft.networking.datamodels.NetworkModels
 import org.openmined.syft.networking.datamodels.syft.AUTH_TYPE
@@ -19,10 +18,21 @@ import org.openmined.syft.networking.datamodels.webRTC.NEW_PEER_TYPE
 import org.openmined.syft.networking.datamodels.webRTC.NewPeer
 import org.openmined.syft.networking.datamodels.webRTC.WEBRTC_INTERNAL_TYPE
 
-internal enum class REQUESTS(override val value: String) : ResponseMessageTypes {
+internal sealed class REQUESTS(override val value: String) : ResponseMessageTypes() {
+    companion object {
+        fun getObjectFromString(value: String): REQUESTS {
+            return when (value) {
+                AUTH_TYPE -> AUTHENTICATION
+                CYCLE_TYPE -> CYCLE_REQUEST
+                REPORT_TYPE -> REPORT
+                WEBRTC_INTERNAL_TYPE -> WEBRTC_INTERNAL
+                NEW_PEER_TYPE -> WEBRTC_PEER
+                else -> throw SerializationException("unknown type REQUESTS $value")
+            }
+        }
+    }
 
-    AUTHENTICATION(AUTH_TYPE) {
-        override val jsonParser = Json(JsonConfiguration.Stable.copy(classDiscriminator = "status"))
+    object AUTHENTICATION : REQUESTS(AUTH_TYPE) {
         override fun parseJson(jsonString: String): NetworkModels =
                 jsonParser.parse(AuthenticationResponse.serializer(), jsonString)
 
@@ -31,31 +41,25 @@ internal enum class REQUESTS(override val value: String) : ResponseMessageTypes 
                     AuthenticationRequest.serializer(),
                     obj as AuthenticationRequest
                 )
-    },
+    }
 
-    CYCLE_REQUEST(CYCLE_TYPE) {
-        override val jsonParser = Json(
-            JsonConfiguration.Stable.copy(classDiscriminator = "status")
-        )
-
+    object CYCLE_REQUEST : REQUESTS(CYCLE_TYPE) {
         override fun parseJson(jsonString: String): NetworkModels =
                 jsonParser.parse(CycleResponseData.serializer(), jsonString)
 
         override fun serialize(obj: NetworkModels) =
                 jsonParser.toJson(CycleRequest.serializer(), obj as CycleRequest)
-    },
-    REPORT(REPORT_TYPE) {
-        override val jsonParser = Json(JsonConfiguration.Stable)
+    }
+
+    object REPORT : REQUESTS(REPORT_TYPE) {
         override fun parseJson(jsonString: String): NetworkModels =
                 jsonParser.parse(ReportResponse.serializer(), jsonString)
 
         override fun serialize(obj: NetworkModels) =
                 jsonParser.toJson(ReportRequest.serializer(), obj as ReportRequest)
-    },
-    WEBRTC_INTERNAL(WEBRTC_INTERNAL_TYPE) {
-        override val jsonParser: Json
-            get() = Json(JsonConfiguration.Stable)
+    }
 
+    object WEBRTC_INTERNAL : REQUESTS(WEBRTC_INTERNAL_TYPE) {
         override fun parseJson(jsonString: String): NetworkModels =
                 jsonParser.parse(InternalMessageResponse.serializer(), jsonString)
 
@@ -64,11 +68,9 @@ internal enum class REQUESTS(override val value: String) : ResponseMessageTypes 
                     InternalMessageRequest.serializer(),
                     obj as InternalMessageRequest
                 )
-    },
-    WEBRTC_PEER(NEW_PEER_TYPE) {
-        override val jsonParser: Json
-            get() = Json(JsonConfiguration.Stable)
+    }
 
+    object WEBRTC_PEER : REQUESTS(NEW_PEER_TYPE) {
         override fun parseJson(jsonString: String): NetworkModels =
                 jsonParser.parse(NewPeer.serializer(), jsonString)
 
@@ -77,7 +79,5 @@ internal enum class REQUESTS(override val value: String) : ResponseMessageTypes 
                     InternalMessageRequest.serializer(),
                     obj as InternalMessageRequest
                 )
-
     }
-
 }
