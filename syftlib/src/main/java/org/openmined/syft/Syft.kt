@@ -67,8 +67,8 @@ class Syft internal constructor(
             this,
             syftConfig
         )
-//        if (syftConfig.maxConcurrentJobs == workerJob.size)
-//            throw IndexOutOfBoundsException("maximum number of allowed jobs reached")
+        if (workerJob != null)
+            throw IndexOutOfBoundsException("maximum number of allowed jobs reached")
 
         workerJob = job
         job.subscribe(object : JobStatusSubscriber() {

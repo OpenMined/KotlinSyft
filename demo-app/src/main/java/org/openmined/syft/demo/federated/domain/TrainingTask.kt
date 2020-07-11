@@ -48,7 +48,7 @@ class TrainingTask(
             }
 
             override fun onRejected(timeout: String) {
-                logger.postLog("We've been rejected for time $timeout")
+                logger.postLog("We've been rejected for the time $timeout")
                 statusPublisher.offer(Result.retry())
             }
 

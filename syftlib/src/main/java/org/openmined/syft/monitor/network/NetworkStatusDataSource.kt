@@ -22,9 +22,11 @@ import org.openmined.syft.networking.requests.HttpAPI
 import java.io.File
 import java.io.InputStream
 import java.util.Random
+import kotlin.Float.Companion.POSITIVE_INFINITY
 
-private const val MB = 1024 * 1024
-private const val SPEED_BUFFER_WINDOW = 20
+private const val KB = 1024
+private const val MB = KB * KB
+private const val MAX_SPEED_TESTS = 3
 private const val SPEED_MULTIPLICATION_FACTOR = 10
 private const val MAX_SPEED_TESTING_BYTES = MB * 8
 private const val TAG = "NetworkStateEvaluator"
@@ -103,40 +105,15 @@ internal class NetworkStatusRealTimeDataSource internal constructor(
         workerId: String,
         networkStatusModel: NetworkStatusModel
     ): Completable {
-        val fileSize = 64
-        val file = File(filesDir, "uploadFile").apply {
-            bufferedWriter().use { output ->
-                repeat(fileSize) {
-                    output.write("x".repeat(MB))
-                }
-            }
+        return getUploadSpeedTester(64 * MB, workerId).flatMapCompletable { speed ->
+            val speedCapped = if (speed > 10e10f)
+                10e10f
+            else
+                speed
+            networkStatusModel.uploadSpeed = speedCapped.toString()
+            Log.d(TAG, "Upload Speed is ${networkStatusModel.uploadSpeed} KBps")
+            Completable.complete()
         }
-        val requestFile = file.asRequestBody("text/plain".toMediaType())
-        val body = MultipartBody.Part.createFormData("sample", file.name, requestFile)
-        val description = "uploadFile".toRequestBody()
-        val start = System.currentTimeMillis() / 1000.0f
-
-        return downloader.uploadSpeedTest(
-            workerId, Random().ints(128).toString(),
-            description,
-            body
-        )
-                .flatMapCompletable { response ->
-                    if (response.body()?.error == null && response.code() == 200) {
-                        var speed = fileSize * 1024 / (System.currentTimeMillis() / 1000.0f - start)
-                        if (speed > 100000)
-                        //capping infinity
-                            speed = 100000.0f
-                        networkStatusModel.uploadSpeed = speed.toString()
-                        Log.d(TAG, "Upload Speed is ${networkStatusModel.uploadSpeed} KBps")
-                        file.delete()
-                        Completable.complete()
-
-                    } else {
-                        file.delete()
-                        Completable.error(NetworkErrorException("unable to verify upload speed"))
-                    }
-                }
     }
 
     fun updateDownloadSpeed(workerId: String, networkStatusModel: NetworkStatusModel) =
@@ -150,46 +127,59 @@ internal class NetworkStatusRealTimeDataSource internal constructor(
                         Completable.complete()
                     }
 
+    private fun getUploadSpeedTester(sizeInBytes: Int, workerId: String): Single<Float> {
+        val file = File(filesDir, "uploadFile").apply {
+            bufferedWriter().use { output ->
+                output.write("x".repeat(sizeInBytes))
+            }
+        }
+        val start = System.currentTimeMillis() / 1000.0f
+        val description = "uploadFile".toRequestBody()
+        val requestFile = file.asRequestBody("text/plain".toMediaType())
+        val body = MultipartBody.Part.createFormData("sample", file.name, requestFile)
+        return downloader.uploadSpeedTest(
+            workerId, Random().ints(128).toString(),
+            description,
+            body
+        )
+                .flatMap { response ->
+                    if (response.body()?.error == null && response.code() == 200) {
+                        Single.just(sizeInBytes / (System.currentTimeMillis() / 1000.0f - start))
+                    } else {
+                        file.delete()
+                        Single.error(NetworkErrorException("unable to verify upload speed"))
+                    }
+                }
+    }
+
     private fun evaluateDownloadSpeed(input: ResponseBody?): Single<Float> {
         if (input == null)
             return Single.error(UninitializedPropertyAccessException())
 
         return Single.create { emitter ->
-            var begin = 0
             var bufferSize = DEFAULT_BUFFER_SIZE
-            val avgSpeedWindow = Array(SPEED_BUFFER_WINDOW) { 0.0f }
+            val avgSpeedWindow = mutableListOf<Float>()
             var start = System.currentTimeMillis()
             input.byteStream().use { inputStream ->
-                while (true) {
+                for (idx in (0..MAX_SPEED_TESTS)) {
                     val count = inputStream.readNBuffers(bufferSize)
                     if (count == 0)
                         break
                     val timeTaken = (System.currentTimeMillis() - start) / 1000.0f
-                    if (timeTaken < 0.5) {
+                    if (timeTaken < 0.5)
                         bufferSize = Integer.min(
                             bufferSize * SPEED_MULTIPLICATION_FACTOR,
                             MAX_SPEED_TESTING_BYTES
                         )
-                        continue
-                    }
                     val newSpeed = bufferSize / (timeTaken * 1024)
-                    if (begin % SPEED_BUFFER_WINDOW == 0) {
-                        val avg = avgSpeedWindow.sum() / SPEED_BUFFER_WINDOW
-                        val deviation = avg - avgSpeedWindow.min()!!
-                        if (deviation < 20 && avg > 0) {
-                            break
-                        }
-                    }
-                    avgSpeedWindow[begin % SPEED_BUFFER_WINDOW] = newSpeed
-                    begin += 1
+                    if (newSpeed < POSITIVE_INFINITY)
+                        avgSpeedWindow.add(newSpeed)
                     start = System.currentTimeMillis()
                 }
-                emitter.onSuccess(
-                    avgSpeedWindow.sum() / Integer.min(
-                        begin,
-                        SPEED_BUFFER_WINDOW
-                    )
-                )
+                if (avgSpeedWindow.size > 1)
+                    emitter.onSuccess(avgSpeedWindow.sum() / avgSpeedWindow.size)
+                else
+                    emitter.onSuccess(POSITIVE_INFINITY)
             }
         }
     }

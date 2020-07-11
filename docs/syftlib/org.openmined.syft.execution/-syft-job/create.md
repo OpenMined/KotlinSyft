@@ -7,28 +7,28 @@
 Creates a new Syft Job
 
 ``` kotlin
-        val job = SyftJob.create(
-            model,
-            version,
-            this,
-            syftConfig
-        )
-//        if (syftConfig.maxConcurrentJobs == workerJob.size)
-//            throw IndexOutOfBoundsException("maximum number of allowed jobs reached")
+val job = SyftJob.create(
+    model,
+    version,
+    this,
+    syftConfig
+)
+if (workerJob != null)
+    throw IndexOutOfBoundsException("maximum number of allowed jobs reached")
 
-        workerJob = job
-        job.subscribe(object : JobStatusSubscriber() {
-            override fun onComplete() {
-                workerJob = null
-            }
+workerJob = job
+job.subscribe(object : JobStatusSubscriber() {
+    override fun onComplete() {
+        workerJob = null
+    }
 
-            override fun onError(throwable: Throwable) {
-                Log.e(TAG, throwable.message.toString())
-                workerJob = null
-            }
-        }, syftConfig.networkingSchedulers)
+    override fun onError(throwable: Throwable) {
+        Log.e(TAG, throwable.message.toString())
+        workerJob = null
+    }
+}, syftConfig.networkingSchedulers)
 
-        return job
+return job
 ```
 
 ### Parameters

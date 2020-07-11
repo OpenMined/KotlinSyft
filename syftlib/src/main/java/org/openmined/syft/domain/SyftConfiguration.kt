@@ -130,11 +130,11 @@ class SyftConfiguration internal constructor(
             this.computeSchedulers = computeSchedulers
             return this
         }
-
-        fun setMaxConcurrentJobs(numJobs: Int): SyftConfigBuilder {
-            this.maxConcurrentJobs = numJobs
-            return this
-        }
+//todo add this when pygrid supports multiple jobs
+//        fun setMaxConcurrentJobs(numJobs: Int): SyftConfigBuilder {
+//            this.maxConcurrentJobs = numJobs
+//            return this
+//        }
 
         fun disableBackgroundServiceExecution(): SyftConfigBuilder {
             this.monitorDevice = true

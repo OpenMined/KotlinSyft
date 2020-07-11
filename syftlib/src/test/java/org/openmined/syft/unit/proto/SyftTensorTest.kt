@@ -47,7 +47,6 @@ class SyftTensorTest {
         val result = tensor.toSyftTensor()
 
         // Then
-        assert(tensorId == result.id)
         assert(tensorData == result.contents)
         assert(listOf(1, 2) == result.shape)
         assert(type == result.dtype)
@@ -131,7 +130,6 @@ class SyftTensorTest {
 
     @Test
     fun `Given a SyftTensor when it is serialized it returns the corresponding syftProtoTensor`() {
-        val tensorId = IdOuterClass.Id.newBuilder().setIdStr("myId").build()
         val tagList = listOf("tag1", "tag2")
         val description = "description"
         val tensorData = mockk<TensorDataOuterClass.TensorData> {
@@ -139,7 +137,7 @@ class SyftTensorTest {
         }
 
         val cut = SyftTensor(
-            id = tensorId,
+            id = "id",
             contents = tensorData,
             shape = mutableListOf(1, 2),
             dtype = "int32",
@@ -151,7 +149,7 @@ class SyftTensorTest {
         val syftProtoTensor = cut.serialize()
 
         assert(syftProtoTensor.contentsData == tensorData)
-        assert(syftProtoTensor.id == tensorId)
+        assert(syftProtoTensor.id.idStr == "id")
         assert(syftProtoTensor.contentsData.dtype == "INT32")
         assert(syftProtoTensor.tagsList == tagList)
         assert(syftProtoTensor.description == description)
@@ -380,11 +378,11 @@ class SyftTensorTest {
         val diffModule = mockk<Module> {
             every {
                 forward(
-                    cut.getIValue(),
                     opIvalue1,
                     opIvalue2,
-                    opIvalue3
-                )
+                    opIvalue3,
+                    cut.getIValue()
+                    )
             } returns outputIvalue
 
         }
@@ -403,7 +401,7 @@ class SyftTensorTest {
 
         val cut = spy(
             SyftTensor(
-                id = tensorId,
+                id = "id",
                 contents = tensorData,
                 shape = mutableListOf(3, 1),
                 dtype = "bfloat16",
@@ -422,7 +420,7 @@ class SyftTensorTest {
         tensorData: TensorDataOuterClass.TensorData
     ): SyftTensor {
         return SyftTensor(
-            id = tensorId,
+            id = "id",
             contents = tensorData,
             shape = mutableListOf(3, 1),
             dtype = dtype,
