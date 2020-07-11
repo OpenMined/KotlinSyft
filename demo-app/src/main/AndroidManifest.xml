@@ -1,5 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.openmined.syft.demo">
+    package="org.openmined.syft.demo" >
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -7,5 +11,29 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme" />
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true" >
+        <activity
+            android:name=".federated.ui.work.WorkInfoActivity"
+            android:label="@string/title_activity_work_info"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:theme="@style/AppTheme.NoActionBar" >
+        </activity>
+        <activity
+            android:name=".login.LoginActivity"
+            android:label="Login"
+            android:theme="@style/FullscreenTheme" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".federated.ui.main.MnistActivity"
+            android:label="MNIST Trainer"
+            android:theme="@style/AppTheme.NoActionBar" />
+    </application>
+
 </manifest>

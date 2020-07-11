@@ -1,0 +1,29 @@
+apply plugin: "nebula.maven-publish"
+apply plugin: "nebula.javadoc-jar"
+apply plugin: "nebula.source-jar"
+
+apply plugin: "nebula.nebula-bintray-publishing"
+
+Properties properties = new Properties()
+def propertiesFile = project.rootProject.file('local.properties')
+if (propertiesFile.exists()) {
+    properties.load(propertiesFile.newDataInputStream())
+}
+
+def bintrayUser = properties.getProperty('bintray.user')
+def bintrayKey = properties.getProperty('bintray.key')
+
+bintray {
+    user = bintrayUser
+    key = bintrayKey
+    pkg {
+        userOrg = "openmined"
+        repo = "KotlinSyft"
+        name = "syft"
+        websiteUrl = "https://github.com/OpenMined/KotlinSyft"
+        issueTrackerUrl = "https://github.com/OpenMined/KotlinSyft/issues"
+        vcsUrl = "https://github.com/OpenMined/KotlinSyft.git"
+        licenses = ["Apache-2.0"]
+        labels = ["openmined", "kotlin", "machine learning", "privacy", "pytorch"]
+    }
+}

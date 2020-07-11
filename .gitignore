@@ -3,4 +3,7 @@
 *.iml
 local.properties
 .gradle/
-.idea
+.idea/*.xml
+.idea/caches
+.idea/libraries
+demo-app/local_config.properties

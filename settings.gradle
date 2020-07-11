@@ -1,4 +1,2 @@
-include ':demo-app'
-include ':syftlib'
-
-rootProject.name = 'KotlinSyft'
+include (":demo-app",":syftlib")
+rootProject.name = "KotlinSyft"

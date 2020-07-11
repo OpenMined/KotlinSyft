@@ -1,31 +1,89 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlinx-serialization'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'jacoco'
+apply plugin: 'org.jetbrains.dokka'
+apply from: 'publish.gradle'
+
+jacoco {
+    toolVersion = Versions.jacocoVersion
+}
+
+check.finalizedBy "jacocoTestReport"
+
+task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {
+
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+
+    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*']
+    def debugTree = fileTree(dir: "$project.buildDir/tmp/kotlin-classes/debug", excludes: fileFilter)
+    def mainSrc = "$project.projectDir/src/main/java"
+
+    sourceDirectories = files([mainSrc])
+    classDirectories = files([debugTree])
+    executionData = fileTree(dir: project.buildDir, includes: [
+            'jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec'
+    ])
+}
+
+dokka {
+    outputFormat = 'gfm'
+    outputDirectory = "$buildDir/docs"
+    configuration {
+        // Use to include or exclude non public members.
+        includeNonPublic = false
+    }
+    doLast {
+        ant.move file: "$outputDirectory",
+                todir: "$rootDir"
+    }
+}
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
-
+    compileSdkVersion Versions.compileSdk
+    buildToolsVersion Versions.buildTools
 
     defaultConfig {
-        minSdkVersion 24
-        targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
-
+        minSdkVersion Versions.minSdk
+        targetSdkVersion Versions.targetSdk
+        versionCode Versions.appVersionCode
+        versionName Versions.appVersionName
+        javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
     }
 
     buildTypes {
+        debug {
+            testCoverageEnabled = true
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     compileOptions {
-        sourceCompatibility = 1.8
-        targetCompatibility = 1.8
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+        unitTests.includeAndroidResources = true
+        unitTests.all {
+            jacoco {
+                jacoco.includeNoLocationClasses = true
+
+            }
+        }
     }
 
     lintOptions {
@@ -39,16 +97,33 @@ android {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.core:core-ktx:1.1.0'
-    implementation 'org.webrtc:google-webrtc:1.0.30039'
+    implementation SyftlibDependencies.kotlinJDK
+    implementation CommonDependencies.appCompat
+    implementation CommonDependencies.coreKtx
+    implementation CommonDependencies.kotlinSerialization
+    implementation SyftlibDependencies.webrtc
+    implementation CommonDependencies.rxJava
+    implementation CommonDependencies.rxAndroid
+    implementation SyftlibDependencies.okhttp
+    implementation CommonDependencies.kotlinSerializationFactory
+    implementation SyftlibDependencies.retrofitAdapter
+    implementation SyftlibDependencies.retrofit
 
-    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation SyftlibDependencies.syftProto
+    implementation SyftlibDependencies.protobuf
 
-    debugImplementation "org.mockito:mockito-junit-jupiter:3.2.4"
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.5.2'
-    testImplementation "org.mockito:mockito-core:3.2.4"
+    implementation SyftlibDependencies.pytorchAndroid
+    implementation SyftlibDependencies.torchVisionAndroid
+
+    androidTestImplementation CommonDependencies.adxExtJunit
+    androidTestImplementation CommonDependencies.adxRunner
+    androidTestImplementation CommonDependencies.adxExtTruth
+    androidTestImplementation CommonDependencies.espresso
+
+    testImplementation CommonDependencies.adxTest
+    testImplementation CommonDependencies.robolectric
+    testImplementation CommonDependencies.junit
+    testImplementation CommonDependencies.mockitoCore
+    testImplementation CommonDependencies.mockitoKotlin
+    testImplementation CommonDependencies.mockk
 }

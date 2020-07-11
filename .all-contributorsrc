@@ -1,0 +1,87 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "vkkhare",
+      "name": "varun khare",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/18126069?v=4",
+      "profile": "http://vkkhare.github.io",
+      "contributions": [
+        "code",
+        "test",
+        "doc",
+        "design"
+      ]
+    },
+    {
+      "login": "mccorby",
+      "name": "Jose A. Corbacho",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/4661075?v=4",
+      "profile": "https://github.com/mccorby",
+      "contributions": [
+        "code",
+        "test",
+        "design",
+        "doc"
+      ]
+    },
+    {
+      "login": "IamRavikantSingh",
+      "name": "Ravikant Singh",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/40258150?v=4",
+      "profile": "http://ravikantsingh.com",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    },
+    {
+      "login": "codeboy5",
+      "name": "Saksham Rastogi",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/40931412?v=4",
+      "profile": "https://github.com/codeboy5",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "cereallarceny",
+      "name": "Patrick Cason",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/1297930?v=4",
+      "profile": "https://www.patrickcason.com",
+      "contributions": [
+        "doc",
+        "business"
+      ]
+    },
+    {
+      "login": "galalen",
+      "name": "Mohammed Galalen",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/16897043?v=4",
+      "profile": "http://galalen.github.io",
+      "contributions": [
+        "doc",
+        "test"
+      ]
+    },
+    {
+      "login": "erksch",
+      "name": "Erik Ziegler",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/19290349?v=4",
+      "profile": "https://github.com/erksch",
+      "contributions": [
+        "bug"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "KotlinSyft",
+  "projectOwner": "OpenMined",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": false
+}
