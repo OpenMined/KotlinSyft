@@ -46,8 +46,8 @@ data class SyftTensor(
     fun applyOperation(scriptModuleLocation: String, vararg operands: SyftTensor): SyftTensor {
         val diffModule = Module.load(scriptModuleLocation)
         val output = diffModule.forward(
-            this.getIValue(),
-            *(operands.map { it.getIValue() }.toTypedArray())
+            *(operands.map { it.getIValue() }.toTypedArray()),
+            this.getIValue()
         )
         return output.toTensor().toSyftTensor()
     }

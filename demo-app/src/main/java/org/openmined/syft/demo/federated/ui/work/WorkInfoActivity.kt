@@ -27,8 +27,6 @@ class WorkInfoActivity : AppCompatActivity() {
     private lateinit var binding: ActivityWorkInfoBinding
     private lateinit var viewModel: WorkInfoViewModel
 
-    private val workerRepository = WorkerRepository(this)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_work_info)
