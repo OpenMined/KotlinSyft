@@ -81,7 +81,7 @@ class WorkInfoActivity : AppCompatActivity() {
         processState.data.forEachIndexed { index, value ->
             entries.add(Entry(index.toFloat(), value))
         }
-        val dataSet = LineDataSet(entries, "accuracy")
+        val dataSet = LineDataSet(entries, "loss")
         val lineData = LineData(dataSet)
         chart.data = lineData
         chart.setMaxVisibleValueCount(0)

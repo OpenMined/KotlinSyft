@@ -131,9 +131,8 @@ You can use KotlinSyft as a front-end or as a background service. The following 
             mnistJob.report(diff)
         }
 
-        override fun onRejected(timeout: String) {
+        override fun onRejected() {
         // Implement this function to define what your worker will do when your worker is rejected from the cycle
-        // timeout tells you after how much time you should try again for the cycle at PyGrid
         }
 
         override fun onError(throwable: Throwable) {

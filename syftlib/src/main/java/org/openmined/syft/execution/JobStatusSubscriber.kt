@@ -50,7 +50,7 @@ open class JobStatusSubscriber {
      * This method is called when the worker has been rejected from the cycle by the PyGrid
      * @param timeout is the timestamp indicating the time after which the worker should retry joining into the cycle
      */
-    open fun onRejected(timeout: String) {}
+    open fun onRejected() {}
 
     /**
      * This method is called when the job throws an error
@@ -73,7 +73,7 @@ open class JobStatusSubscriber {
                 else
                     onError(InvalidObjectException("Client config not available yet"))
             }
-            is JobStatusMessage.JobCycleRejected -> onRejected(jobStatusMessage.timeout)
+            is JobStatusMessage.JobCycleRejected -> onRejected()
             //add all the other messages as and when needed
         }
     }

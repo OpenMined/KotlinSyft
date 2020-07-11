@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 @ExperimentalUnsignedTypes
 internal sealed class JobStatusMessage {
-    class JobCycleRejected(val timeout: String) : JobStatusMessage()
+    class JobCycleRejected : JobStatusMessage()
 
     class JobReady(
         val model: SyftModel,

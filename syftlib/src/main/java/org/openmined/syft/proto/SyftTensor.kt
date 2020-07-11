@@ -9,7 +9,6 @@ import org.pytorch.DType
 import org.pytorch.IValue
 import org.pytorch.Module
 import java.io.InvalidClassException
-import java.lang.Math.random
 import java.nio.DoubleBuffer
 import java.util.Locale
 import org.openmined.syftproto.types.torch.v1.Tensor.TorchTensor as SyftProtoTensor
@@ -18,7 +17,7 @@ import org.pytorch.Tensor as TorchTensor
 // SyftTensor is a model class for syft tensor type.
 @ExperimentalUnsignedTypes
 data class SyftTensor(
-    val id: IdOuterClass.Id,
+    var id: String,
     val contents: TensorDataOuterClass.TensorData,
     val shape: MutableList<Int>,
     val dtype: String,
@@ -32,7 +31,7 @@ data class SyftTensor(
         SizeOuterClass.Size.newBuilder().addAllDims(shape)
         val syftTensorBuilder = SyftProtoTensor.newBuilder()
                 .addAllTags(tags)
-                .setId(id)
+                .setId(IdOuterClass.Id.newBuilder().setIdStr(id))
                 .setContentsData(contents)
                 .setDescription(description)
                 .setSerializer(Tensor.TorchTensor.Serializer.SERIALIZER_ALL)
@@ -130,7 +129,7 @@ fun SyftProtoTensor.toSyftTensor(): SyftTensor {
     else
         null
     return SyftTensor(
-        this.id,
+        this.id.idStr,
         tensorData,
         //todo we should ideally have long here
         tensorData.shape.dimsList,
@@ -154,9 +153,8 @@ fun TorchTensor.toSyftTensor(): SyftTensor {
         this,
         tensorDataBuilder
     ).build()
-    val id = IdOuterClass.Id.newBuilder().setIdInt(random().toLong()).build()
     return SyftTensor(
-        id,
+        "",
         tensorData,
         shape.dimsList,
         tensorData.dtype,

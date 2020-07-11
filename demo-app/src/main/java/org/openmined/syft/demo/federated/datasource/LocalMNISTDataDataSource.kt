@@ -5,14 +5,14 @@ import org.openmined.syft.demo.R
 import org.openmined.syft.demo.federated.domain.Batch
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.security.InvalidKeyException
 
 private const val FEATURESIZE = 784
 
 class LocalMNISTDataDataSource constructor(
     private val resources: Resources
 ) {
-    private var trainDataReader = returnNewReader()
+    private var trainDataReader = returnDataReader()
+    private var labelDataReader = returnLabelReader()
     private val oneHotMap = HashMap<Int, List<Float>>()
 
     init {
@@ -47,27 +47,45 @@ class LocalMNISTDataDataSource constructor(
         trainInput: ArrayList<List<Float>>,
         labels: ArrayList<List<Float>>
     ) {
-        val sample = trainDataReader.readLine()?.split(',') ?: run {
-            restartReader()
-            trainDataReader.readLine()?.split(',')
-        } ?: throw Exception("cannot read from dataset file")
+        val sample = readLine()
 
         trainInput.add(
-            sample.slice(1..FEATURESIZE).map { it.trim().toFloat() }
+            sample.first.map { it.trim().toFloat() }
         )
-        oneHotMap[sample[0].toInt()]?.let {
-            labels.add(it)
-        } ?: throw InvalidKeyException("key not found ${sample[0]}")
+        labels.add(
+            sample.second.map { it.trim().toFloat() }
+        )
+    }
+
+    private fun readLine(): Pair<List<String>, List<String>> {
+        var x = trainDataReader.readLine()?.split(",")
+        var y = labelDataReader.readLine()?.split(",")
+        if (x == null || y == null) {
+            restartReader()
+            x = trainDataReader.readLine()?.split(",")
+            y = labelDataReader.readLine()?.split(",")
+        }
+        if (x == null || y == null)
+            throw Exception("cannot read from dataset file")
+        return Pair(x, y)
     }
 
     private fun restartReader() {
         trainDataReader.close()
-        trainDataReader = returnNewReader()
+        labelDataReader.close()
+        trainDataReader = returnDataReader()
+        labelDataReader = returnLabelReader()
     }
 
-    private fun returnNewReader() = BufferedReader(
+    private fun returnDataReader() = BufferedReader(
         InputStreamReader(
-            resources.openRawResource(R.raw.mnist_train)
+            resources.openRawResource(R.raw.pixels)
+        )
+    )
+
+    private fun returnLabelReader() = BufferedReader(
+        InputStreamReader(
+            resources.openRawResource(R.raw.labels)
         )
     )
 }
