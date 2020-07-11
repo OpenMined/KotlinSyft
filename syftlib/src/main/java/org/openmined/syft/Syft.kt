@@ -14,7 +14,6 @@ import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
 import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val TAG = "Syft"
@@ -48,7 +47,8 @@ class Syft internal constructor(
         }
     }
 
-    private val workerJobs = ConcurrentHashMap<SyftJob.JobID, SyftJob>()
+    //todo single job for now but eventually worker should support multiple jobs
+    private var workerJob: SyftJob? = null
     private val compositeDisposable = CompositeDisposable()
     private val isDisposed = AtomicBoolean(false)
 
@@ -67,18 +67,18 @@ class Syft internal constructor(
             this,
             syftConfig
         )
-        if (syftConfig.maxConcurrentJobs == workerJobs.size)
-            throw IndexOutOfBoundsException("maximum number of allowed jobs reached")
+//        if (syftConfig.maxConcurrentJobs == workerJob.size)
+//            throw IndexOutOfBoundsException("maximum number of allowed jobs reached")
 
-        workerJobs[job.jobId] = job
+        workerJob = job
         job.subscribe(object : JobStatusSubscriber() {
             override fun onComplete() {
-                workerJobs.remove(job.jobId)
+                workerJob = null
             }
 
             override fun onError(throwable: Throwable) {
                 Log.e(TAG, throwable.message.toString())
-                workerJobs.remove(job.jobId)
+                workerJob = null
             }
         }, syftConfig.networkingSchedulers)
 
@@ -127,7 +127,7 @@ class Syft internal constructor(
         Log.d(TAG, "disposing syft worker")
         deviceMonitor.dispose()
         compositeDisposable.clear()
-        workerJobs.forEach { (_, job) -> job.dispose() }
+        workerJob?.dispose()
         INSTANCE = null
     }
 
@@ -188,22 +188,11 @@ class Syft internal constructor(
     }
 
     private fun handleCycleReject(responseData: CycleResponseData.CycleReject) {
-        val job = workerJobs.getValue(
-            SyftJob.JobID(
-                responseData.modelName,
-                responseData.version
-            )
-        )
-        job.cycleRejected(responseData)
+        workerJob?.cycleRejected(responseData)
     }
 
     private fun handleCycleAccept(responseData: CycleResponseData.CycleAccept) {
-        val job = workerJobs.getValue(
-            SyftJob.JobID(
-                responseData.modelName,
-                responseData.version
-            )
-        )
+        val job = workerJob ?: throw IllegalStateException("job deleted and accessed")
         job.cycleAccepted(responseData)
         if (jobErrorIfBatteryInvalid(job) ||
             jobErrorIfNetworkInvalid(job)
@@ -250,7 +239,7 @@ class Syft internal constructor(
     private fun setSyftWorkerId(workerId: String) {
         if (this.workerId == null)
             this.workerId = workerId
-        else if (workerJobs.isEmpty())
+        else if (workerJob == null)
             this.workerId = workerId
     }
 

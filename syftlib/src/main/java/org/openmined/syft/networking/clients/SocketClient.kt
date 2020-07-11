@@ -93,14 +93,6 @@ internal class SocketClient(
         syftWebSocket.send(serializeNetworkModel(REQUESTS.CYCLE_REQUEST, cycleRequest))
         return messageProcessor.onBackpressureBuffer()
                 .ofType(CycleResponseData::class.java)
-                .filter {
-                    SyftJob.JobID(
-                        cycleRequest.modelName,
-                        cycleRequest.version
-                        //todo when pygrid updates to have version in rejected
-                        // we need to supply version here as well
-                    ).matchWithResponse(it.modelName)
-                }
                 .firstOrError()
     }
 
