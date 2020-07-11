@@ -33,7 +33,7 @@ class LoginActivity : AppCompatActivity() {
             if (valid) {
                 val intent = Intent(this, MnistActivity::class.java)
                 intent.putExtra("baseURL", baseUrl)
-                intent.putExtra("authToken", "auth")
+                intent.putExtra("authToken", loginViewModel.getAuthToken())
                 startActivity(intent)
             } else {
                 binding.error.text = getString(R.string.error_url)

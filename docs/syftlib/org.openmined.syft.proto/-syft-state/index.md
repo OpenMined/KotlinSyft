@@ -26,7 +26,7 @@ We update these model weights after every plan.execute
 |---|---|
 | [createDiff](create-diff.md) | Subtract the older state from the current state to generate the diff`fun createDiff(oldSyftState: `[`SyftState`](./index.md)`, diffScriptLocation: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`SyftState`](./index.md) |
 | [equals](equals.md) | `fun equals(other: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`?): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
-| [getIValueTensorArray](get-i-value-tensor-array.md) | `fun getIValueTensorArray(): `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<IValue!>` |
+| [getTensorArray](get-tensor-array.md) | `fun getTensorArray(): `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<Tensor>` |
 | [hashCode](hash-code.md) | `fun hashCode(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [serialize](serialize.md) | Generate StateOuterClass.State object using Placeholders list and syftTensor list`fun serialize(): State` |
 

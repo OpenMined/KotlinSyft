@@ -13,7 +13,7 @@ tensor after doing some computation.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | The Plan Class contains functions to load a PyTorch model from a TorchScript and to run training through the forward function of the PyTorch Module. A PyTorch Module is simply a container that takes in tensors as input and returns tensor after doing some computation.`Plan(job: `[`SyftJob`](../-syft-job/index.md)`, planId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)` |
+| [&lt;init&gt;](-init-.md) | The Plan Class contains functions to load a PyTorch model from a TorchScript and to run training through the forward function of the PyTorch Module. A PyTorch Module is simply a container that takes in tensors as input and returns tensor after doing some computation.`Plan(job: `[`SyftJob`](../-syft-job/index.md)`, planId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, planName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)` |
 
 ### Properties
 
@@ -21,6 +21,7 @@ tensor after doing some computation.
 |---|---|
 | [job](job.md) | is the job hosting this plan`val job: `[`SyftJob`](../-syft-job/index.md) |
 | [planId](plan-id.md) | is the unique id allotted to the plan by PyGrid`val planId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [planName](plan-name.md) | is the name of the plan`val planName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 
 ### Functions
 

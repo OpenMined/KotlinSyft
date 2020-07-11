@@ -109,7 +109,7 @@ internal class JobRepository(
                 )
             )
         }
-        protocols.forEach { (protocolId, protocol) ->
+        protocols.forEach { (_, protocol) ->
             protocol.protocolFileLocation = "${config.filesDir}/protocols"
             downloadList.add(
                 processProtocols(
@@ -117,7 +117,7 @@ internal class JobRepository(
                     config,
                     request,
                     protocol.protocolFileLocation,
-                    protocolId
+                    protocol.protocolId
                 )
             )
         }

@@ -48,7 +48,7 @@ internal class SocketClientTest {
 
     @Test
     fun `verify socket is initialised only once when empty on authenticate`() {
-        val authenticationRequest = AuthenticationRequest("test")
+        val authenticationRequest = AuthenticationRequest("test","model name")
         socketClient.authenticate(authenticationRequest)
                 .observeOn(testScheduler)
                 .subscribeOn(testScheduler)
@@ -61,7 +61,7 @@ internal class SocketClientTest {
 
     @Test
     fun `verify authentication success response on socket client authenticate`() {
-        val authenticationRequest = AuthenticationRequest("test")
+        val authenticationRequest = AuthenticationRequest("test","model name")
         val serializedAuthRequest = json {
             TYPE to REQUESTS.AUTHENTICATION.value
             DATA to REQUESTS.AUTHENTICATION.serialize(authenticationRequest)
@@ -94,7 +94,7 @@ internal class SocketClientTest {
     fun `verify cycle accepted response on socket client getCycle`() {
         val cycleRequest = CycleRequest(
             "auth",
-            "test",
+            "model name",
             "1",
             "10",
             "1000",
@@ -106,14 +106,14 @@ internal class SocketClientTest {
         }
         val cycleResponseSerialized = json {
             "status" to CYCLE_ACCEPT
-            "model" to "test"
+            "model" to "model name"
             "version" to "1"
             "request_key" to "random key"
             "plans" to json {
                 "plan name" to "plan id"
             }
             "client_config" to json {
-                "name" to "test"
+                "name" to "model name"
                 "version" to "1"
                 "batch_size" to 1L
                 "lr" to 0.1f

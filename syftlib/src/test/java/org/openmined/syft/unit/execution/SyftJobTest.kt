@@ -116,7 +116,7 @@ class SyftJobTest {
 
     @Test
     fun `Given a SyftJob with a rejected cycle when it starts then nothing happens`() {
-        cut.cycleRejected(CycleResponseData.CycleReject(modelName, modelVersion, "10"))
+        cut.cycleRejected(CycleResponseData.CycleReject("10"))
 
         verifyNoMoreInteractions(subscriber)
         verifyNoMoreInteractions(worker)

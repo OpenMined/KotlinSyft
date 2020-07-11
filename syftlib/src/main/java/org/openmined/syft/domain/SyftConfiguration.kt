@@ -100,6 +100,10 @@ class SyftConfiguration internal constructor(
             return this
         }
 
+        fun setMessagingClient(messagingClient : NetworkingClients) : SyftConfigBuilder {
+            this.messagingClient = messagingClient
+            return this
+        }
 
         fun enableCellularData(): SyftConfigBuilder {
             networkTransportMedium = NetworkCapabilities.TRANSPORT_CELLULAR
@@ -126,11 +130,11 @@ class SyftConfiguration internal constructor(
             this.computeSchedulers = computeSchedulers
             return this
         }
-
-        fun setMaxConcurrentJobs(numJobs: Int): SyftConfigBuilder {
-            this.maxConcurrentJobs = numJobs
-            return this
-        }
+//todo add this when pygrid supports multiple jobs
+//        fun setMaxConcurrentJobs(numJobs: Int): SyftConfigBuilder {
+//            this.maxConcurrentJobs = numJobs
+//            return this
+//        }
 
         fun disableBackgroundServiceExecution(): SyftConfigBuilder {
             this.monitorDevice = true

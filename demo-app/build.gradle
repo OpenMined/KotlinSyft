@@ -15,6 +15,8 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         Properties properties = new Properties()
+        properties.load(project.rootProject.file('demo-app/authentication.properties').newDataInputStream())
+        buildConfigField 'String', 'SYFT_AUTH_TOKEN', properties.getProperty('syft.authToken')
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8

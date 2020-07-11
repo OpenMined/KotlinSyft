@@ -17,6 +17,7 @@ import org.openmined.syft.networking.datamodels.syft.SpeedCheckResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Headers
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
@@ -130,8 +131,11 @@ internal interface HttpAPI : CommunicationAPI {
      *
      * @param authRequest Contains JWT auth-token. JWT authentication protects the model from sybil attacks.
      */
-    @GET(AUTH_TYPE)
-    override fun authenticate(authRequest: AuthenticationRequest): Single<AuthenticationResponse>
+    @Headers(
+        "Content-Type: application/json"
+    )
+    @POST(AUTH_TYPE)
+    override fun authenticate(@Body authRequest: AuthenticationRequest): Single<AuthenticationResponse>
 
     /**
      * Calls **federated/cycle-request** for requesting PyGrid server for training cycle.
@@ -141,6 +145,7 @@ internal interface HttpAPI : CommunicationAPI {
      *
      * @param cycleRequest @see org.openmined.syft.networking.datamodels.syft.CycleRequest
      */
+    @Headers("Content-Type: application/json")
     @POST(CYCLE_TYPE)
     override fun getCycle(@Body cycleRequest: CycleRequest): Single<CycleResponseData>
 
@@ -149,6 +154,7 @@ internal interface HttpAPI : CommunicationAPI {
      *
      * @param reportRequest Contains worker-id and request-key.
      */
+    @Headers("Content-Type: application/json")
     @POST(REPORT_TYPE)
     override fun report(@Body reportRequest: ReportRequest): Single<ReportResponse>
 }

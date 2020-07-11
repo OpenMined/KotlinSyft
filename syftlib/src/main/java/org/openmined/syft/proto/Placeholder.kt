@@ -6,14 +6,14 @@ import org.openmined.syftproto.types.syft.v1.IdOuterClass
 
 // Placeholder class is used to reference the order of the tensors in the plan.
 data class Placeholder(
-    val id: IdOuterClass.Id,
+    val id: String,
     val tags: List<String>,
-    val description: String
+    val description: String = ""
 ) {
     companion object {
         // Generate Placeholder object by parsing PlaceholderOuterClass.Placeholder object
         fun deserialize(protobufPlaceholder: PlaceholderOuterClass.Placeholder) = Placeholder(
-            protobufPlaceholder.id,
+            protobufPlaceholder.id.idStr,
             protobufPlaceholder.tagsList,
             protobufPlaceholder.description
         )
@@ -22,7 +22,7 @@ data class Placeholder(
     //Generate PlaceholderOuterClass.Placeholder object
     fun serialize(): PlaceholderOuterClass.Placeholder = PlaceholderOuterClass.Placeholder
             .newBuilder()
-            .setId(id)
+            .setId(IdOuterClass.Id.newBuilder().setIdStr(id))
             .setDescription(description)
             .addAllTags(tags).build()
 }

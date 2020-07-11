@@ -19,7 +19,6 @@ import org.openmined.syft.networking.clients.HttpClient
 import org.openmined.syft.networking.clients.SocketClient
 import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
 import org.openmined.syft.networking.datamodels.syft.AuthenticationResponse
-import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.threading.ProcessSchedulers
 
 internal class SyftTest {
@@ -28,7 +27,15 @@ internal class SyftTest {
     @ExperimentalUnsignedTypes
     fun `Given a syft object when requestCycle is invoked then socket client calls authenticate api`() {
         val socketClient = mock<SocketClient> {
-            on { authenticate(AuthenticationRequest("auth token")) }.thenReturn(
+            on {
+                authenticate(
+                    AuthenticationRequest(
+                        "auth token",
+                        "model name",
+                        "1.0.0"
+                    )
+                )
+            }.thenReturn(
                 Single.just(
                     AuthenticationResponse.AuthenticationSuccess(
                         "test id",
@@ -69,7 +76,7 @@ internal class SyftTest {
             messagingClient = SyftConfiguration.NetworkingClients.SOCKET
         )
         val workerTest = spy(
-            Syft( config, deviceMonitor,"auth token", true)
+            Syft(config, deviceMonitor, "auth token", true)
         )
         val syftJob = SyftJob.create(
             "model name",
@@ -79,7 +86,13 @@ internal class SyftTest {
         )
 
         workerTest.executeCycleRequest(syftJob)
-        verify(socketClient).authenticate(AuthenticationRequest("auth token"))
+        verify(socketClient).authenticate(
+            AuthenticationRequest(
+                "auth token",
+                "model name",
+                "1.0.0"
+            )
+        )
     }
 
     @Test
@@ -87,7 +100,15 @@ internal class SyftTest {
     fun `Given a syft object when requestCycle is invoked and speed test is not enabled then network status returns an empty result`() {
         val workerId = "test id"
         val socketClient = mock<SocketClient> {
-            on { authenticate(AuthenticationRequest("auth token")) }.thenReturn(
+            on {
+                authenticate(
+                    AuthenticationRequest(
+                        "auth token",
+                        "model name",
+                        "1.0.0"
+                    )
+                )
+            }.thenReturn(
                 Single.just(
                     AuthenticationResponse.AuthenticationSuccess(
                         workerId,
@@ -129,7 +150,7 @@ internal class SyftTest {
         )
 
         val workerTest = spy(
-            Syft( config, deviceMonitor,"auth token", true)
+            Syft(config, deviceMonitor, "auth token", true)
         )
         val modelName = "model name"
         val version = "1.0.0"
@@ -141,7 +162,13 @@ internal class SyftTest {
         )
 
         workerTest.executeCycleRequest(syftJob)
-        verify(socketClient).authenticate(AuthenticationRequest("auth token"))
+        verify(socketClient).authenticate(
+            AuthenticationRequest(
+                "auth token",
+                "model name",
+                "1.0.0"
+            )
+        )
         verifyNoMoreInteractions(socketClient)
     }
 }

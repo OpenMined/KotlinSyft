@@ -2,7 +2,6 @@ package org.openmined.syft.proto
 
 import org.openmined.syftproto.execution.v1.StateOuterClass
 import org.openmined.syftproto.execution.v1.StateTensorOuterClass
-import org.pytorch.IValue
 import java.io.File
 
 /** SyftState class is responsible for storing all the weights of the neural network.
@@ -43,14 +42,20 @@ data class SyftState(
                 oldSyftState.syftTensors[index]
             )
         }
-        return this.copy(syftTensors = diff)
+        val localPlaceHolders = diff.mapIndexed { idx, _ ->
+            Placeholder(
+                idx.toString(),
+                listOf("$idx", "#state-$idx")
+            )
+        }.toTypedArray()
+        return SyftState(placeholders = localPlaceHolders, syftTensors = diff)
     }
 
     /**
      * @return an array of pyTorch [IValue][https://pytorch.org/javadoc/org/pytorch/IValue.html] from the SyftTensors list
      */
-    fun getIValueTensorArray() =
-            syftTensors.map { IValue.from(it.getTorchTensor()) }.toTypedArray()
+    fun getTensorArray() =
+            syftTensors.map { it.getTorchTensor() }.toTypedArray()
 
     /**
      * Generate StateOuterClass.State object using Placeholders list and syftTensor list

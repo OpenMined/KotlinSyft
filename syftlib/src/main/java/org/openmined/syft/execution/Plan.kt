@@ -3,6 +3,7 @@ package org.openmined.syft.execution
 import android.util.Log
 import org.pytorch.IValue
 import org.pytorch.Module
+import org.pytorch.Tensor
 
 private const val TAG = "syft.processes.Plan"
 
@@ -11,11 +12,12 @@ private const val TAG = "syft.processes.Plan"
  * to run training through the forward function of the PyTorch Module.
  * A PyTorch Module is simply a container that takes in tensors as input and returns
  * tensor after doing some computation.
- * @property planId is the unique id allotted to the plan by PyGrid
  * @property job is the job hosting this plan
+ * @property planId is the unique id allotted to the plan by PyGrid
+ * @property planName is the name of the plan
  */
 @ExperimentalUnsignedTypes
-class Plan(val job: SyftJob, val planId: String) {
+class Plan(val job: SyftJob, val planId: String, val planName : String) {
     private var pyTorchModule: Module? = null
 
     /**
@@ -39,8 +41,7 @@ class Plan(val job: SyftJob, val planId: String) {
             Log.e(TAG, "pytorch module not initialized yet")
             return null
         }
-
-        // We feed in the training data to the forward function of the pytorchModule.
+        // We feed in the training data to the forward function of the pyTorchModule.
         return localModuleState.forward(*iValues)
     }
 

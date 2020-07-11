@@ -78,8 +78,6 @@ internal class SocketClientMock(
         else
             json {
                 "status" to CYCLE_REJECT
-                "model" to "test"
-                "version" to "1"
                 "timeout" to "never"
             }
     }.toString()
@@ -117,8 +115,6 @@ internal class SocketClientMock(
         else
             json {
                 "status" to CYCLE_REJECT
-                "model" to "test2"
-                "version" to "1"
                 "timeout" to "never"
             }
     }.toString()

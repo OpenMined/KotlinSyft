@@ -27,8 +27,6 @@ class WorkInfoActivity : AppCompatActivity() {
     private lateinit var binding: ActivityWorkInfoBinding
     private lateinit var viewModel: WorkInfoViewModel
 
-    private val workerRepository = WorkerRepository(this)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_work_info)
@@ -81,7 +79,7 @@ class WorkInfoActivity : AppCompatActivity() {
         processState.data.forEachIndexed { index, value ->
             entries.add(Entry(index.toFloat(), value))
         }
-        val dataSet = LineDataSet(entries, "accuracy")
+        val dataSet = LineDataSet(entries, "loss")
         val lineData = LineData(dataSet)
         chart.data = lineData
         chart.setMaxVisibleValueCount(0)

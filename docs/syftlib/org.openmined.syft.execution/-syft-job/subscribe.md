@@ -13,18 +13,18 @@ val job = SyftJob.create(
     this,
     syftConfig
 )
-if (syftConfig.maxConcurrentJobs == workerJobs.size)
+if (workerJob != null)
     throw IndexOutOfBoundsException("maximum number of allowed jobs reached")
 
-workerJobs[job.jobId] = job
+workerJob = job
 job.subscribe(object : JobStatusSubscriber() {
     override fun onComplete() {
-        workerJobs.remove(job.jobId)
+        workerJob = null
     }
 
     override fun onError(throwable: Throwable) {
         Log.e(TAG, throwable.message.toString())
-        workerJobs.remove(job.jobId)
+        workerJob = null
     }
 }, syftConfig.networkingSchedulers)
 
