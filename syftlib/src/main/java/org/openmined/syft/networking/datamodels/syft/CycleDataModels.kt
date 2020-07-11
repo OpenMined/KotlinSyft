@@ -42,7 +42,9 @@ internal sealed class CycleResponseData : NetworkModels() {
 
     @SerialName(CYCLE_REJECT)
     @Serializable
-    class CycleReject() : CycleResponseData()
+    data class CycleReject(
+        val timeout: String = ""
+    ) : CycleResponseData()
 }
 
 @Serializable

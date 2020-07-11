@@ -173,7 +173,7 @@ class SyftJob internal constructor(
      */
     internal fun cycleRejected(responseData: CycleResponseData.CycleReject) {
         cycleStatus.set(CycleStatus.REJECT)
-        jobStatusProcessor.offer(JobStatusMessage.JobCycleRejected())
+        jobStatusProcessor.offer(JobStatusMessage.JobCycleRejected(responseData.timeout))
     }
 
     /**

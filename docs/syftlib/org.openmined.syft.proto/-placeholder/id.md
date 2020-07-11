@@ -2,4 +2,4 @@
 
 # id
 
-`val id: Id`
+`val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)

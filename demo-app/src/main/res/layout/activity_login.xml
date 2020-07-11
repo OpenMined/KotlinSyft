@@ -89,7 +89,7 @@
                 android:text="@string/submit"
                 android:textAlignment="center"
                 android:textAllCaps="true"
-                android:textColor="#1B1919"
+                android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 tools:layout_editor_absoluteX="161dp"

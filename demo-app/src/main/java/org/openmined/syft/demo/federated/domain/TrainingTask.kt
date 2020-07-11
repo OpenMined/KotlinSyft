@@ -1,6 +1,5 @@
 package org.openmined.syft.demo.federated.domain
 
-import android.util.Log
 import androidx.work.ListenableWorker.Result
 import io.reactivex.Single
 import io.reactivex.processors.PublishProcessor
@@ -48,8 +47,8 @@ class TrainingTask(
                 statusPublisher.offer(Result.success())
             }
 
-            override fun onRejected() {
-                logger.postLog("We've been rejected")
+            override fun onRejected(timeout: String) {
+                logger.postLog("We've been rejected for time $timeout")
                 statusPublisher.offer(Result.retry())
             }
 

@@ -99,14 +99,14 @@ You can use KotlinSyft as a front-end or as a background service. The following 
                 // your custom implementation to read a databatch from your data
                 val batchData = dataRepository.loadDataBatch(clientConfig.batchSize)
                 //get Model weights and return if not set already
-                val modelParams = model.getParamsIValueArray() ?: return
+                val modelParams = model.getParamArray() ?: return
+                val paramIValue = IValue.listFrom(*modelParams)
                 // plan.execute runs a single gradient step and returns the output as PyTorch IValue
                 val output = plan.execute(
                     batchData.first,
                     batchData.second,
                     batchIValue,
-                    lr,
-                    *modelParams
+                    lr,paramIValue
                 )?.toTuple()
                 // The output is a tuple with outputs defined by the pysyft plan along with all the model params
                 output?.let { outputResult ->
@@ -114,11 +114,11 @@ You can use KotlinSyft as a front-end or as a background service. The following 
                     // The model params are always appended at the end of the output tuple
                     val beginIndex = outputResult.size - paramSize
                     val updatedParams =
-                            outputResult.slice(beginIndex until outputResult.size - 1)
+                            outputResult.slice(beginIndex until outputResult.size)
                     // update your model. You can perform any arbitrary computation and checkpoint creation with these model weights
                     model.updateModel(updatedParams.map { it.toTensor() })
                     // get the required loss, accuracy, etc values just like you do in Pytorch Android
-                    val accuracy = outputResult[1].toTensor().dataAsFloatArray.last()
+                    val accuracy = outputResult[0].toTensor().dataAsFloatArray.last()
                 } ?: return // this will happen when plan execution fails. 
                 // Most probably due to device state not fulfilling syft config constraints 
                 // You should not handle any error here and simply return to close the subscriber. 

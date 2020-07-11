@@ -8,4 +8,4 @@ This method is called when the worker has been rejected from the cycle by the Py
 
 ### Parameters
 
-`timeout` - is the timestamp indicating the time after which the worker should retry joining into the cycle
+`timeout` - is the timestamp indicating the time after which the worker should retry joining into the cycle. This will be empty if it is the last cycle.

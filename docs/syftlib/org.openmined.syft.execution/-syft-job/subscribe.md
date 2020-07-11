@@ -7,28 +7,28 @@
 This method can be called when the user needs to attach a listener to the job but do not wish to start it
 
 ``` kotlin
-val job = SyftJob.create(
-    model,
-    version,
-    this,
-    syftConfig
-)
-if (syftConfig.maxConcurrentJobs == workerJobs.size)
-    throw IndexOutOfBoundsException("maximum number of allowed jobs reached")
+        val job = SyftJob.create(
+            model,
+            version,
+            this,
+            syftConfig
+        )
+//        if (syftConfig.maxConcurrentJobs == workerJob.size)
+//            throw IndexOutOfBoundsException("maximum number of allowed jobs reached")
 
-workerJobs[job.jobId] = job
-job.subscribe(object : JobStatusSubscriber() {
-    override fun onComplete() {
-        workerJobs.remove(job.jobId)
-    }
+        workerJob = job
+        job.subscribe(object : JobStatusSubscriber() {
+            override fun onComplete() {
+                workerJob = null
+            }
 
-    override fun onError(throwable: Throwable) {
-        Log.e(TAG, throwable.message.toString())
-        workerJobs.remove(job.jobId)
-    }
-}, syftConfig.networkingSchedulers)
+            override fun onError(throwable: Throwable) {
+                Log.e(TAG, throwable.message.toString())
+                workerJob = null
+            }
+        }, syftConfig.networkingSchedulers)
 
-return job
+        return job
 ```
 
 ### Parameters
