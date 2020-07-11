@@ -166,11 +166,11 @@ cd PyGrid
 docker-compose up
 ```
 
-- Install [PySyft](https://github.com/OpenMined/PySyft) `v0.2.5` in the virtual environment.
+- Install [PySyft](https://github.com/OpenMined/PySyft) `v0.2.7` in the virtual environment.
 ```bash
 virtualenv -p python3 venv
 source venv/bin/activate
-pip install syft==0.2.5
+pip install syft==0.2.7
 pip install jupyter==1.0.0
 pip install  notebook==5.7.8
 git clone https://github.com/OpenMined/PySyft
