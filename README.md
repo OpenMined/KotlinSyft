@@ -1,11 +1,12 @@
 ![KotlinSyft-logo](project_resources/pysyft_android.png)
 
-
-![Tests](<https://img.shields.io/github/workflow/status/OpenMined/KotlinSyft/Testing Workflow?label=tests>)
-![Coverage](https://img.shields.io/codecov/c/github/OpenMined/KotlinSyft/dev)
-![build](https://github.com/OpenMined/KotlinSyft/workflows/Android%20CI/badge.svg)
 ![License](https://img.shields.io/github/license/OpenMined/KotlinSyft)
+![Tests](<https://img.shields.io/github/workflow/status/OpenMined/KotlinSyft/Testing Workflow?label=tests>)
+![build](https://github.com/OpenMined/KotlinSyft/workflows/Android%20CI/badge.svg)
+![Coverage](https://img.shields.io/codecov/c/github/OpenMined/KotlinSyft/dev)
 ![OpenCollective](https://img.shields.io/opencollective/all/openmined)
+[![Chat on Slack](https://img.shields.io/badge/chat-on%20slack-7A5979.svg)](https://openmined.slack.com/messages/lib_kotlin_syft)
+[ ![Download](https://api.bintray.com/packages/openmined/KotlinSyft/syft/images/download.svg) ](https://bintray.com/openmined/KotlinSyft/syft/_latestVersion)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
