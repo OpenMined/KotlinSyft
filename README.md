@@ -1,11 +1,12 @@
 ![KotlinSyft-logo](project_resources/pysyft_android.png)
 
-
-![Tests](<https://img.shields.io/github/workflow/status/OpenMined/KotlinSyft/Testing Workflow?label=tests>)
-![Coverage](https://img.shields.io/codecov/c/github/OpenMined/KotlinSyft/dev)
-![build](https://github.com/OpenMined/KotlinSyft/workflows/Android%20CI/badge.svg)
 ![License](https://img.shields.io/github/license/OpenMined/KotlinSyft)
+![Tests](<https://img.shields.io/github/workflow/status/OpenMined/KotlinSyft/Testing Workflow?label=tests>)
+![build](https://github.com/OpenMined/KotlinSyft/workflows/Android%20CI/badge.svg)
+![Coverage](https://img.shields.io/codecov/c/github/OpenMined/KotlinSyft/dev)
 ![OpenCollective](https://img.shields.io/opencollective/all/openmined)
+[![Chat on Slack](https://img.shields.io/badge/chat-on%20slack-7A5979.svg)](https://openmined.slack.com/messages/lib_kotlin_syft)
+[ ![Download](https://api.bintray.com/packages/openmined/KotlinSyft/syft/images/download.svg) ](https://bintray.com/openmined/KotlinSyft/syft/_latestVersion)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
@@ -32,7 +33,22 @@ There are a variety of additional privacy-preserving protections that may be app
 If you want to know how scalable federated systems are built, [Towards Federated Learning at Scale](https://arxiv.org/pdf/1902.01046.pdf) is a fantastic introduction!
 
 ## Installation
-We have not currently made our initial release. KotlinSyft would soon be available on JCenter and Maven.
+KotlinSyft is available on maven and jcenter. To add the library as a dependency in your android project use one of the following methods:
+
+1. Maven snippet:
+```xml
+<dependency>
+  <groupId>org.openmined.kotlinsyft</groupId>
+  <artifactId>syftlib</artifactId>
+  <version>0.1.0</version>
+  <type>pom</type>
+</dependency>
+``` 
+
+2. Gradle dependency:
+```groovy
+implementation 'org.openmined.kotlinsyft:syftlib:0.1.0'
+```
 
 ## Quick Start
 As a developer, there are few steps to building your own secure federated learning system upon the OpenMined infrastructure:
@@ -174,24 +190,19 @@ pip install syft==0.2.7
 pip install jupyter==1.0.0
 pip install  notebook==5.7.8
 git clone https://github.com/OpenMined/PySyft
-git checkout tags/v0.2.5 -b v0.2.5
+git checkout tags/v0.2.7 -b v0.2.7
 ```
 - Host Jupyter Notebook 
 ```bash
 jupyter notebook
 ```
 - Open a browser and navigate to [localhost:8888](http://localhost:8888/). You should be able to see the pysyft notebook console.
-- In the Jupyter Notebook, navigate to `examples/experimental/FL Training Plan`
-- Run the notebooks `Create Plan`. It should save three files in the `FL Training Plan` folder
-- Run the notebook `Host Plan`. Now PyGrid is setup and the model is hosted over it.
+- In the Jupyter Notebook, navigate to `examples/tutorials/static-fl`
+- Run the notebook `Create Plan`. It should host the model on PyGrid.
+- Optionally, run the notebook `Execute Plan`. This will train the model on the python worker of PySyft.
 - The android app connects to your PC's localhost via router (easier approach)
 - Get the IP address of your computer by running `ip address show | grep "inet " | grep -v 127.0.0.1` if using Linux/Mac. For windows there are different steps. Alternatively, if you want to run the demo app in the emulator, use `10.0.2.2` as the IP address.
 - Use this IP address in your login screen to supply the PyGrid server url
-
-### Training Dataset
-The demo app has a smaller randomly sampled subset of MNIST Training Data. You can replace the `demo-app/src/main/res/raw/mnist_train.csv` with the 100MB file from [here](https://drive.google.com/file/d/1oHegwSc9pDFQDZe0FeKW51-SQsTz4i3W/view?usp=sharing)
-
-Download the above file and replace it with `train_mnist.csv` to train on complete mnist data. 
 
 ## Contributing
 1. Star, fork, and clone the repo
