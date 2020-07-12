@@ -35,7 +35,7 @@ If you want to know how scalable federated systems are built, [Towards Federated
 KotlinSyft is available on maven and jcenter.
 
 1. Maven snippet:
-```maven pom
+```xml
 <dependency>
   <groupId>org.openmined.kotlinsyft</groupId>
   <artifactId>syftlib</artifactId>
@@ -45,7 +45,7 @@ KotlinSyft is available on maven and jcenter.
 ``` 
 
 2. Gradle dependency:
-```gradle
+```groovy
 implementation 'org.openmined.kotlinsyft:syftlib:0.1.0'
 ```
 
