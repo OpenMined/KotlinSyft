@@ -32,7 +32,22 @@ There are a variety of additional privacy-preserving protections that may be app
 If you want to know how scalable federated systems are built, [Towards Federated Learning at Scale](https://arxiv.org/pdf/1902.01046.pdf) is a fantastic introduction!
 
 ## Installation
-We have not currently made our initial release. KotlinSyft would soon be available on JCenter and Maven.
+KotlinSyft is available on maven and jcenter.
+
+1. Maven snippet:
+```maven pom
+<dependency>
+  <groupId>org.openmined.kotlinsyft</groupId>
+  <artifactId>syftlib</artifactId>
+  <version>0.1.0</version>
+  <type>pom</type>
+</dependency>
+``` 
+
+2. Gradle dependency:
+```gradle
+implementation 'org.openmined.kotlinsyft:syftlib:0.1.0'
+```
 
 ## Quick Start
 As a developer, there are few steps to building your own secure federated learning system upon the OpenMined infrastructure:
@@ -174,7 +189,7 @@ pip install syft==0.2.7
 pip install jupyter==1.0.0
 pip install  notebook==5.7.8
 git clone https://github.com/OpenMined/PySyft
-git checkout tags/v0.2.5 -b v0.2.5
+git checkout tags/v0.2.7 -b v0.2.7
 ```
 - Host Jupyter Notebook 
 ```bash
