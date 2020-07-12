@@ -33,7 +33,7 @@ There are a variety of additional privacy-preserving protections that may be app
 If you want to know how scalable federated systems are built, [Towards Federated Learning at Scale](https://arxiv.org/pdf/1902.01046.pdf) is a fantastic introduction!
 
 ## Installation
-KotlinSyft is available on maven and jcenter.
+KotlinSyft is available on maven and jcenter. To add the library as a dependency in your android project use one of the following methods:
 
 1. Maven snippet:
 ```xml
@@ -203,11 +203,6 @@ jupyter notebook
 - The android app connects to your PC's localhost via router (easier approach)
 - Get the IP address of your computer by running `ip address show | grep "inet " | grep -v 127.0.0.1` if using Linux/Mac. For windows there are different steps. Alternatively, if you want to run the demo app in the emulator, use `10.0.2.2` as the IP address.
 - Use this IP address in your login screen to supply the PyGrid server url
-
-### Training Dataset
-The demo app has a smaller randomly sampled subset of MNIST Training Data. You can replace the `demo-app/src/main/res/raw/mnist_train.csv` with the 100MB file from [here](https://drive.google.com/file/d/1oHegwSc9pDFQDZe0FeKW51-SQsTz4i3W/view?usp=sharing)
-
-Download the above file and replace it with `train_mnist.csv` to train on complete mnist data. 
 
 ## Contributing
 1. Star, fork, and clone the repo
