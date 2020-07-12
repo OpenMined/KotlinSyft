@@ -197,9 +197,9 @@ git checkout tags/v0.2.7 -b v0.2.7
 jupyter notebook
 ```
 - Open a browser and navigate to [localhost:8888](http://localhost:8888/). You should be able to see the pysyft notebook console.
-- In the Jupyter Notebook, navigate to `examples/experimental/FL Training Plan`
-- Run the notebooks `Create Plan`. It should save three files in the `FL Training Plan` folder
-- Run the notebook `Host Plan`. Now PyGrid is setup and the model is hosted over it.
+- In the Jupyter Notebook, navigate to `examples/tutorials/static-fl`
+- Run the notebook `Create Plan`. It should host the model on PyGrid.
+- Optionally, run the notebook `Execute Plan`. This will train the model on the python worker of PySyft.
 - The android app connects to your PC's localhost via router (easier approach)
 - Get the IP address of your computer by running `ip address show | grep "inet " | grep -v 127.0.0.1` if using Linux/Mac. For windows there are different steps. Alternatively, if you want to run the demo app in the emulator, use `10.0.2.2` as the IP address.
 - Use this IP address in your login screen to supply the PyGrid server url
