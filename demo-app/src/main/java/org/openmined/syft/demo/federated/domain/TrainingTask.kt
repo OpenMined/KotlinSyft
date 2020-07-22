@@ -106,9 +106,6 @@ class TrainingTask(
                             outputResult.slice(beginIndex until outputResult.size)
                     model.updateModel(updatedParams.map { it.toTensor() })
                     result = outputResult[0].toTensor().dataAsFloatArray.last()
-                } ?: run {
-                    logger.postLog("the model returned empty array due to invalid device state")
-                    return
                 }
                 logger.postState(ContentState.Training)
                 logger.postData(result)

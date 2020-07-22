@@ -1,11 +1,11 @@
 package org.openmined.syft
 
-import android.accounts.NetworkErrorException
 import android.util.Log
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.execution.JobErrorThrowable
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.fp.Either
@@ -108,7 +108,12 @@ class Syft internal constructor(
                                 }
                             },
                             { errorMsg: Throwable ->
-                                job.throwError(errorMsg)
+                                job.throwError(
+                                    JobErrorThrowable.ExternalException(
+                                        errorMsg.message,
+                                        errorMsg.cause
+                                    )
+                                )
                             })
             )
         } ?: executeAuthentication(job)
@@ -126,7 +131,7 @@ class Syft internal constructor(
 
     internal fun jobErrorIfNetworkInvalid(job: SyftJob): Boolean {
         if (!deviceMonitor.isNetworkStateValid()) {
-            job.throwError(IllegalStateException("network constraints failed"))
+            job.throwError(JobErrorThrowable.NetworkConstraintsFailure)
             disposeSocketClient()
             return true
         }
@@ -135,7 +140,7 @@ class Syft internal constructor(
 
     internal fun jobErrorIfBatteryInvalid(job: SyftJob): Boolean {
         if (!deviceMonitor.isBatteryStateValid()) {
-            job.throwError(IllegalStateException("Battery constraints failed"))
+            job.throwError(JobErrorThrowable.BatteryConstraintsFailure)
             return true
         }
         return false
@@ -150,7 +155,7 @@ class Syft internal constructor(
     ): Single<CycleResponseData> {
 
         return when (val check = checkConditions(ping, downloadSpeed, uploadSpeed)) {
-            is Either.Left -> Single.error(NetworkErrorException(check.a))
+            is Either.Left -> Single.error(JobErrorThrowable.NetworkUnreachable(check.a))
             is Either.Right -> syftConfig.getSignallingClient().getCycle(
                 CycleRequest(
                     id,
@@ -194,7 +199,7 @@ class Syft internal constructor(
 
         workerId?.let {
             job.downloadData(it, responseData)
-        } ?: throw IllegalStateException("workerId is not initialised")
+        } ?: job.throwError(JobErrorThrowable.UninitializedWorkerError)
 
     }
 
@@ -219,12 +224,12 @@ class Syft internal constructor(
                                 executeCycleRequest(job)
                             }
                             is AuthenticationResponse.AuthenticationError -> {
-                                job.throwError(SecurityException(response.errorMessage))
+                                job.throwError(JobErrorThrowable.AuthenticationFailure(response.errorMessage))
                                 Log.d(TAG, response.errorMessage)
                             }
                         }
                     }, {
-                        job.throwError(it)
+                        job.throwError(JobErrorThrowable.ExternalException(it.message, it.cause))
                     })
         )
     }

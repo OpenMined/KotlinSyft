@@ -1,9 +1,9 @@
 package org.openmined.syft.execution
 
-import android.accounts.NetworkErrorException
 import android.util.Base64
 import android.util.Log
 import androidx.annotation.VisibleForTesting
+import io.reactivex.Flowable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
@@ -143,6 +143,12 @@ class SyftJob internal constructor(
         statusDisposable.add(
             jobStatusProcessor.onBackpressureBuffer()
                     .compose(schedulers.applyFlowableSchedulers())
+                    .flatMap {
+                        when (it) {
+                            is JobStatusMessage.JobError -> Flowable.error<JobStatusMessage>(it.error)
+                            else -> Flowable.just(it)
+                        }
+                    }
                     .subscribe(
                         { message -> subscriber.onJobStatusMessage(message) },
                         { error -> subscriber.onError(error) },
@@ -188,7 +194,7 @@ class SyftJob internal constructor(
         responseData: CycleResponseData.CycleAccept
     ) {
         if (cycleStatus.get() != CycleStatus.ACCEPTED) {
-            throwError(IllegalStateException("Cycle not accepted. Download cannot start"))
+            throwError(JobErrorThrowable.CycleNotAccepted("Cycle not accepted. Download cannot start"))
             return
         }
         if (jobRepository.status == DownloadStatus.NOT_STARTED) {
@@ -243,7 +249,7 @@ class SyftJob internal constructor(
                         .compose(config.networkingSchedulers.applySingleSchedulers())
                         .subscribe { reportResponse: ReportResponse ->
                             if (reportResponse.error != null)
-                                throwError(NetworkErrorException(reportResponse.error))
+                                throwError(JobErrorThrowable.NetworkResponseFailure(reportResponse.error))
                             if (reportResponse.status != null) {
                                 Log.d(TAG, "report status ${reportResponse.status}")
                                 jobStatusProcessor.onComplete()
@@ -276,8 +282,9 @@ class SyftJob internal constructor(
     /**
      * Notify all the listeners about the error and dispose the job
      */
-    internal fun throwError(throwable: Throwable) {
-        jobStatusProcessor.onError(throwable)
+    internal fun throwError(throwable: JobErrorThrowable) {
+        jobStatusProcessor.offer(JobStatusMessage.JobError(throwable))
+        statusDisposable.clear()
         networkDisposable.clear()
         isDisposed.set(true)
     }
@@ -293,6 +300,7 @@ class SyftJob internal constructor(
     override fun dispose() {
         if (!isDisposed()) {
             jobStatusProcessor.onComplete()
+            statusDisposable.clear()
             networkDisposable.clear()
             isDisposed.set(true)
             Log.d(TAG, "job $jobId disposed")
