@@ -73,7 +73,6 @@ open class JobStatusSubscriber {
                     onError(JobErrorThrowable.DownloadIncomplete("Client config not available yet"))
             }
             is JobStatusMessage.JobCycleRejected -> onRejected(jobStatusMessage.timeout)
-            is JobStatusMessage.JobError -> onError(jobStatusMessage.error)
             //add all the other messages as and when needed
         }
     }

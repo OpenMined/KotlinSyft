@@ -54,11 +54,11 @@ internal data class CycleRequest(
     @SerialName("model")
     val modelName: String,
     val version: String? = null,
-    val ping: String,
+    val ping: Int,
     @SerialName("download")
-    val downloadSpeed: String,
+    val downloadSpeed: Float,
     @SerialName("upload")
-    val uploadSpeed: String
+    val uploadSpeed: Float
 ) : NetworkModels()
 
 

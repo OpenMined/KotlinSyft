@@ -123,7 +123,7 @@ class SyftJob internal constructor(
         }
         if (isDisposed.get()) {
             Log.e(TAG, "cannot start a disposed job")
-            subscriber.onError(IllegalThreadStateException("Job has already been disposed"))
+            subscriber.onError(JobErrorThrowable.RunningDisposedJob)
             return
         }
         subscribe(subscriber, config.computeSchedulers)
@@ -143,12 +143,6 @@ class SyftJob internal constructor(
         statusDisposable.add(
             jobStatusProcessor.onBackpressureBuffer()
                     .compose(schedulers.applyFlowableSchedulers())
-                    .flatMap {
-                        when (it) {
-                            is JobStatusMessage.JobError -> Flowable.error<JobStatusMessage>(it.error)
-                            else -> Flowable.just(it)
-                        }
-                    }
                     .subscribe(
                         { message -> subscriber.onJobStatusMessage(message) },
                         { error -> subscriber.onError(error) },
@@ -283,8 +277,9 @@ class SyftJob internal constructor(
      * Notify all the listeners about the error and dispose the job
      */
     internal fun throwError(throwable: JobErrorThrowable) {
-        jobStatusProcessor.offer(JobStatusMessage.JobError(throwable))
-        statusDisposable.clear()
+//        config.computeSchedulers.computeThreadScheduler.shutdown()
+//        config.computeSchedulers.computeThreadScheduler.start()
+        jobStatusProcessor.onError(throwable)
         networkDisposable.clear()
         isDisposed.set(true)
     }
@@ -300,7 +295,6 @@ class SyftJob internal constructor(
     override fun dispose() {
         if (!isDisposed()) {
             jobStatusProcessor.onComplete()
-            statusDisposable.clear()
             networkDisposable.clear()
             isDisposed.set(true)
             Log.d(TAG, "job $jobId disposed")

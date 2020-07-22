@@ -8,8 +8,6 @@ import java.util.concurrent.ConcurrentHashMap
 internal sealed class JobStatusMessage {
     class JobCycleRejected(val timeout: String) : JobStatusMessage()
 
-    class JobError(val error : JobErrorThrowable) : JobStatusMessage()
-
     class JobReady(
         val model: SyftModel,
         val plans: ConcurrentHashMap<String, Plan>,

@@ -149,9 +149,9 @@ class Syft internal constructor(
     private fun requestCycle(
         id: String,
         job: SyftJob,
-        ping: String?,
-        downloadSpeed: String?,
-        uploadSpeed: String?
+        ping: Int?,
+        downloadSpeed: Float?,
+        uploadSpeed: Float?
     ): Single<CycleResponseData> {
 
         return when (val check = checkConditions(ping, downloadSpeed, uploadSpeed)) {
@@ -161,18 +161,18 @@ class Syft internal constructor(
                     id,
                     job.jobId.modelName,
                     job.jobId.version,
-                    if (ping.isNullOrEmpty()) "10" else ping,
-                    if (downloadSpeed.isNullOrEmpty()) "10" else downloadSpeed,
-                    if (uploadSpeed.isNullOrEmpty()) "10" else uploadSpeed
+                    ping ?: -1,
+                    downloadSpeed ?: 0.0f,
+                    uploadSpeed ?: 0.0f
                 )
             )
         }
     }
 
     private fun checkConditions(
-        ping: String?,
-        downloadSpeed: String?,
-        uploadSpeed: String?
+        ping: Int?,
+        downloadSpeed: Float?,
+        uploadSpeed: Float?
     ): Either<String, Boolean> {
         return when {
             ping == null ->
