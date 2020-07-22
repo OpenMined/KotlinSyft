@@ -74,6 +74,7 @@ class SyftJob internal constructor(
 
     val jobId = JobID(modelName, version)
     internal var cycleStatus = AtomicReference(CycleStatus.APPLY)
+    internal val requiresSpeedTest = AtomicBoolean(true)
     private val jobStatusProcessor = PublishProcessor.create<JobStatusMessage>()
     private val isDisposed = AtomicBoolean(false)
 
@@ -86,6 +87,7 @@ class SyftJob internal constructor(
     private val networkDisposable = CompositeDisposable()
     private val statusDisposable = CompositeDisposable()
     private var requestKey = ""
+
 
     /**
      * Starts the job by asking syft worker to request for cycle.

@@ -22,8 +22,7 @@ private const val TAG = "Syft"
 class Syft internal constructor(
     private val syftConfig: SyftConfiguration,
     private val deviceMonitor: DeviceMonitor,
-    private val authToken: String?,
-    private val isSpeedTestEnable: Boolean
+    private val authToken: String?
 ) : Disposable {
     companion object {
         @Volatile
@@ -40,8 +39,7 @@ class Syft internal constructor(
                 } ?: Syft(
                     syftConfig = syftConfiguration,
                     deviceMonitor = DeviceMonitor.construct(syftConfiguration),
-                    authToken = authToken,
-                    isSpeedTestEnable = true
+                    authToken = authToken
                 ).also { INSTANCE = it }
             }
         }
@@ -54,8 +52,6 @@ class Syft internal constructor(
 
     @Volatile
     private var workerId: String? = null
-
-    private var requiresSpeedTest: Boolean = true
 
     fun newJob(
         model: String,
@@ -91,12 +87,9 @@ class Syft internal constructor(
         if (jobErrorIfBatteryInvalid(job) || jobErrorIfNetworkInvalid(job))
             return
 
-        val isRequiresSpeedTestEnabled = isSpeedTestEnable and requiresSpeedTest
-        Log.d(TAG, "isRequiresSpeedTestEnabled $isRequiresSpeedTestEnabled")
-
         workerId?.let { id ->
             compositeDisposable.add(
-                deviceMonitor.getNetworkStatus(id, isRequiresSpeedTestEnabled)
+                deviceMonitor.getNetworkStatus(id, job.requiresSpeedTest.get())
                         .flatMap { networkState ->
                             requestCycle(
                                 id,
@@ -220,8 +213,9 @@ class Syft internal constructor(
                             is AuthenticationResponse.AuthenticationSuccess -> {
                                 if (workerId == null) {
                                     setSyftWorkerId(response.workerId)
-                                    requiresSpeedTest = response.requiresSpeedTest
                                 }
+                                //todo eventually requires_speed test will be migrated to it's own endpoint
+                                job.requiresSpeedTest.set(response.requiresSpeedTest)
                                 executeCycleRequest(job)
                             }
                             is AuthenticationResponse.AuthenticationError -> {
