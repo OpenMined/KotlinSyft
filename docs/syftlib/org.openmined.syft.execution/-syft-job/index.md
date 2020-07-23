@@ -26,7 +26,7 @@
 
 | Name | Summary |
 |---|---|
-| [createDiff](create-diff.md) | `fun createDiff(): `[`SyftState`](../../org.openmined.syft.proto/-syft-state/index.md) |
+| [createDiff](create-diff.md) | Create a diff between the model parameters downloaded from the PyGrid with the current state of model parameters The diff is sent to [report](report.md) for sending it to PyGrid`fun createDiff(): `[`SyftState`](../../org.openmined.syft.proto/-syft-state/index.md) |
 | [dispose](dispose.md) | Dispose the job. Once disposed, a job cannot be resumed again.`fun dispose(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [isDisposed](is-disposed.md) | Identifies if the job is already disposed`fun isDisposed(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [report](report.md) | Once training is finished submit the new model weights to PyGrid to complete the cycle`fun report(diff: `[`SyftState`](../../org.openmined.syft.proto/-syft-state/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

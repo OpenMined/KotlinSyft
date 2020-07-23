@@ -36,7 +36,7 @@ internal class NetworkStatusRepository (
             cacheService.getNetworkStatusCache()
                     .switchIfEmpty(getNetworkStatusUncached(workerId))
         } else {
-            Single.just(NetworkStatusModel("", "", ""))
+            Single.just(NetworkStatusModel(-1, 0.0f, 0.0f))
         }
     }
 
