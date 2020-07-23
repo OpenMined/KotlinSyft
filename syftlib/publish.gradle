@@ -4,14 +4,8 @@ apply plugin: "nebula.source-jar"
 
 apply plugin: "nebula.nebula-bintray-publishing"
 
-Properties properties = new Properties()
-def propertiesFile = project.rootProject.file('local.properties')
-if (propertiesFile.exists()) {
-    properties.load(propertiesFile.newDataInputStream())
-}
-
-def bintrayUser = properties.getProperty('bintray.user')
-def bintrayKey = properties.getProperty('bintray.key')
+def bintrayUser = System.getenv('BINTRAY_USERNAME')
+def bintrayKey = System.getenv('BINTRAY_KEY')
 
 bintray {
     user = bintrayUser
