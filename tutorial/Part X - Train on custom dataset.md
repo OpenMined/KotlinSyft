@@ -101,6 +101,9 @@ Define the dimensions and starting indices of training data and labels, and the 
 
 #### Custom data filter.
 ```kotlin
+    // readline or go back to the beginning of the file if we 
+    // have exhausted the dataset. This allows us to iterate 
+    // infinitely over the same data
     private fun readLine(): Pair<List<String>, List<String>> {
         var x = trainDataReader.readLine()?.split(delim)
         var y = labelDataReader.readLine()?.split(delim)
