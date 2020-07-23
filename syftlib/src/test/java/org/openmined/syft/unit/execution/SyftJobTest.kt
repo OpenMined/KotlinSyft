@@ -8,7 +8,6 @@ import com.nhaarman.mockitokotlin2.capture
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
 import com.nhaarman.mockitokotlin2.whenever
@@ -31,6 +30,7 @@ import org.openmined.syft.Syft
 import org.openmined.syft.domain.DownloadStatus
 import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.execution.JobErrorThrowable
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
@@ -104,14 +104,14 @@ class SyftJobTest {
 
     @Test
     fun `Given a SyftJob that has been disposed when it starts then an exception is thrown`() {
-        val parameterCaptor = ArgumentCaptor.forClass(IllegalThreadStateException::class.java)
+        val parameterCaptor = ArgumentCaptor.forClass(JobErrorThrowable::class.java)
 
         cut.dispose()
 
         cut.start(subscriber)
 
-        verify(subscriber).onError(capture<IllegalThreadStateException>(parameterCaptor))
-        assert(parameterCaptor.value is IllegalThreadStateException)
+        verify(subscriber).onError(capture<JobErrorThrowable>(parameterCaptor))
+        assert(parameterCaptor.value is JobErrorThrowable.RunningDisposedJob)
     }
 
     @Test
@@ -150,11 +150,18 @@ class SyftJobTest {
     fun `createDiff creates the diff module and then evaluates diff`() {
         whenever(stateMock.createDiff(any(), any())).doReturn(mockk())
 
-        val config = mockk<SyftConfiguration>(){
+        val config = mockk<SyftConfiguration>() {
             every { filesDir } returns File("test")
         }
         whenever(jobRepository.getDiffScript(config)).doReturn(mockk())
-        whenever(jobRepository.persistToLocalStorage(any(), any(), any(), eq(false))).doReturn("test module path")
+        whenever(
+            jobRepository.persistToLocalStorage(
+                any(),
+                any(),
+                any(),
+                eq(false)
+            )
+        ).doReturn("test module path")
 
         val jobTest = SyftJob(modelName, modelVersion, worker, config, jobRepository)
 
@@ -212,10 +219,14 @@ class SyftJobTest {
 
     @Test
     fun `Given a SyftJob when an error is thrown then the subscriber is notified and job is in disposed state`() {
+        val exception = JobErrorThrowable.ExternalException(
+            TestException().message,
+            TestException().cause
+        )
         cut.start(subscriber)
-        cut.throwError(TestException())
+        cut.publishError(exception)
 
-        verify(subscriber).onError(TestException())
+        verify(subscriber).onError(exception)
         assertTrue(cut.isDisposed)
     }
 }
@@ -274,7 +285,8 @@ internal class RobolectricJobTests {
         whenever(config.getSignallingClient()).doReturn(signallingClient)
 
         whenever(worker.getSyftWorkerId()).thenReturn("workerId")
-
+        whenever(worker.isBatteryValid()).thenReturn(true)
+        whenever(worker.isNetworkValid()).thenReturn(true)
         val diffState = mock<SyftState>()
         val state = mock<StateOuterClass.State>()
         val diff = "hello".toByteArray()
@@ -293,7 +305,7 @@ internal class RobolectricJobTests {
     }
 }
 
-private class TestException: Throwable() {
+private class TestException : Throwable() {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

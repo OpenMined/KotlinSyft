@@ -9,6 +9,7 @@ import com.nhaarman.mockitokotlin2.verify
 import org.junit.Test
 import org.openmined.syft.Syft
 import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.execution.JobErrorThrowable
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.integration.clients.HttpClientMock
 import org.openmined.syft.integration.clients.SocketClientMock
@@ -126,7 +127,7 @@ class AuthenticationTest : AbstractSyftWorkerTest() {
         job.start(jobStatusSubscriber)
         argumentCaptor<Throwable>().apply {
             verify(jobStatusSubscriber).onError(capture())
-            assert(firstValue is SecurityException)
+            assert(firstValue is JobErrorThrowable.AuthenticationFailure)
         }
         syftWorker.dispose()
         verify(jobStatusSubscriber, never()).onComplete()
