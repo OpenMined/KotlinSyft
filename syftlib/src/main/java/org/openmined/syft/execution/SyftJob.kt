@@ -217,6 +217,10 @@ class SyftJob internal constructor(
         }
     }
 
+    /**
+     * Create a diff between the model parameters downloaded from the PyGrid with the current state of model parameters
+     * The diff is sent to [report] for sending it to PyGrid
+     */
     fun createDiff(): SyftState {
         val modulePath = jobRepository.persistToLocalStorage(
             jobRepository.getDiffScript(config),
@@ -263,8 +267,9 @@ class SyftJob internal constructor(
     }
 
     /**
-     * Throw an error when network constraints fail
+     * Throw an error when network constraints fail.
      * @param publish when false the error is thrown for the error handler otherwise caught and published on the status processor
+     * @return true if error is thrown otherwise false
      */
     internal fun throwErrorIfNetworkInvalid(publish: Boolean = true): Boolean {
         val validity = worker.isNetworkValid()
@@ -278,6 +283,7 @@ class SyftJob internal constructor(
     /**
      * Throw an error when battery constraints fail
      * @param publish when false the error is thrown for the error handler otherwise caught and published on the status processor
+     * @return true if error is thrown otherwise false
      */
     internal fun throwErrorIfBatteryInvalid(publish: Boolean = true): Boolean {
         val validity = worker.isBatteryValid()
