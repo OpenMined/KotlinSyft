@@ -13,7 +13,7 @@ interface ProcessSchedulers {
     val computeThreadScheduler: Scheduler
 
     /**
-     * calleeThreadScheduler defines the thread on which the callback to observable is run
+     * calleeThreadScheduler defines the thread on which the observable is monitored
      * @sample calleeThreadScheduler AndroidSchedulers.MainThread()
      */
     val calleeThreadScheduler: Scheduler

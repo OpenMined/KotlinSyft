@@ -3,7 +3,7 @@ package org.openmined.syft.execution
 import android.util.Base64
 import android.util.Log
 import androidx.annotation.VisibleForTesting
-import io.reactivex.Flowable
+import io.reactivex.Completable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
@@ -85,7 +85,8 @@ class SyftJob internal constructor(
     internal val model = SyftModel(modelName, version)
 
     private val networkDisposable = CompositeDisposable()
-    private val statusDisposable = CompositeDisposable()
+    private var statusDisposable: Disposable? = null
+    private val computeDisposable = CompositeDisposable()
     private var requestKey = ""
 
 
@@ -140,15 +141,25 @@ class SyftJob internal constructor(
         subscriber: JobStatusSubscriber,
         schedulers: ProcessSchedulers
     ) {
-        statusDisposable.add(
-            jobStatusProcessor.onBackpressureBuffer()
-                    .compose(schedulers.applyFlowableSchedulers())
-                    .subscribe(
-                        { message -> subscriber.onJobStatusMessage(message) },
-                        { error -> subscriber.onError(error) },
-                        { subscriber.onComplete() }
-                    )
-        )
+        statusDisposable = jobStatusProcessor.onBackpressureBuffer()
+                .subscribeOn(schedulers.calleeThreadScheduler)
+                .subscribe(
+                    { message ->
+                        computeDisposable.add(Completable.create {
+                            subscriber.onJobStatusMessage(message)
+                            it.onComplete()
+                        }.subscribeOn(schedulers.computeThreadScheduler).subscribe({}, {
+                            subscriber.onError(it)
+                        }))
+                    },
+                    { error ->
+                        subscriber.onError(error)
+                        computeDisposable.clear()
+                        computeDisposable.dispose()
+                    },
+                    { subscriber.onComplete() }
+                )
+
     }
 
     /**
@@ -188,7 +199,7 @@ class SyftJob internal constructor(
         responseData: CycleResponseData.CycleAccept
     ) {
         if (cycleStatus.get() != CycleStatus.ACCEPTED) {
-            throwError(JobErrorThrowable.CycleNotAccepted("Cycle not accepted. Download cannot start"))
+            publishError(JobErrorThrowable.CycleNotAccepted("Cycle not accepted. Download cannot start"))
             return
         }
         if (jobRepository.status == DownloadStatus.NOT_STARTED) {
@@ -243,7 +254,7 @@ class SyftJob internal constructor(
                         .compose(config.networkingSchedulers.applySingleSchedulers())
                         .subscribe { reportResponse: ReportResponse ->
                             if (reportResponse.error != null)
-                                throwError(JobErrorThrowable.NetworkResponseFailure(reportResponse.error))
+                                publishError(JobErrorThrowable.NetworkResponseFailure(reportResponse.error))
                             if (reportResponse.status != null) {
                                 Log.d(TAG, "report status ${reportResponse.status}")
                                 jobStatusProcessor.onComplete()
@@ -253,35 +264,46 @@ class SyftJob internal constructor(
 
     /**
      * Throw an error when network constraints fail
+     * @param publish when false the error is thrown for the error handler otherwise caught and published on the status processor
      */
-    private fun throwErrorIfNetworkInvalid(): Boolean {
-        if (worker.jobErrorIfNetworkInvalid(this)) {
-            //todo save model to a file here
-            return true
-        }
-        return false
+    internal fun throwErrorIfNetworkInvalid(publish: Boolean = true): Boolean {
+        val validity = worker.isNetworkValid()
+        if (publish && !validity)
+            publishError(JobErrorThrowable.NetworkConstraintsFailure)
+        else if (!validity)
+            throwError(JobErrorThrowable.NetworkConstraintsFailure)
+        return !validity
     }
 
     /**
      * Throw an error when battery constraints fail
+     * @param publish when false the error is thrown for the error handler otherwise caught and published on the status processor
      */
-    internal fun throwErrorIfBatteryInvalid(): Boolean {
-        if (worker.jobErrorIfBatteryInvalid(this)) {
-            //todo save model to a file here
-            return true
-        }
-        return false
+    internal fun throwErrorIfBatteryInvalid(publish: Boolean = true): Boolean {
+        val validity = worker.isBatteryValid()
+        if (publish && !validity)
+            publishError(JobErrorThrowable.BatteryConstraintsFailure)
+        else if (!validity)
+            throwError(JobErrorThrowable.BatteryConstraintsFailure)
+        return !validity
     }
 
     /**
      * Notify all the listeners about the error and dispose the job
      */
-    internal fun throwError(throwable: JobErrorThrowable) {
-//        config.computeSchedulers.computeThreadScheduler.shutdown()
-//        config.computeSchedulers.computeThreadScheduler.start()
+    internal fun publishError(throwable: JobErrorThrowable) {
         jobStatusProcessor.onError(throwable)
         networkDisposable.clear()
         isDisposed.set(true)
+    }
+
+    /**
+     * Throw the error to be caught by error handlers
+     */
+    private fun throwError(throwable: JobErrorThrowable) {
+        networkDisposable.clear()
+        isDisposed.set(true)
+        throw throwable
     }
 
     /**

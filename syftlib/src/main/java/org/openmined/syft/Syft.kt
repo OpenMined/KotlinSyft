@@ -84,7 +84,7 @@ class Syft internal constructor(
     internal fun getSyftWorkerId() = workerId
 
     internal fun executeCycleRequest(job: SyftJob) {
-        if (jobErrorIfBatteryInvalid(job) || jobErrorIfNetworkInvalid(job))
+        if (job.throwErrorIfBatteryInvalid() || job.throwErrorIfNetworkInvalid())
             return
 
         workerId?.let { id ->
@@ -108,7 +108,7 @@ class Syft internal constructor(
                                 }
                             },
                             { errorMsg: Throwable ->
-                                job.throwError(
+                                job.publishError(
                                     JobErrorThrowable.ExternalException(
                                         errorMsg.message,
                                         errorMsg.cause
@@ -129,22 +129,8 @@ class Syft internal constructor(
         INSTANCE = null
     }
 
-    internal fun jobErrorIfNetworkInvalid(job: SyftJob): Boolean {
-        if (!deviceMonitor.isNetworkStateValid()) {
-            job.throwError(JobErrorThrowable.NetworkConstraintsFailure)
-            disposeSocketClient()
-            return true
-        }
-        return false
-    }
-
-    internal fun jobErrorIfBatteryInvalid(job: SyftJob): Boolean {
-        if (!deviceMonitor.isBatteryStateValid()) {
-            job.throwError(JobErrorThrowable.BatteryConstraintsFailure)
-            return true
-        }
-        return false
-    }
+    internal fun isNetworkValid() = deviceMonitor.isNetworkStateValid()
+    internal fun isBatteryValid() = deviceMonitor.isBatteryStateValid()
 
     private fun requestCycle(
         id: String,
@@ -192,14 +178,14 @@ class Syft internal constructor(
     private fun handleCycleAccept(responseData: CycleResponseData.CycleAccept) {
         val job = workerJob ?: throw IllegalStateException("job deleted and accessed")
         job.cycleAccepted(responseData)
-        if (jobErrorIfBatteryInvalid(job) ||
-            jobErrorIfNetworkInvalid(job)
+        if (job.throwErrorIfBatteryInvalid() ||
+            job.throwErrorIfNetworkInvalid()
         )
             return
 
         workerId?.let {
             job.downloadData(it, responseData)
-        } ?: job.throwError(JobErrorThrowable.UninitializedWorkerError)
+        } ?: job.publishError(JobErrorThrowable.UninitializedWorkerError)
 
     }
 
@@ -224,12 +210,12 @@ class Syft internal constructor(
                                 executeCycleRequest(job)
                             }
                             is AuthenticationResponse.AuthenticationError -> {
-                                job.throwError(JobErrorThrowable.AuthenticationFailure(response.errorMessage))
+                                job.publishError(JobErrorThrowable.AuthenticationFailure(response.errorMessage))
                                 Log.d(TAG, response.errorMessage)
                             }
                         }
                     }, {
-                        job.throwError(JobErrorThrowable.ExternalException(it.message, it.cause))
+                        job.publishError(JobErrorThrowable.ExternalException(it.message, it.cause))
                     })
         )
     }
