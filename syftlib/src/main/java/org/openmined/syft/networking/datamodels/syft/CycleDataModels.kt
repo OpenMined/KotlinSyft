@@ -18,7 +18,7 @@ import kotlinx.serialization.json.json
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.NetworkModels
 
-internal const val CYCLE_TYPE = "federated/cycle-request"
+internal const val CYCLE_TYPE = "model_centric/cycle-request"
 internal const val CYCLE_ACCEPT = "accepted"
 internal const val CYCLE_REJECT = "rejected"
 
@@ -54,11 +54,11 @@ internal data class CycleRequest(
     @SerialName("model")
     val modelName: String,
     val version: String? = null,
-    val ping: String,
+    val ping: Int,
     @SerialName("download")
-    val downloadSpeed: String,
+    val downloadSpeed: Float,
     @SerialName("upload")
-    val uploadSpeed: String
+    val uploadSpeed: Float
 ) : NetworkModels()
 
 

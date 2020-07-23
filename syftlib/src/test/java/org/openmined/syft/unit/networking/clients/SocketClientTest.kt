@@ -96,9 +96,9 @@ internal class SocketClientTest {
             "auth",
             "model name",
             "1",
-            "10",
-            "1000",
-            "1000"
+            10,
+            1000.0f,
+            1000.0f
         )
         val serializedRequest = json {
             TYPE to REQUESTS.CYCLE_REQUEST.value

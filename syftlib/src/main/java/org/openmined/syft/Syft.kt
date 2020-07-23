@@ -1,11 +1,11 @@
 package org.openmined.syft
 
-import android.accounts.NetworkErrorException
 import android.util.Log
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.execution.JobErrorThrowable
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.fp.Either
@@ -22,8 +22,7 @@ private const val TAG = "Syft"
 class Syft internal constructor(
     private val syftConfig: SyftConfiguration,
     private val deviceMonitor: DeviceMonitor,
-    private val authToken: String?,
-    private val isSpeedTestEnable: Boolean
+    private val authToken: String?
 ) : Disposable {
     companion object {
         @Volatile
@@ -40,8 +39,7 @@ class Syft internal constructor(
                 } ?: Syft(
                     syftConfig = syftConfiguration,
                     deviceMonitor = DeviceMonitor.construct(syftConfiguration),
-                    authToken = authToken,
-                    isSpeedTestEnable = true
+                    authToken = authToken
                 ).also { INSTANCE = it }
             }
         }
@@ -54,8 +52,6 @@ class Syft internal constructor(
 
     @Volatile
     private var workerId: String? = null
-
-    private var requiresSpeedTest: Boolean = true
 
     fun newJob(
         model: String,
@@ -88,15 +84,12 @@ class Syft internal constructor(
     internal fun getSyftWorkerId() = workerId
 
     internal fun executeCycleRequest(job: SyftJob) {
-        if (jobErrorIfBatteryInvalid(job) || jobErrorIfNetworkInvalid(job))
+        if (job.throwErrorIfBatteryInvalid() || job.throwErrorIfNetworkInvalid())
             return
-
-        val isRequiresSpeedTestEnabled = isSpeedTestEnable and requiresSpeedTest
-        Log.d(TAG, "isRequiresSpeedTestEnabled $isRequiresSpeedTestEnabled")
 
         workerId?.let { id ->
             compositeDisposable.add(
-                deviceMonitor.getNetworkStatus(id, isRequiresSpeedTestEnabled)
+                deviceMonitor.getNetworkStatus(id, job.requiresSpeedTest.get())
                         .flatMap { networkState ->
                             requestCycle(
                                 id,
@@ -115,7 +108,12 @@ class Syft internal constructor(
                                 }
                             },
                             { errorMsg: Throwable ->
-                                job.throwError(errorMsg)
+                                job.publishError(
+                                    JobErrorThrowable.ExternalException(
+                                        errorMsg.message,
+                                        errorMsg.cause
+                                    )
+                                )
                             })
             )
         } ?: executeAuthentication(job)
@@ -131,50 +129,36 @@ class Syft internal constructor(
         INSTANCE = null
     }
 
-    internal fun jobErrorIfNetworkInvalid(job: SyftJob): Boolean {
-        if (!deviceMonitor.isNetworkStateValid()) {
-            job.throwError(IllegalStateException("network constraints failed"))
-            disposeSocketClient()
-            return true
-        }
-        return false
-    }
-
-    internal fun jobErrorIfBatteryInvalid(job: SyftJob): Boolean {
-        if (!deviceMonitor.isBatteryStateValid()) {
-            job.throwError(IllegalStateException("Battery constraints failed"))
-            return true
-        }
-        return false
-    }
+    internal fun isNetworkValid() = deviceMonitor.isNetworkStateValid()
+    internal fun isBatteryValid() = deviceMonitor.isBatteryStateValid()
 
     private fun requestCycle(
         id: String,
         job: SyftJob,
-        ping: String?,
-        downloadSpeed: String?,
-        uploadSpeed: String?
+        ping: Int?,
+        downloadSpeed: Float?,
+        uploadSpeed: Float?
     ): Single<CycleResponseData> {
 
         return when (val check = checkConditions(ping, downloadSpeed, uploadSpeed)) {
-            is Either.Left -> Single.error(NetworkErrorException(check.a))
+            is Either.Left -> Single.error(JobErrorThrowable.NetworkUnreachable(check.a))
             is Either.Right -> syftConfig.getSignallingClient().getCycle(
                 CycleRequest(
                     id,
                     job.jobId.modelName,
                     job.jobId.version,
-                    if (ping.isNullOrEmpty()) "10" else ping,
-                    if (downloadSpeed.isNullOrEmpty()) "10" else downloadSpeed,
-                    if (uploadSpeed.isNullOrEmpty()) "10" else uploadSpeed
+                    ping ?: -1,
+                    downloadSpeed ?: 0.0f,
+                    uploadSpeed ?: 0.0f
                 )
             )
         }
     }
 
     private fun checkConditions(
-        ping: String?,
-        downloadSpeed: String?,
-        uploadSpeed: String?
+        ping: Int?,
+        downloadSpeed: Float?,
+        uploadSpeed: Float?
     ): Either<String, Boolean> {
         return when {
             ping == null ->
@@ -194,14 +178,14 @@ class Syft internal constructor(
     private fun handleCycleAccept(responseData: CycleResponseData.CycleAccept) {
         val job = workerJob ?: throw IllegalStateException("job deleted and accessed")
         job.cycleAccepted(responseData)
-        if (jobErrorIfBatteryInvalid(job) ||
-            jobErrorIfNetworkInvalid(job)
+        if (job.throwErrorIfBatteryInvalid() ||
+            job.throwErrorIfNetworkInvalid()
         )
             return
 
         workerId?.let {
             job.downloadData(it, responseData)
-        } ?: throw IllegalStateException("workerId is not initialised")
+        } ?: job.publishError(JobErrorThrowable.UninitializedWorkerError)
 
     }
 
@@ -220,17 +204,18 @@ class Syft internal constructor(
                             is AuthenticationResponse.AuthenticationSuccess -> {
                                 if (workerId == null) {
                                     setSyftWorkerId(response.workerId)
-                                    requiresSpeedTest = response.requiresSpeedTest
                                 }
+                                //todo eventually requires_speed test will be migrated to it's own endpoint
+                                job.requiresSpeedTest.set(response.requiresSpeedTest)
                                 executeCycleRequest(job)
                             }
                             is AuthenticationResponse.AuthenticationError -> {
-                                job.throwError(SecurityException(response.errorMessage))
+                                job.publishError(JobErrorThrowable.AuthenticationFailure(response.errorMessage))
                                 Log.d(TAG, response.errorMessage)
                             }
                         }
                     }, {
-                        job.throwError(it)
+                        job.publishError(JobErrorThrowable.ExternalException(it.message, it.cause))
                     })
         )
     }

@@ -135,11 +135,7 @@ You can use KotlinSyft as a front-end or as a background service. The following 
                     model.updateModel(updatedParams.map { it.toTensor() })
                     // get the required loss, accuracy, etc values just like you do in Pytorch Android
                     val accuracy = outputResult[0].toTensor().dataAsFloatArray.last()
-                } ?: return // this will happen when plan execution fails. 
-                // Most probably due to device state not fulfilling syft config constraints 
-                // You should not handle any error here and simply return to close the subscriber. 
-                // Failing to return from onReady will crash the application.
-                // All error handling must be done with `onError` Listener
+                } 
             }
             // Once training finishes generate the model diff
             val diff = mnistJob.createDiff()
