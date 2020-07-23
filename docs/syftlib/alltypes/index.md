@@ -25,6 +25,11 @@ Client properties specific to the job description
 
 |
 
+##### [org.openmined.syft.execution.JobErrorThrowable](../org.openmined.syft.execution/-job-error-throwable/index.md)
+
+
+|
+
 ##### [org.openmined.syft.execution.JobStatusSubscriber](../org.openmined.syft.execution/-job-status-subscriber/index.md)
 
 This is passed as argument to [SyftJob.start](../org.openmined.syft.execution/-syft-job/start.md) giving the overridden callbacks for different phases of the job cycle.

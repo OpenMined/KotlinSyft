@@ -8,7 +8,7 @@
 
 | Name | Summary |
 |---|---|
-| [calleeThreadScheduler](callee-thread-scheduler.md) | calleeThreadScheduler defines the thread on which the callback to observable is run`abstract val calleeThreadScheduler: Scheduler` |
+| [calleeThreadScheduler](callee-thread-scheduler.md) | calleeThreadScheduler defines the thread on which the observable is monitored`abstract val calleeThreadScheduler: Scheduler` |
 | [computeThreadScheduler](compute-thread-scheduler.md) | computeThreadScheduler defines the thread on which observable runs`abstract val computeThreadScheduler: Scheduler` |
 
 ### Functions
