@@ -23,6 +23,11 @@ Client properties specific to the job description
 ##### [org.openmined.syft.domain.DownloadStatus](../org.openmined.syft.domain/-download-status/index.md)
 
 
+| (extensions in package org.openmined.syft.proto)
+
+##### [org.pytorch.IValue](../org.openmined.syft.proto/org.pytorch.-i-value/index.md)
+
+
 |
 
 ##### [org.openmined.syft.execution.JobErrorThrowable](../org.openmined.syft.execution/-job-error-throwable/index.md)
