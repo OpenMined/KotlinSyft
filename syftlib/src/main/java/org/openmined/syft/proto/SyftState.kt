@@ -2,20 +2,31 @@ package org.openmined.syft.proto
 
 import org.openmined.syftproto.execution.v1.StateOuterClass
 import org.openmined.syftproto.execution.v1.StateTensorOuterClass
+import org.pytorch.IValue
 import java.io.File
 
 /** SyftState class is responsible for storing all the weights of the neural network.
  * We update these model weights after every plan.execute
  * @property placeholders the variables describing the location of tensor in the plan torchscript
- * @property syftTensors the tensors for the model params
+ * @property iValueTensors the IValue tensors for the model params
  * @sample SyftModel.updateModel
  * @sample SyftModel.loadModelState
  */
 @ExperimentalUnsignedTypes
 data class SyftState(
     val placeholders: Array<Placeholder>,
-    val syftTensors: Array<SyftTensor>
+    val iValueTensors: Array<IValue>
 ) {
+
+    /**
+     * @return an array of [SyftTensor] from the [State][[https://pytorch.org/javadoc/org/pytorch/IValue.html] IValue Array
+     */
+    val syftTensorArray get() = iValueTensors.map { it.toTensor().toSyftTensor() }.toTypedArray()
+
+    /**
+     * @return an array of pyTorch [Tensors][https://pytorch.org/javadoc/org/pytorch/Tensor.html] from the SyftTensors list
+     */
+    val tensorArray get() = iValueTensors.map { it.toTensor() }.toTypedArray()
 
     companion object {
         /**
@@ -24,6 +35,21 @@ data class SyftState(
         @ExperimentalUnsignedTypes
         fun loadSyftState(fileLocation: String): SyftState {
             return StateOuterClass.State.parseFrom(File(fileLocation).readBytes()).toSyftState()
+        }
+
+    }
+
+    /**
+     * This method is used to save/update SyftState parameters.
+     * @throws IllegalArgumentException if the size newModelParams is not correct.
+     * @param newStateTensors a list of PyTorch Tensor that would be converted to syftTensor
+     */
+    fun updateState(newStateTensors: Array<IValue>) {
+        if (iValueTensors.size != newStateTensors.size) {
+            throw IllegalArgumentException("The size of the list of new parameters ${newStateTensors.size} is different than the list of params of the model ${iValueTensors.size}")
+        }
+        newStateTensors.forEachIndexed { idx, value ->
+            iValueTensors[idx] = value
         }
     }
 
@@ -34,12 +60,12 @@ data class SyftState(
      * @throws IllegalArgumentException if the size newModelParams is not same.
      */
     fun createDiff(oldSyftState: SyftState, diffScriptLocation: String): SyftState {
-        if (this.syftTensors.size != oldSyftState.syftTensors.size)
-            throw IllegalArgumentException("Dimension mismatch. Original model params have size ${oldSyftState.syftTensors.size} while input size is ${this.syftTensors.size}")
-        val diff = Array(size = this.syftTensors.size) { index ->
-            this.syftTensors[index].applyOperation(
+        if (this.iValueTensors.size != oldSyftState.iValueTensors.size)
+            throw IllegalArgumentException("Dimension mismatch. Original model params have size ${oldSyftState.iValueTensors.size} while input size is ${this.iValueTensors.size}")
+        val diff = Array(size = this.iValueTensors.size) { index ->
+            this.iValueTensors[index].applyOperation(
                 diffScriptLocation,
-                oldSyftState.syftTensors[index]
+                oldSyftState.iValueTensors[index]
             )
         }
         val localPlaceHolders = diff.mapIndexed { idx, _ ->
@@ -48,14 +74,8 @@ data class SyftState(
                 listOf("$idx", "#state-$idx")
             )
         }.toTypedArray()
-        return SyftState(placeholders = localPlaceHolders, syftTensors = diff)
+        return SyftState(placeholders = localPlaceHolders, iValueTensors = diff)
     }
-
-    /**
-     * @return an array of pyTorch [IValue][https://pytorch.org/javadoc/org/pytorch/IValue.html] from the SyftTensors list
-     */
-    fun getTensorArray() =
-            syftTensors.map { it.getTorchTensor() }.toTypedArray()
 
     /**
      * Generate StateOuterClass.State object using Placeholders list and syftTensor list
@@ -63,7 +83,7 @@ data class SyftState(
     fun serialize(): StateOuterClass.State {
         return StateOuterClass.State.newBuilder().addAllPlaceholders(
             placeholders.map { it.serialize() }
-        ).addAllTensors(syftTensors.map {
+        ).addAllTensors(syftTensorArray.map {
             StateTensorOuterClass.StateTensor
                     .newBuilder()
                     .setTorchTensor(it.serialize())
@@ -78,14 +98,14 @@ data class SyftState(
         other as SyftState
 
         if (!placeholders.contentEquals(other.placeholders)) return false
-        if (!syftTensors.contentEquals(other.syftTensors)) return false
+        if (!iValueTensors.contentEquals(other.iValueTensors)) return false
 
         return true
     }
 
     override fun hashCode(): Int {
         var result = placeholders.contentHashCode()
-        result = 31 * result + syftTensors.contentHashCode()
+        result = 31 * result + iValueTensors.contentHashCode()
         return result
     }
 }
@@ -99,7 +119,7 @@ fun StateOuterClass.State.toSyftState(): SyftState {
         Placeholder.deserialize(it)
     }.toTypedArray()
     val syftTensors = this.tensorsList.map {
-        it.torchTensor.toSyftTensor()
+        it.torchTensor.toSyftTensor().getIValue()
     }.toTypedArray()
     return SyftState(placeholders, syftTensors)
 }
