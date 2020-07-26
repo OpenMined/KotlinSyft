@@ -3,7 +3,6 @@ package org.openmined.syft.execution
 import android.util.Log
 import org.pytorch.IValue
 import org.pytorch.Module
-import org.pytorch.Tensor
 
 private const val TAG = "syft.processes.Plan"
 
@@ -17,7 +16,7 @@ private const val TAG = "syft.processes.Plan"
  * @property planName is the name of the plan
  */
 @ExperimentalUnsignedTypes
-class Plan(val job: SyftJob, val planId: String, val planName : String) {
+class Plan(val job: SyftJob, val planId: String, val planName: String) {
     private var pyTorchModule: Module? = null
 
     /**
@@ -31,10 +30,7 @@ class Plan(val job: SyftJob, val planId: String, val planName : String) {
     @Throws(IllegalStateException::class)
     @ExperimentalStdlibApi
     fun execute(vararg iValues: IValue): IValue? {
-        if (job.throwErrorIfBatteryInvalid()) {
-            //todo decide how we want to handle this. Throw an error or quietly skip execution
-            return null
-        }
+        job.throwErrorIfBatteryInvalid(false)
 
         val localModuleState = pyTorchModule
         if (localModuleState == null) {

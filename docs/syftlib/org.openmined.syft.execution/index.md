@@ -10,3 +10,9 @@
 | [Plan](-plan/index.md) | The Plan Class contains functions to load a PyTorch model from a TorchScript and to run training through the forward function of the PyTorch Module. A PyTorch Module is simply a container that takes in tensors as input and returns tensor after doing some computation.`class Plan` |
 | [Protocol](-protocol/index.md) | `class Protocol` |
 | [SyftJob](-syft-job/index.md) | `class SyftJob : Disposable` |
+
+### Exceptions
+
+| Name | Summary |
+|---|---|
+| [JobErrorThrowable](-job-error-throwable/index.md) | `sealed class JobErrorThrowable : `[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html) |

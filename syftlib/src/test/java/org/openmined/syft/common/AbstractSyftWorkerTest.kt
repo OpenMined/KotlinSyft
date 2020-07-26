@@ -1,4 +1,4 @@
-package org.openmined.syft.integration
+package org.openmined.syft.common
 
 import android.content.Context
 import android.content.Intent

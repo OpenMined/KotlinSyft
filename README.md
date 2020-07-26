@@ -8,7 +8,7 @@
 [![Chat on Slack](https://img.shields.io/badge/chat-on%20slack-7A5979.svg)](https://openmined.slack.com/messages/lib_kotlin_syft)
 [ ![Download](https://api.bintray.com/packages/openmined/KotlinSyft/syft/images/download.svg) ](https://bintray.com/openmined/KotlinSyft/syft/_latestVersion)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-8-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # KotlinSyft
@@ -135,11 +135,7 @@ You can use KotlinSyft as a front-end or as a background service. The following 
                     model.updateModel(updatedParams.map { it.toTensor() })
                     // get the required loss, accuracy, etc values just like you do in Pytorch Android
                     val accuracy = outputResult[0].toTensor().dataAsFloatArray.last()
-                } ?: return // this will happen when plan execution fails. 
-                // Most probably due to device state not fulfilling syft config constraints 
-                // You should not handle any error here and simply return to close the subscriber. 
-                // Failing to return from onReady will crash the application.
-                // All error handling must be done with `onError` Listener
+                } 
             }
             // Once training finishes generate the model diff
             val diff = mnistJob.createDiff()
@@ -229,6 +225,9 @@ These people were integral part of the efforts to bring KotlinSyft to fruition a
     <td align="center"><a href="https://www.patrickcason.com"><img src="https://avatars1.githubusercontent.com/u/1297930?v=4" width="100px;" alt=""/><br /><sub><b>Patrick Cason</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/commits?author=cereallarceny" title="Documentation">📖</a> <a href="#business-cereallarceny" title="Business development">💼</a></td>
     <td align="center"><a href="http://galalen.github.io"><img src="https://avatars0.githubusercontent.com/u/16897043?v=4" width="100px;" alt=""/><br /><sub><b>Mohammed Galalen</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/commits?author=galalen" title="Documentation">📖</a> <a href="https://github.com/OpenMined/KotlinSyft/commits?author=galalen" title="Tests">⚠️</a></td>
     <td align="center"><a href="https://github.com/erksch"><img src="https://avatars2.githubusercontent.com/u/19290349?v=4" width="100px;" alt=""/><br /><sub><b>Erik Ziegler</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/issues?q=author%3Aerksch" title="Bug reports">🐛</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://pengyuan-zhou.github.io/"><img src="https://avatars3.githubusercontent.com/u/20013315?v=4" width="100px;" alt=""/><br /><sub><b>Pengyuan Zhou</b></sub></a><br /><a href="#tutorial-pengyuan-zhou" title="Tutorials">✅</a></td>
   </tr>
 </table>
 

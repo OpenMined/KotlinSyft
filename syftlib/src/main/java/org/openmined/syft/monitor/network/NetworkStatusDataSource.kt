@@ -90,7 +90,7 @@ internal class NetworkStatusRealTimeDataSource internal constructor(
         )
                 .flatMapCompletable { response ->
                     if (response.code() == 200 && response.body()?.error == null) {
-                        networkStatusModel.ping = (System.currentTimeMillis() - start).toString()
+                        networkStatusModel.ping = (System.currentTimeMillis() - start).toInt()
                         Log.d(TAG, "Ping is ${networkStatusModel.ping} ms")
                         Completable.complete()
                     } else
@@ -127,7 +127,7 @@ internal class NetworkStatusRealTimeDataSource internal constructor(
                         if (speed > 100000)
                         //capping infinity
                             speed = 100000.0f
-                        networkStatusModel.uploadSpeed = speed.toString()
+                        networkStatusModel.uploadSpeed = speed
                         Log.d(TAG, "Upload Speed is ${networkStatusModel.uploadSpeed} KBps")
                         file.delete()
                         Completable.complete()
@@ -145,7 +145,7 @@ internal class NetworkStatusRealTimeDataSource internal constructor(
                     .flatMap { response ->
                         evaluateDownloadSpeed(response.body())
                     }.flatMapCompletable { speed ->
-                        networkStatusModel.downloadSpeed = speed.toString()
+                        networkStatusModel.downloadSpeed = speed
                         Log.d(TAG, "Download Speed is ${networkStatusModel.downloadSpeed} KBps")
                         Completable.complete()
                     }

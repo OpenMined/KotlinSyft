@@ -1,9 +1,8 @@
-name: Java CI
+name: Publish
 
 on:
-    release:
-      branches:
-        - master
+    push:
+      tags: v[0-9]+.[0-9]+.[0-9]+
 
 jobs:
   build:
@@ -16,9 +15,29 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+    - name: Gradle Cache
+      uses: actions/cache@v2
+      with:
+        path: .gradle/caches
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+    - name: Create ndk cache dir
+      run: |
+        sudo mkdir -p /usr/local/lib/android/sdk/ndk
+        sudo chown -R $USER /usr/local/lib/android/sdk/ndk
+    - name: NDK Cache
+      id: ndk-cache
+      uses: actions/cache@v2
+      with:
+        path: /usr/local/lib/android/sdk/ndk
+        key: Linux-ndkcache
+        restore-keys: Linux-ndkcache
     - name: Install NDK
+      if: steps.ndk-cache.outputs.cache-hit != 'true'
       run: echo "y" | sudo ${ANDROID_HOME}/tools/bin/sdkmanager --install "ndk;20.0.5594570" --sdk_root=${ANDROID_SDK_ROOT}
-    - name: Build with Gradle
-      run: ./gradlew final
+    - name: Publish with Gradle
+      env:
+        BINTRAY_USERNAME: ${{ secrets.BINTRAY_USERNAME }}
+        BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
+      run: ./gradlew -Prelease.useLastTag=true final

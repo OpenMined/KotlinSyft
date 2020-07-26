@@ -37,6 +37,7 @@ internal class SocketClientMock(
             DATA to json {
                 "status" to "success"
                 "worker_id" to "test_id"
+                "requires_speed_test" to true
             }
         else
             DATA to json {
@@ -49,9 +50,9 @@ internal class SocketClientMock(
         "test_id",
         "test",
         "1",
-        "10",
-        "1000",
-        "1000"
+        10,
+        1000.9f,
+        1000.0f
     )
 
     private val socketResponseTest1 = json {
@@ -86,9 +87,9 @@ internal class SocketClientMock(
         "test_id",
         "test2",
         "1",
-        "10",
-        "1000",
-        "1000"
+        10,
+        1000.0f,
+        1000.0f
     )
 
     private val socketResponseTest2 = json {

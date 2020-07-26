@@ -10,7 +10,9 @@ import com.nhaarman.mockitokotlin2.spy
 import com.nhaarman.mockitokotlin2.verify
 import org.junit.Test
 import org.openmined.syft.Syft
+import org.openmined.syft.common.AbstractSyftWorkerTest
 import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.execution.JobErrorThrowable
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.integration.clients.HttpClientMock
 import org.openmined.syft.integration.clients.SocketClientMock
@@ -62,8 +64,7 @@ class DeviceMonitorTest : AbstractSyftWorkerTest() {
         job.start(jobStatusSubscriber)
         argumentCaptor<Throwable>().apply {
             verify(jobStatusSubscriber).onError(capture())
-            assert(firstValue is IllegalStateException)
-            assert(firstValue.message == "Battery constraints failed")
+            assert(firstValue is JobErrorThrowable.BatteryConstraintsFailure)
         }
         syftWorker.dispose()
         verify(jobStatusSubscriber, never()).onComplete()
@@ -109,8 +110,7 @@ class DeviceMonitorTest : AbstractSyftWorkerTest() {
         job.start(jobStatusSubscriber)
         argumentCaptor<Throwable>().apply {
             verify(jobStatusSubscriber).onError(capture())
-            assert(firstValue is IllegalStateException)
-            assert(firstValue.message == "network constraints failed")
+            assert(firstValue is JobErrorThrowable.NetworkConstraintsFailure)
         }
         syftWorker.dispose()
         verify(jobStatusSubscriber, never()).onComplete()

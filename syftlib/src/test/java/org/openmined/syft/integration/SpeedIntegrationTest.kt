@@ -5,9 +5,9 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.spy
 import com.nhaarman.mockitokotlin2.verify
-import org.junit.Before
 import org.junit.Test
 import org.openmined.syft.Syft
+import org.openmined.syft.common.AbstractSyftWorkerTest
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.integration.clients.HttpClientMock

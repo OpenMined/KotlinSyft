@@ -4,11 +4,11 @@
 
 `abstract val calleeThreadScheduler: Scheduler`
 
-calleeThreadScheduler defines the thread on which the callback to observable is run
+calleeThreadScheduler defines the thread on which the observable is monitored
 
 ``` kotlin
 /**
-     * calleeThreadScheduler defines the thread on which the callback to observable is run
+     * calleeThreadScheduler defines the thread on which the observable is monitored
      * @sample calleeThreadScheduler AndroidSchedulers.MainThread()
      */
     val calleeThreadScheduler: Scheduler
