@@ -186,6 +186,7 @@ pip install syft==0.2.7
 pip install jupyter==1.0.0
 pip install  notebook==5.7.8
 git clone https://github.com/OpenMined/PySyft
+cd PySyft
 git checkout tags/v0.2.7 -b v0.2.7
 ```
 - Host Jupyter Notebook 
@@ -198,7 +199,7 @@ jupyter notebook
 - Optionally, run the notebook `Execute Plan`. This will train the model on the python worker of PySyft.
 - The android app connects to your PC's localhost via router (easier approach)
 - Get the IP address of your computer by running `ip address show | grep "inet " | grep -v 127.0.0.1` if using Linux/Mac. For windows there are different steps. Alternatively, if you want to run the demo app in the emulator, use `10.0.2.2` as the IP address.
-- Use this IP address in your login screen to supply the PyGrid server url
+- Use this IP address and the port (default:5000) in your login screen to supply the PyGrid server url, e.g., 10.0.2.2:5000
 
 ## Contributing
 1. Star, fork, and clone the repo
