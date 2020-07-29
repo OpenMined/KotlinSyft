@@ -1,0 +1,45 @@
+name: AutoDocumentPR
+
+on:
+  push:
+    branches: 
+      - dev
+
+jobs:
+  dokka:
+    name: Dokka
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: "Cache ~/.gradle/caches"
+        uses: actions/cache@preview
+        with:
+          path: "~/.gradle/caches"
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/build.gradle.kts') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - name: Setup JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+          
+      - name: Configure git
+        run: |
+          git config --local user.email "noreply@github.com"
+          git config --local user.name "GitHub"
+          
+      - name: Run dokka
+        run: |
+          ./gradlew dokka
+          
+      - name: Commit files
+        run: |
+          git add -f docs
+          git diff-index --quiet HEAD || git commit \
+          --author="github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>" \
+          -m "📑 Auto Document PR" || echo "Nothing to commit"
+     
+      - name: Push changes
+        run: git push origin HEAD:dev
