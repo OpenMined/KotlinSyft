@@ -18,9 +18,9 @@ internal abstract class ResponseMessageTypes() : MessageTypes {
 internal enum class DOWNLOAD(
     override val value: String
 ) : MessageTypes {
-    TRAININGPLAN("model_centric/get-training-plan"),
-    PROTOCOL("model_centric/get-protocol"),
-    MODEL("model_centric/get-model")
+    TRAININGPLAN("model-centric/get-training-plan"),
+    PROTOCOL("model-centric/get-protocol"),
+    MODEL("model-centric/get-model")
 }
 
 internal enum class WebRTCMessageTypes(override val value: String) : MessageTypes {

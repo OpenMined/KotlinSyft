@@ -17,7 +17,7 @@ import kotlinx.serialization.json.JsonOutput
 import kotlinx.serialization.json.json
 import org.openmined.syft.networking.datamodels.NetworkModels
 
-internal const val AUTH_TYPE = "model_centric/authenticate"
+internal const val AUTH_TYPE = "model-centric/authenticate"
 internal const val AUTH_SUCCESS = "success"
 internal const val AUTH_FAILURE = "rejected"
 

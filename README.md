@@ -7,23 +7,27 @@
 ![OpenCollective](https://img.shields.io/opencollective/all/openmined)
 [![Chat on Slack](https://img.shields.io/badge/chat-on%20slack-7A5979.svg)](https://openmined.slack.com/messages/lib_kotlin_syft)
 [ ![Download](https://api.bintray.com/packages/openmined/KotlinSyft/syft/images/download.svg) ](https://bintray.com/openmined/KotlinSyft/syft/_latestVersion)
+
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-8-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # KotlinSyft
+
 KotlinSyft makes it easy for you to **train and inference PySyft models on Android devices**. This allows you to utilize training data located directly on the device itself, bypassing the need to send a user's data to a central server. This is known as [federated learning](https://ai.googleblog.com/2017/04/federated-learning-collaborative.html).
 
 - :gear: **Training and inference** of any PySyft model written in PyTorch or TensorFlow
 - :bust_in_silhouette: Allows all data to stay on the user's device
-- :zap: Support for full multi-threading / background service execution 
+- :zap: Support for full multi-threading / background service execution
 - :key: Support for **JWT authentication** to protect models from Sybil attacks
-- :+1: A set of **inbuilt best practices** to prevent apps from over using device resources. 
-    - :electric_plug: **Charge detection** to allow background training only when device is connected to charger
-    - :zzz: **Sleep and wake detection** so that the app does not occupy resource when user starts using the device
-    - :money_with_wings: **Wifi and metered network detection** to ensure the model updates do not use all the available data quota 
-    - :no_bell: All of these smart defaults are easily are **overridable**
-- :mortar_board: Support for both reactive and callback patterns so you have your freedom of choice (_in progress_)
+- :+1: A set of **inbuilt best practices** to prevent apps from over using device resources.
+  - :electric_plug: **Charge detection** to allow background training only when device is connected to charger
+  - :zzz: **Sleep and wake detection** so that the app does not occupy resource when user starts using the device
+  - :money_with_wings: **Wifi and metered network detection** to ensure the model updates do not use all the available data quota
+  - :no_bell: All of these smart defaults are easily are **overridable**
+- :mortar*board: Support for both reactive and callback patterns so you have your freedom of choice (\_in progress*)
 - :lock: Support for **secure multi-party computation** and **secure aggregation** protocols using **peer-to-peer WebRTC** connections (_in progress_).
 
 There are a variety of additional privacy-preserving protections that may be applied, including [differential privacy](https://towardsdatascience.com/understanding-differential-privacy-85ce191e198a), [muliti-party computation](https://www.inpher.io/technology/what-is-secure-multiparty-computation), and [secure aggregation](https://research.google/pubs/pub45808/).
@@ -33,9 +37,11 @@ There are a variety of additional privacy-preserving protections that may be app
 If you want to know how scalable federated systems are built, [Towards Federated Learning at Scale](https://arxiv.org/pdf/1902.01046.pdf) is a fantastic introduction!
 
 ## Installation
+
 KotlinSyft is available on maven and jcenter. To add the library as a dependency in your android project use one of the following methods:
 
 1. Maven snippet:
+
 ```xml
 <dependency>
   <groupId>org.openmined.kotlinsyft</groupId>
@@ -43,14 +49,16 @@ KotlinSyft is available on maven and jcenter. To add the library as a dependency
   <version>0.1.0</version>
   <type>pom</type>
 </dependency>
-``` 
+```
 
 2. Gradle dependency:
+
 ```groovy
 implementation 'org.openmined.kotlinsyft:syftlib:0.1.0'
 ```
 
 ## Quick Start
+
 As a developer, there are few steps to building your own secure federated learning system upon the OpenMined infrastructure:
 
 1. :robot: Generate your secure ML model using [PySyft](https://github.com/OpenMined/PySyft). By design, PySyft is built upon PyTorch and TensorFlow so you **don't need to learn a new ML framework**. You will also need to write a training plan (training code the worker runs) and an averaging plan (code that PyGrid runs to average the model diff).
@@ -59,11 +67,11 @@ As a developer, there are few steps to building your own secure federated learni
 
 **:notebook: The entire workflow and process is described in greater detail in our [project roadmap](https://github.com/OpenMined/Roadmap/blob/master/web_and_mobile_team/projects/federated_learning.md).**
 
-You can use KotlinSyft as a front-end or as a background service. The following is a quick start example usage: 
+You can use KotlinSyft as a front-end or as a background service. The following is a quick start example usage:
 
 ```kotlin
     val userId = "my Id"
-    
+
     // Optional: Make an http request to your server to get an authentication token
     val authToken = apiClient.requestToken("https://www.mywebsite.com/request-token/$userId")
 
@@ -71,13 +79,13 @@ You can use KotlinSyft as a front-end or as a background service. The following 
     // The url entered here cannot define connection protocol like https/wss since the worker allots them by its own
     // `this` supplies the context. It can be an activity context, a service context, or an application context.
     val config = SyftConfiguration.builder(this, "www.mypygrid-url.com").build()
-    
+
     // Initiate Syft worker to handle all your jobs
     val syftWorker = Syft.getInstance(authToken, configuration)
-    
+
     // Create a new Job
     val newJob = syftWorker.newJob("mnist", "1.0.0")
-    
+
     // Define training procedure for the job
     val jobStatusSubscriber = object : JobStatusSubscriber() {
         override fun onReady(
@@ -88,11 +96,11 @@ You can use KotlinSyft as a front-end or as a background service. The following 
             // This function is called when KotlinSyft has downloaded the plans and protocols from PyGrid
             // You are ready to train your model on your data
             // param model stores the model weights given by PyGrid
-            // param plans is a HashMap of all the planIDs and their plans. 
+            // param plans is a HashMap of all the planIDs and their plans.
             // ClientConfig has hyper parameters like batchsize, learning rate, number of steps, etc
-            
+
             // Plans are accessible by their plan Id used while hosting it on PyGrid.
-            // eventually you would be able to use plan name here 
+            // eventually you would be able to use plan name here
             val plan = plans["plan name"]
 
             repeat(clientConfig.properties.maxUpdates) { step ->
@@ -135,7 +143,7 @@ You can use KotlinSyft as a front-end or as a background service. The following 
                     model.updateModel(updatedParams.map { it.toTensor() })
                     // get the required loss, accuracy, etc values just like you do in Pytorch Android
                     val accuracy = outputResult[0].toTensor().dataAsFloatArray.last()
-                } 
+                }
             }
             // Once training finishes generate the model diff
             val diff = mnistJob.createDiff()
@@ -148,18 +156,20 @@ You can use KotlinSyft as a front-end or as a background service. The following 
         }
 
         override fun onError(throwable: Throwable) {
-        // Implement this function to handle error during job execution 
+        // Implement this function to handle error during job execution
         }
     }
-    
+
     // Start your job
-    newJob.start(jobStatusSubscriber) 
-    
+    newJob.start(jobStatusSubscriber)
+
     // Voila! You are done.
 ```
 
 ### Running the Demo App
+
 The demo app fetches the plans, protocols and model weights from pygrid server hosted locally. The plans are then deserialized and executed using libtorch.
+
 <p align="center">
 <img src="project_resources/demo.gif" height="354">
 </p>
@@ -167,18 +177,22 @@ The demo app fetches the plans, protocols and model weights from pygrid server h
 Follow these steps to setup an environment to run the demo app:
 
 - Clone the repo [PyGrid](https://github.com/OpenMined/PyGrid) and change directory to it
+
 ```bash
 git clone https://github.com/OpenMined/PyGrid
 cd PyGrid
 ```
+
 - Install [docker](https://github.com/OpenMined/PyGrid/#getting-started)
 - Install docker-compose.
 - Execute `docker-compose` in the command line to start pygrid server.
+
 ```bash
 docker-compose up
 ```
 
 - Install [PySyft](https://github.com/OpenMined/PySyft) `v0.2.7` in the virtual environment.
+
 ```bash
 virtualenv -p python3 venv
 source venv/bin/activate
@@ -189,12 +203,15 @@ git clone https://github.com/OpenMined/PySyft
 cd PySyft
 git checkout tags/v0.2.7 -b v0.2.7
 ```
-- Host Jupyter Notebook 
+
+- Host Jupyter Notebook
+
 ```bash
 jupyter notebook
 ```
+
 - Open a browser and navigate to [localhost:8888](http://localhost:8888/). You should be able to see the pysyft notebook console.
-- In the Jupyter Notebook, navigate to `examples/tutorials/static-fl`
+- In the Jupyter Notebook, navigate to `examples/tutorials/model-centric-fl`
 - Run the notebook `Create Plan`. It should host the model on PyGrid.
 - Optionally, run the notebook `Execute Plan`. This will train the model on the python worker of PySyft.
 - The android app connects to your PC's localhost via router (easier approach)
@@ -202,16 +219,18 @@ jupyter notebook
 - Use this IP address and the port (default:5000) in your login screen to supply the PyGrid server url, e.g., 10.0.2.2:5000
 
 ## Contributing
+
 1. Star, fork, and clone the repo
 2. Open Android Studio and import project
 3. Do your work.
 4. Push to your fork
 5. Submit a PR to OpenMined/KotlinSyft
 
-Read the [contribution guide](https://github.com/OpenMined/.github/blob/master/CONTRIBUTING.md) as a good starting place. Additionally, we welcome you to the [slack](http://slack.openmined.org/) for queries related to the library and contribution in general. The Slack channel `#lib_kotlin_syft` is specific to KotlinSyft development, the Slack channel `#lib_syft_mobile` is meant for both Android and iOS teams. See you there! 
+Read the [contribution guide](https://github.com/OpenMined/.github/blob/master/CONTRIBUTING.md) as a good starting place. Additionally, we welcome you to the [slack](http://slack.openmined.org/) for queries related to the library and contribution in general. The Slack channel `#lib_kotlin_syft` is specific to KotlinSyft development, the Slack channel `#lib_syft_mobile` is meant for both Android and iOS teams. See you there!
 
 ## Contributors
-These people were integral part of the efforts to bring KotlinSyft to fruition and in its active development. 
+
+These people were integral part of the efforts to bring KotlinSyft to fruition and in its active development.
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
@@ -233,6 +252,9 @@ These people were integral part of the efforts to bring KotlinSyft to fruition a
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
+
 ## License
+
 [Apache License 2.0](https://choosealicense.com/licenses/apache-2.0/)

@@ -18,7 +18,7 @@ import kotlinx.serialization.json.json
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.NetworkModels
 
-internal const val CYCLE_TYPE = "model_centric/cycle-request"
+internal const val CYCLE_TYPE = "model-centric/cycle-request"
 internal const val CYCLE_ACCEPT = "accepted"
 internal const val CYCLE_REJECT = "rejected"
 

@@ -39,7 +39,7 @@ internal interface HttpAPI : CommunicationAPI {
      * @param workerId Id of syft worker handling this job.
      * @param random A random integer bit stream.
      */
-    @GET("model_centric/speed-test")
+    @GET("model-centric/speed-test")
     fun checkPing(
         @Query("is_ping") isPing: Int = 1,
         @Query("worker_id") workerId: String,
@@ -53,7 +53,7 @@ internal interface HttpAPI : CommunicationAPI {
      * @param random A random integer bit stream.
      */
     @Streaming
-    @GET("model_centric/speed-test")
+    @GET("model-centric/speed-test")
     fun downloadSpeedTest(
         @Query("worker_id") workerId: String,
         @Query("random") random: String
@@ -68,7 +68,7 @@ internal interface HttpAPI : CommunicationAPI {
      * @param file_body A file to be uploaded to check upload speed.
      */
     @Multipart
-    @POST("model_centric/speed-test")
+    @POST("model-centric/speed-test")
     fun uploadSpeedTest(
         @Query("worker_id") workerId: String,
         @Query("random") random: String,
@@ -86,7 +86,7 @@ internal interface HttpAPI : CommunicationAPI {
      * @param op_type Format in which Plan operations are defined, Can be torchScript.
      */
     //    @Streaming
-    @GET("/model_centric/get-plan")
+    @GET("/model-centric/get-plan")
     fun downloadPlan(
         @Query("worker_id") workerId: String,
         @Query("request_key") requestKey: String,
@@ -103,7 +103,7 @@ internal interface HttpAPI : CommunicationAPI {
      * @param protocolId Id of the Protocol to be downloaded.
      */
     //    @Streaming
-    @GET("/model_centric/get-protocol")
+    @GET("/model-centric/get-protocol")
     fun downloadProtocol(
         @Query("worker_id") workerId: String,
         @Query("request_key") requestKey: String,
@@ -119,7 +119,7 @@ internal interface HttpAPI : CommunicationAPI {
      * @param modelId Id of the model to be downloaded.
      */
     //    @Streaming
-    @GET("/model_centric/get-model")
+    @GET("/model-centric/get-model")
     fun downloadModel(
         @Query("worker_id") workerId: String,
         @Query("request_key") requestKey: String,
@@ -127,7 +127,7 @@ internal interface HttpAPI : CommunicationAPI {
     ): Single<Response<ResponseBody>>
 
     /**
-     * Calls **model_centric/authenticate** for authentication.
+     * Calls **model-centric/authenticate** for authentication.
      *
      * @param authRequest Contains JWT auth-token. JWT authentication protects the model from sybil attacks.
      */
@@ -138,7 +138,7 @@ internal interface HttpAPI : CommunicationAPI {
     override fun authenticate(@Body authRequest: AuthenticationRequest): Single<AuthenticationResponse>
 
     /**
-     * Calls **model_centric/cycle-request** for requesting PyGrid server for training cycle.
+     * Calls **model-centric/cycle-request** for requesting PyGrid server for training cycle.
      * Response of server can be CycleAccept or CycleReject
      * @see CycleResponseData.CycleAccept
      * @see CycleResponseData.CycleReject
@@ -150,7 +150,7 @@ internal interface HttpAPI : CommunicationAPI {
     override fun getCycle(@Body cycleRequest: CycleRequest): Single<CycleResponseData>
 
     /**
-     * Calls **model_centric/report** for sending the updated model back to PyGrid.
+     * Calls **model-centric/report** for sending the updated model back to PyGrid.
      *
      * @param reportRequest Contains worker-id and request-key.
      */
