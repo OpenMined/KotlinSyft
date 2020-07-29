@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.openmined.syft.networking.datamodels.NetworkModels
 
-internal const val REPORT_TYPE = "model_centric/report"
+internal const val REPORT_TYPE = "model-centric/report"
 
 @Serializable
 internal data class ReportResponse(
