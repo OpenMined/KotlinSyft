@@ -34,7 +34,7 @@ internal class SyftModelTest {
     @Test
     fun `given a model param file test it correctly serialises to SyftModel`() {
         cut.loadModelState(modelFilePath)
-        assert(cut.modelSyftState?.syftTensors?.size == 4)
+        assert(cut.modelSyftState?.syftTensorArray?.size == 4)
         assert(cut.modelSyftState?.placeholders?.size == 4)
     }
 
@@ -42,20 +42,10 @@ internal class SyftModelTest {
     fun `Given a list of params when model is updated and tensor list size does not match then an exception is thrown`() {
         // Given
         mockkStatic("org.openmined.syft.proto.SyftTensorKt")
-        val syftTensor1 = mockk<SyftTensor>()
-        val syftTensor2 = mockk<SyftTensor>()
-        val syftTensor3 = mockk<SyftTensor>()
-        val tensor1 = mockk<Tensor> {
-            every { toSyftTensor() } returns syftTensor1
-        }
-        val tensor2 = mockk<Tensor> {
-            every { toSyftTensor() } returns syftTensor2
-        }
-        val tensor3 = mockk<Tensor> {
-            every { toSyftTensor() } returns syftTensor3
-        }
-
-        val params = listOf(tensor1, tensor2, tensor3)
+        val syftIValue1 = mockk<IValue>()
+        val syftIValue2 = mockk<IValue>()
+        val syftIValue3 = mockk<IValue>()
+        val params = listOf(syftIValue1, syftIValue2, syftIValue3)
 
         cut.loadModelState(modelFilePath)
 
@@ -78,11 +68,11 @@ internal class SyftModelTest {
     fun `getParamsIValueArray calls syftState's getIValueTensorArray`(){
         val returnIvalue = arrayOf(Tensor.fromBlob(longArrayOf(0L), longArrayOf(1)))
         val state = mockk<SyftState>{
-            every { getTensorArray() } returns returnIvalue
+            every { tensorArray } returns returnIvalue
         }
         val cut = SyftModel("model name",modelSyftState = state)
-        val out = cut.getParamArray()
-        verify { state.getTensorArray() }
+        val out = cut.paramArray
+        verify { state.tensorArray }
         assert(out?.contentEquals(returnIvalue) ?: false)
     }
 
@@ -90,7 +80,7 @@ internal class SyftModelTest {
     @Test
     fun `getParamsIValueArray return null if state is null`(){
         val cut = SyftModel("test")
-        val out = cut.getParamArray()
+        val out = cut.paramArray
         assert(out == null)
     }
 
@@ -105,24 +95,13 @@ internal class SyftModelTest {
     fun `Given a list of params when model is updated then model state is updated`() {
         // Given
         mockkStatic("org.openmined.syft.proto.SyftTensorKt")
-        val syftTensor1 = mockk<SyftTensor>()
-        val syftTensor2 = mockk<SyftTensor>()
-        val syftTensor3 = mockk<SyftTensor>()
-        val syftTensor4 = mockk<SyftTensor>()
+        val syftTensor1 = mockk<IValue>()
+        val syftTensor2 = mockk<IValue>()
+        val syftTensor3 = mockk<IValue>()
+        val syftTensor4 = mockk<IValue>()
         val syftTensors = arrayOf(syftTensor1, syftTensor2, syftTensor3, syftTensor4)
-        val tensor1 = mockk<Tensor> {
-            every { toSyftTensor() } returns syftTensor1
-        }
-        val tensor2 = mockk<Tensor> {
-            every { toSyftTensor() } returns syftTensor2
-        }
-        val tensor3 = mockk<Tensor> {
-            every { toSyftTensor() } returns syftTensor3
-        }
-        val tensor4 = mockk<Tensor> {
-            every { toSyftTensor() } returns syftTensor4
-        }
-        val params = listOf(tensor1, tensor2, tensor3, tensor4)
+
+        val params = listOf(syftTensor1, syftTensor2, syftTensor3, syftTensor4)
 
         cut.loadModelState(modelFilePath)
 
@@ -130,7 +109,7 @@ internal class SyftModelTest {
         cut.updateModel(params)
 
         // Then
-        assert(params.size == cut.modelSyftState?.syftTensors?.size)
-        assert(cut.modelSyftState?.syftTensors?.contentEquals(syftTensors) == true)
+        assert(params.size == cut.stateTensorSize)
+        assert(cut.modelSyftState?.iValueTensors?.contentEquals(syftTensors) == true)
     }
 }

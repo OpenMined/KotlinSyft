@@ -11,6 +11,7 @@ import io.mockk.spyk
 import org.junit.Before
 import org.junit.Test
 import org.openmined.syft.proto.SyftTensor
+import org.openmined.syft.proto.applyOperation
 import org.openmined.syft.proto.toSyftTensor
 import org.openmined.syftproto.types.syft.v1.IdOuterClass
 import org.openmined.syftproto.types.torch.v1.Tensor
@@ -345,26 +346,18 @@ class SyftTensorTest {
     }
 
     @Test
-    fun `applyOperation calls the module forward with relevant arguments and returns syftTensor`() {
+    fun `applyOperation calls the module forward with relevant arguments and returns IValue`() {
         val tensorData = mockk<TensorDataOuterClass.TensorData> {
             every { dtype } returns "BFLOAT16"
             every { contentsBfloat16List } returns listOf(100F, 100F, 100F)
         }
 
-        val tensor = createSyftTensorFromType("bfloat16", tensorData)
+        val ivalueTensor = IValue.from(createSyftTensorFromType("bfloat16", tensorData).getTorchTensor())
 
         val opIvalue1 = mockk<IValue>()
-        val opTensor1 = mockk<SyftTensor> {
-            every { getIValue() } returns opIvalue1
-        }
         val opIvalue2 = mockk<IValue>()
-        val opTensor2 = mockk<SyftTensor> {
-            every { getIValue() } returns opIvalue2
-        }
         val opIvalue3 = mockk<IValue>()
-        val opTensor3 = mockk<SyftTensor> {
-            every { getIValue() } returns opIvalue3
-        }
+
         val outputTensor = mockk<org.pytorch.Tensor>{
             every { shape() } returns listOf(3L).toLongArray()
             every { dtype() } returns DType.FLOAT32
@@ -374,14 +367,14 @@ class SyftTensorTest {
             every { toTensor() } returns outputTensor
         }
 
-        val cut = spyk(tensor)
+        val cut = spyk(ivalueTensor)
         val diffModule = mockk<Module> {
             every {
                 forward(
                     opIvalue1,
                     opIvalue2,
                     opIvalue3,
-                    cut.getIValue()
+                    cut
                     )
             } returns outputIvalue
 
@@ -389,7 +382,7 @@ class SyftTensorTest {
 
         mockkStatic(Module::class)
         every { Module.load(any()) } returns diffModule
-        cut.applyOperation("filepath", opTensor1, opTensor2, opTensor3)
+        cut.applyOperation("filepath", opIvalue1, opIvalue2, opIvalue3)
     }
 
     @Test

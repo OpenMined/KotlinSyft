@@ -17,4 +17,5 @@
 |---|---|
 | [org.openmined.syftproto.execution.v1.StateOuterClass.State](org.openmined.syftproto.execution.v1.-state-outer-class.-state/index.md) |  |
 | [org.openmined.syftproto.types.torch.v1.Tensor.TorchTensor](org.openmined.syftproto.types.torch.v1.-tensor.-torch-tensor/index.md) |  |
+| [org.pytorch.IValue](org.pytorch.-i-value/index.md) |  |
 | [org.pytorch.Tensor](org.pytorch.-tensor/index.md) |  |
