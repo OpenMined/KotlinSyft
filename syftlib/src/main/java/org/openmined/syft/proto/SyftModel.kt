@@ -1,6 +1,7 @@
 package org.openmined.syft.proto
 
 import android.util.Log
+import org.pytorch.IValue
 import org.pytorch.Tensor
 
 private const val TAG = "SyftModel"
@@ -18,8 +19,21 @@ data class SyftModel(
     val modelName: String,
     val version: String? = null,
     var pyGridModelId: String? = null,
-    var modelSyftState: SyftState? = null
+    internal var modelSyftState: SyftState? = null
 ) {
+
+    /**
+     * @return the number of tensors as model parameters
+     */
+    val stateTensorSize: Int?
+        get() = modelSyftState?.iValueTensors?.size
+
+    /**
+     * @return The array of [Tensor][https://pytorch.org/javadoc/org/pytorch/Tensor.html] of model weights or null if not set
+     * This can be fed directly to the [org.openmined.syft.execution.Plan.execute] by converting it to [IValue][https://pytorch.org/javadoc/org/pytorch/IValue.html]
+     */
+    val paramArray: Array<Tensor>?
+        get() = modelSyftState?.tensorArray
 
     /**
      * Subtract the older state from the current state to generate the diff for Upload to PyGrid
@@ -37,26 +51,14 @@ data class SyftModel(
      * This method is used to save/update SyftModel class.
      * This function must be called after every gradient step to update the model state for further plan executions.
      * @throws IllegalArgumentException if the size newModelParams is not correct.
-     * @param newModelParams a list of PyTorch Tensor that would be converted to syftTensor
+     * @param newModelParams a list of PyTorch IValue that would be set as the current state
      * ```kotlin
-     * model.updateModel(updatedParams.map { it.toTensor() })
+     * model.updateModel(updatedParams)
      * ```
      */
-    fun updateModel(newModelParams: List<Tensor>) {
-        modelSyftState?.let { state ->
-            if (state.syftTensors.size != newModelParams.size) {
-                throw IllegalArgumentException("The size of the list of new parameters ${newModelParams.size} is different than the list of params of the model ${state.syftTensors.size}")
-            }
-            newModelParams.forEachIndexed { index, pytorchTensor ->
-                state.syftTensors[index] = pytorchTensor.toSyftTensor()
-            }
-        }
+    fun updateModel(newModelParams: List<IValue>) {
+        modelSyftState?.updateState(newModelParams.toTypedArray())
     }
-
-    /**
-     * @return The array of [IValue][https://pytorch.org/javadoc/org/pytorch/IValue.html] of model weights. This can be fed directly to the [org.openmined.syft.execution.Plan.execute]
-     */
-    fun getParamArray() = modelSyftState?.getTensorArray()
 
     /**
      * This method is used to load SyftModel from file

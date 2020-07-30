@@ -27,6 +27,5 @@
 
 | Name | Summary |
 |---|---|
-| [applyOperation](apply-operation.md) | `fun applyOperation(scriptModuleLocation: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, vararg operands: `[`SyftTensor`](./index.md)`): `[`SyftTensor`](./index.md) |
 | [getTorchTensor](get-torch-tensor.md) | `fun getTorchTensor(): Tensor` |
 | [serialize](serialize.md) | `fun serialize(): TorchTensor` |

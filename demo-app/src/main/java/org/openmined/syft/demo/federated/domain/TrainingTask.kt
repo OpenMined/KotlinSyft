@@ -91,7 +91,7 @@ class TrainingTask(
                 )
                 val batchData =
                         mnistDataRepository.loadDataBatch(batchSize)
-                val modelParams = model.getParamArray() ?: return
+                val modelParams = model.paramArray ?: return
                 val paramIValue = IValue.listFrom(*modelParams)
                 val output = plan.execute(
                     batchData.first,
@@ -100,11 +100,11 @@ class TrainingTask(
                     lr, paramIValue
                 )?.toTuple()
                 output?.let { outputResult ->
-                    val paramSize = model.modelSyftState!!.syftTensors.size
+                    val paramSize = model.stateTensorSize!!
                     val beginIndex = outputResult.size - paramSize
                     val updatedParams =
                             outputResult.slice(beginIndex until outputResult.size)
-                    model.updateModel(updatedParams.map { it.toTensor() })
+                    model.updateModel(updatedParams)
                     result = outputResult[0].toTensor().dataAsFloatArray.last()
                 }
                 logger.postState(ContentState.Training)

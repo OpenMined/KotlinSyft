@@ -1,6 +1,5 @@
 package org.openmined.syft.proto
 
-import androidx.annotation.VisibleForTesting
 import org.openmined.syftproto.types.syft.v1.IdOuterClass
 import org.openmined.syftproto.types.torch.v1.SizeOuterClass
 import org.openmined.syftproto.types.torch.v1.Tensor
@@ -41,15 +40,6 @@ data class SyftTensor(
             syftTensorBuilder.gradChain = grad_chain.serialize()
         syftTensorBuilder.contentsData = contents
         return syftTensorBuilder.build()
-    }
-
-    fun applyOperation(scriptModuleLocation: String, vararg operands: SyftTensor): SyftTensor {
-        val diffModule = Module.load(scriptModuleLocation)
-        val output = diffModule.forward(
-            *(operands.map { it.getIValue() }.toTypedArray()),
-            this.getIValue()
-        )
-        return output.toTensor().toSyftTensor()
     }
 
     // Generate & Return TorchTensor object based on the dtype
@@ -112,9 +102,13 @@ data class SyftTensor(
         }
     }
 
-    @VisibleForTesting
     internal fun getIValue(): IValue = IValue.from(this.getTorchTensor())
 
+}
+
+fun IValue.applyOperation(scriptModuleLocation: String, vararg operands: IValue): IValue {
+    val diffModule = Module.load(scriptModuleLocation)
+    return diffModule.forward(*operands, this)
 }
 
 @ExperimentalUnsignedTypes
