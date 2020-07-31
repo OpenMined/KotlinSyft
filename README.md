@@ -9,9 +9,7 @@
 [ ![Download](https://api.bintray.com/packages/openmined/KotlinSyft/syft/images/download.svg) ](https://bintray.com/openmined/KotlinSyft/syft/_latestVersion)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-
 [![All Contributors](https://img.shields.io/badge/all_contributors-8-orange.svg?style=flat-square)](#contributors-)
-
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # KotlinSyft
@@ -246,13 +244,12 @@ These people were integral part of the efforts to bring KotlinSyft to fruition a
     <td align="center"><a href="https://github.com/erksch"><img src="https://avatars2.githubusercontent.com/u/19290349?v=4" width="100px;" alt=""/><br /><sub><b>Erik Ziegler</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/issues?q=author%3Aerksch" title="Bug reports">🐛</a></td>
   </tr>
   <tr>
-    <td align="center"><a href="https://pengyuan-zhou.github.io/"><img src="https://avatars3.githubusercontent.com/u/20013315?v=4" width="100px;" alt=""/><br /><sub><b>Pengyuan Zhou</b></sub></a><br /><a href="#tutorial-pengyuan-zhou" title="Tutorials">✅</a></td>
+    <td align="center"><a href="https://pengyuan-zhou.github.io/"><img src="https://avatars3.githubusercontent.com/u/20013315?v=4" width="100px;" alt=""/><br /><sub><b>Pengyuan Zhou</b></sub></a><br /><a href="#tutorial-pengyuan-zhou" title="Tutorials">✅</a> <a href="#infra-pengyuan-zhou" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
   </tr>
 </table>
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
-
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 ## License
