@@ -26,7 +26,8 @@
         "code",
         "test",
         "design",
-        "doc"
+        "doc",
+        "infra"
       ]
     },
     {
