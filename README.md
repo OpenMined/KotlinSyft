@@ -244,7 +244,7 @@ These people were integral part of the efforts to bring KotlinSyft to fruition a
     <td align="center"><a href="https://github.com/erksch"><img src="https://avatars2.githubusercontent.com/u/19290349?v=4" width="100px;" alt=""/><br /><sub><b>Erik Ziegler</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/issues?q=author%3Aerksch" title="Bug reports">🐛</a></td>
   </tr>
   <tr>
-    <td align="center"><a href="https://pengyuan-zhou.github.io/"><img src="https://avatars3.githubusercontent.com/u/20013315?v=4" width="100px;" alt=""/><br /><sub><b>Pengyuan Zhou</b></sub></a><br /><a href="#tutorial-pengyuan-zhou" title="Tutorials">✅</a></td>
+    <td align="center"><a href="https://pengyuan-zhou.github.io/"><img src="https://avatars3.githubusercontent.com/u/20013315?v=4" width="100px;" alt=""/><br /><sub><b>Pengyuan Zhou</b></sub></a><br /><a href="#tutorial-pengyuan-zhou" title="Tutorials">✅</a> <a href="#infra-pengyuan-zhou" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
   </tr>
 </table>
 
