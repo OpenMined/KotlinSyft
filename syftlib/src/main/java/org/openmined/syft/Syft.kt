@@ -18,6 +18,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 private const val TAG = "Syft"
 
+/**
+ * This is the main syft worker handling creation and deletion of jobs. This class is also responsible for monitoring device resources via DeviceMonitor
+ */
 @ExperimentalUnsignedTypes
 class Syft internal constructor(
     private val syftConfig: SyftConfiguration,
@@ -28,6 +31,14 @@ class Syft internal constructor(
         @Volatile
         private var INSTANCE: Syft? = null
 
+        /**
+         * Only a single worker must be instantiated across an app lifecycle.
+         * The [getInstance] ensures creation of the singleton object if needed or returns the already created worker.
+         * This method is thread safe so getInstance calls across threads do not suffer
+         * @param syftConfiguration The SyftConfiguration object specifying the mutable properties of syft worker
+         * @param authToken (Optional) The JWT token to be passed by the user
+         * @return Syft instance
+         */
         fun getInstance(
             syftConfiguration: SyftConfiguration,
             authToken: String? = null
@@ -53,6 +64,12 @@ class Syft internal constructor(
     @Volatile
     private var workerId: String? = null
 
+    /**
+     * Create a new job for the worker.
+     * @param model specifies the model name by which the parameters are hosted on the PyGrid server
+     * @param version the version of the model on PyGrid
+     * @return [SyftJob]
+     */
     fun newJob(
         model: String,
         version: String? = null
@@ -119,8 +136,16 @@ class Syft internal constructor(
         } ?: executeAuthentication(job)
     }
 
+    /**
+     * Check if the syft worker has been disposed
+     * @return True/False
+     */
     override fun isDisposed() = isDisposed.get()
 
+    /**
+     * Explicitly dispose off the worker. All the jobs running in the worker will be disposed off as well.
+     * Clears the current singleton worker instance so the immediately next [getInstance] call creates a new syft worker
+     */
     override fun dispose() {
         Log.d(TAG, "disposing syft worker")
         deviceMonitor.dispose()

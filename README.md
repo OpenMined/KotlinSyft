@@ -25,7 +25,7 @@ KotlinSyft makes it easy for you to **train and inference PySyft models on Andro
   - :zzz: **Sleep and wake detection** so that the app does not occupy resource when user starts using the device
   - :money_with_wings: **Wifi and metered network detection** to ensure the model updates do not use all the available data quota
   - :no_bell: All of these smart defaults are easily are **overridable**
-- :mortar*board: Support for both reactive and callback patterns so you have your freedom of choice (\_in progress*)
+- :mortar_board: Support for both reactive and callback patterns so you have your freedom of choice (_in progress_)
 - :lock: Support for **secure multi-party computation** and **secure aggregation** protocols using **peer-to-peer WebRTC** connections (_in progress_).
 
 There are a variety of additional privacy-preserving protections that may be applied, including [differential privacy](https://towardsdatascience.com/understanding-differential-privacy-85ce191e198a), [muliti-party computation](https://www.inpher.io/technology/what-is-secure-multiparty-computation), and [secure aggregation](https://research.google/pubs/pub45808/).
