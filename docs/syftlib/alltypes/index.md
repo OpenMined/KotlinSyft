@@ -74,6 +74,8 @@ tensor after doing some computation.
 
 ##### [org.openmined.syft.Syft](../org.openmined.syft/-syft/index.md)
 
+This is the main syft worker handling creation and deletion of jobs. This class is also responsible for monitoring device resources via DeviceMonitor
+
 
 |
 
