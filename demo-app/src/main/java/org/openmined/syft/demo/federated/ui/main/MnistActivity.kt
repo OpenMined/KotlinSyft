@@ -18,8 +18,8 @@ import org.openmined.syft.demo.databinding.ActivityMnistBinding
 import org.openmined.syft.demo.federated.datasource.LocalMNISTDataDataSource
 import org.openmined.syft.demo.federated.domain.MNISTDataRepository
 import org.openmined.syft.demo.federated.service.WorkerRepository
-import org.openmined.syft.demo.federated.ui.ContentState
-import org.openmined.syft.demo.federated.ui.ProcessData
+import org.openmined.syft.domain.ContentState
+import org.openmined.syft.domain.ProcessData
 import org.openmined.syft.domain.SyftConfiguration
 
 const val AUTH_TOKEN = "authToken"

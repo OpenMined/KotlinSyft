@@ -97,7 +97,7 @@ class SyftJobTest {
 
     @Test
     fun `Given a SyftJob when it starts then worker executes cycle`() {
-        cut.start(subscriber)
+        cut.request(subscriber)
 
         verify(worker).executeCycleRequest(cut)
     }
@@ -108,7 +108,7 @@ class SyftJobTest {
 
         cut.dispose()
 
-        cut.start(subscriber)
+        cut.request(subscriber)
 
         verify(subscriber).onError(capture<JobErrorThrowable>(parameterCaptor))
         assert(parameterCaptor.value is JobErrorThrowable.RunningDisposedJob)
@@ -223,7 +223,7 @@ class SyftJobTest {
             TestException().message,
             TestException().cause
         )
-        cut.start(subscriber)
+        cut.request(subscriber)
         cut.publishError(exception)
 
         verify(subscriber).onError(exception)

@@ -16,8 +16,8 @@ import kotlinx.android.synthetic.main.activity_mnist.toolbar
 import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityWorkInfoBinding
 import org.openmined.syft.demo.federated.service.WorkerRepository
-import org.openmined.syft.demo.federated.ui.ContentState
-import org.openmined.syft.demo.federated.ui.ProcessData
+import org.openmined.syft.domain.ContentState
+import org.openmined.syft.domain.ProcessData
 
 private const val TAG = "WorkInfoActivity"
 

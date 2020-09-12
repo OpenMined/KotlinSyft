@@ -22,9 +22,9 @@ import org.openmined.syft.demo.federated.domain.TrainingTask
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.ui.main.AUTH_TOKEN
 import org.openmined.syft.demo.federated.ui.main.BASE_URL
-import org.openmined.syft.demo.federated.ui.ContentState
-import org.openmined.syft.demo.federated.ui.ProcessData
 import org.openmined.syft.demo.federated.ui.work.WorkInfoActivity
+import org.openmined.syft.domain.ContentState
+import org.openmined.syft.domain.ProcessData
 import org.openmined.syft.domain.SyftConfiguration
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine

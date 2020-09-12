@@ -10,9 +10,10 @@ import org.openmined.syft.demo.federated.service.LOG
 import org.openmined.syft.demo.federated.service.LOSS_LIST
 import org.openmined.syft.demo.federated.service.STATUS
 import org.openmined.syft.demo.federated.service.WorkerRepository
-import org.openmined.syft.demo.federated.ui.ContentState
-import org.openmined.syft.demo.federated.ui.ProcessData
+import org.openmined.syft.domain.ContentState
+import org.openmined.syft.domain.ProcessData
 
+@ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class WorkInfoViewModel(private val workerRepository: WorkerRepository) : MnistLogger, ViewModel() {
 

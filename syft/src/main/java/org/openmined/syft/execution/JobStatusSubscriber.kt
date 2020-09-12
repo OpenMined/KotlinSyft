@@ -5,7 +5,7 @@ import org.openmined.syft.proto.SyftModel
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * This is passed as argument to [SyftJob.start] giving the overridden callbacks for different phases of the job cycle.
+ * This is passed as argument to [SyftJob.request] giving the overridden callbacks for different phases of the job cycle.
  * ```kotlin
  * val jobStatusSubscriber = object : JobStatusSubscriber() {
  *      override fun onReady(

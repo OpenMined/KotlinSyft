@@ -1,10 +1,11 @@
 package org.openmined.syft.demo.federated.logging
 
 import androidx.lifecycle.MutableLiveData
-import org.openmined.syft.demo.federated.ui.ContentState
-import org.openmined.syft.demo.federated.ui.ProcessData
+import org.openmined.syft.domain.ContentState
+import org.openmined.syft.domain.ProcessData
+import org.openmined.syft.domain.SyftLogger
 
-interface MnistLogger {
+interface MnistLogger : SyftLogger {
     val logText: MutableLiveData<String>
 
     val steps: MutableLiveData<String>
@@ -12,12 +13,4 @@ interface MnistLogger {
     val processState: MutableLiveData<ContentState>
 
     val processData: MutableLiveData<ProcessData>
-
-    fun postState(status: ContentState)
-
-    fun postData(result: Float)
-
-    fun postEpoch(epoch: Int)
-
-    fun postLog(message: String)
 }

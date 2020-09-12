@@ -11,15 +11,21 @@ import org.openmined.syft.Syft
 import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
+import org.openmined.syft.domain.ContentState
+import org.openmined.syft.domain.SyftDataRepository
 import org.openmined.syft.domain.DownloadStatus
 import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.domain.SyftLogger
+import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.datamodels.syft.ReportRequest
 import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import org.openmined.syft.proto.SyftModel
 import org.openmined.syft.proto.SyftState
 import org.openmined.syft.threading.ProcessSchedulers
+import org.pytorch.IValue
+import org.pytorch.Tensor
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -97,7 +103,7 @@ class SyftJob internal constructor(
      * @see org.openmined.syft.execution.JobStatusSubscriber for available methods
      *
      * ```kotlin
-     * job.start()
+     * job.request()
      * // OR
      * val jobStatusSubscriber = object : JobStatusSubscriber() {
      *      override fun onReady(
@@ -114,10 +120,10 @@ class SyftJob internal constructor(
      *      }
      * }
      *
-     * job.start(jobStatusSubscriber)
+     * job.request(jobStatusSubscriber)
      * ```
      */
-    fun start(subscriber: JobStatusSubscriber = JobStatusSubscriber()) {
+    fun request(subscriber: JobStatusSubscriber = JobStatusSubscriber()) {
         if (cycleStatus.get() == CycleStatus.REJECT) {
             Log.d(TAG, "job awaiting timer completion to resend the Cycle Request")
             return
@@ -129,6 +135,60 @@ class SyftJob internal constructor(
         }
         subscribe(subscriber, config.computeSchedulers)
         worker.executeCycleRequest(this)
+    }
+
+    @ExperimentalStdlibApi
+    fun train(
+        model: SyftModel,
+        plans: ConcurrentHashMap<String, Plan>,
+        syftDataRepository: SyftDataRepository,
+        clientConfig: ClientConfig,
+        logger: SyftLogger
+    ) {
+        var result = -0.0f
+        plans["training_plan"]?.let { plan ->
+            repeat(clientConfig.properties.maxUpdates) { step ->
+                logger.postEpoch(step + 1)
+                val batchSize = (clientConfig.planArgs["batch_size"]
+                                 ?: error("batch_size doesn't exist")).toInt()
+                val batchIValue = IValue.from(
+                    Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
+                )
+                val lr = IValue.from(
+                    Tensor.fromBlob(
+                        floatArrayOf(
+                            (clientConfig.planArgs["lr"] ?: error("lr doesn't exist")).toFloat()
+                        ),
+                        longArrayOf(1)
+                    )
+                )
+                val batchData = syftDataRepository.loadDataBatch(batchSize)
+                val modelParams = model.paramArray ?: return
+                val paramIValue = IValue.listFrom(*modelParams)
+                val output = plan.execute(
+                    batchData.first,
+                    batchData.second,
+                    batchIValue,
+                    lr,
+                    paramIValue
+                )?.toTuple()
+
+                output?.let { outputResult ->
+                    val paramSize = model.stateTensorSize!!
+                    val beginIndex = outputResult.size - paramSize
+                    val updatedParams =
+                            outputResult.slice(beginIndex until outputResult.size)
+                    model.updateModel(updatedParams)
+                    result = outputResult[0].toTensor().dataAsFloatArray.last()
+                }
+                logger.postState(ContentState.Training)
+                logger.postData(result)
+            }
+            logger.postLog("Training done!\n reporting diff")
+            val diff = createDiff()
+            report(diff)
+            logger.postLog("reported the model to PyGrid")
+        }
     }
 
     /**

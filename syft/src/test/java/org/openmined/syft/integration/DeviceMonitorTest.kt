@@ -61,7 +61,7 @@ class DeviceMonitorTest : AbstractSyftWorkerTest() {
         context.sendBroadcast(chargingStatus)
         shadowOf(getMainLooper()).idle();
 
-        job.start(jobStatusSubscriber)
+        job.request(jobStatusSubscriber)
         argumentCaptor<Throwable>().apply {
             verify(jobStatusSubscriber).onError(capture())
             assert(firstValue is JobErrorThrowable.BatteryConstraintsFailure)
@@ -89,7 +89,7 @@ class DeviceMonitorTest : AbstractSyftWorkerTest() {
         context.sendBroadcast(laterCharge)
         shadowOf(getMainLooper()).idle();
 
-        job.start(jobStatusSubscriber)
+        job.request(jobStatusSubscriber)
         verify(jobStatusSubscriber).onReady(any(), any(), any())
         syftWorker.dispose()
         verify(jobStatusSubscriber).onComplete()
@@ -107,7 +107,7 @@ class DeviceMonitorTest : AbstractSyftWorkerTest() {
             it.onLost(getConnectivityManager().activeNetwork!!)
         }
         shadowOf(getMainLooper()).idle();
-        job.start(jobStatusSubscriber)
+        job.request(jobStatusSubscriber)
         argumentCaptor<Throwable>().apply {
             verify(jobStatusSubscriber).onError(capture())
             assert(firstValue is JobErrorThrowable.NetworkConstraintsFailure)
@@ -135,7 +135,7 @@ class DeviceMonitorTest : AbstractSyftWorkerTest() {
         }
         shadowOf(getMainLooper()).idle();
 
-        job.start(jobStatusSubscriber)
+        job.request(jobStatusSubscriber)
         verify(jobStatusSubscriber).onReady(any(), any(), any())
         syftWorker.dispose()
         verify(jobStatusSubscriber).onComplete()
