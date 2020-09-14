@@ -36,7 +36,7 @@ class TrainingTask(
                 clientConfig: ClientConfig
             ) {
                 logger.postLog("Model ${model.modelName} received.\n\nStarting training process")
-                mnistJob.train(model, plans, mnistDataRepository, clientConfig, logger)
+                mnistJob.train(plans, mnistDataRepository, clientConfig, logger)
             }
 
             override fun onComplete() {

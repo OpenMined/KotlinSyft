@@ -30,9 +30,14 @@ import org.openmined.syft.Syft
 import org.openmined.syft.domain.DownloadStatus
 import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.domain.SyftDataRepository
+import org.openmined.syft.domain.SyftLogger
 import org.openmined.syft.execution.JobErrorThrowable
 import org.openmined.syft.execution.JobStatusSubscriber
+import org.openmined.syft.execution.Plan
 import org.openmined.syft.execution.SyftJob
+import org.openmined.syft.networking.datamodels.ClientConfig
+import org.openmined.syft.networking.datamodels.ClientProperties
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.datamodels.syft.ReportRequest
 import org.openmined.syft.networking.datamodels.syft.ReportResponse
@@ -40,9 +45,11 @@ import org.openmined.syft.networking.requests.CommunicationAPI
 import org.openmined.syft.proto.SyftState
 import org.openmined.syft.threading.ProcessSchedulers
 import org.openmined.syftproto.execution.v1.StateOuterClass
+import org.pytorch.IValue
+import org.pytorch.Tensor
 import org.robolectric.RobolectricTestRunner
 import java.io.File
-
+import java.util.concurrent.ConcurrentHashMap
 
 private const val modelName = "myModel"
 private const val modelVersion = "1.0"
@@ -228,6 +235,60 @@ class SyftJobTest {
 
         verify(subscriber).onError(exception)
         assertTrue(cut.isDisposed)
+    }
+
+    @ExperimentalStdlibApi
+    @Test
+    fun `Given a SyftJob when the model is trained then the model is updated`() {
+        val testModulePath = "test module path"
+        val diffState = mockk<SyftState>()
+//        val model = mockk<SyftModel> {
+//            every { paramArray } returns arrayOf()
+//            every { stateTensorSize } returns 1
+//            every { updateModel(any()) } just Runs
+//            every { createDiff(any(), eq(testModulePath)) } returns diffState
+//        }
+        val repository = mockk<SyftDataRepository>() {
+            every { loadDataBatch(64) } returns Pair(IValue.from(1), IValue.from(1))
+        }
+        val clientProperties = ClientProperties("mnist", "1.0", 5)
+        val planArgs = mapOf(
+            "batch_size" to "64",
+            "lr" to "0.01"
+        )
+        val clientConfig = ClientConfig(clientProperties, planArgs)
+        val logger = object : SyftLogger {}
+
+        val plan = mockk<Plan> {
+            every { execute(*anyVararg()) } returns IValue.tupleFrom(
+                IValue.from(
+                    Tensor.fromBlob(
+                        floatArrayOf(
+                            1F
+                        ), longArrayOf(1)
+                    )
+                )
+            )
+        }
+        val plans = ConcurrentHashMap<String, Plan>().apply {
+            put("training_plan", plan)
+        }
+
+        whenever(worker.getSyftWorkerId()).thenReturn("workerId")
+        whenever(config.filesDir).thenReturn(File("fileDir"))
+        whenever(stateMock.createDiff(any(), any())).doReturn(mockk())
+
+        whenever(jobRepository.getDiffScript(config)).doReturn(mockk())
+        whenever(
+            jobRepository.persistToLocalStorage(
+                any(),
+                any(),
+                any(),
+                eq(false)
+            )
+        ).doReturn(testModulePath)
+
+        cut.train(plans, repository, clientConfig, logger)
     }
 }
 

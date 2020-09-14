@@ -139,7 +139,6 @@ class SyftJob internal constructor(
 
     @ExperimentalStdlibApi
     fun train(
-        model: SyftModel,
         plans: ConcurrentHashMap<String, Plan>,
         syftDataRepository: SyftDataRepository,
         clientConfig: ClientConfig,
@@ -281,15 +280,16 @@ class SyftJob internal constructor(
      * Create a diff between the model parameters downloaded from the PyGrid with the current state of model parameters
      * The diff is sent to [report] for sending it to PyGrid
      */
-    fun createDiff(): SyftState {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun createDiff(): SyftState {
         val modulePath = jobRepository.persistToLocalStorage(
             jobRepository.getDiffScript(config),
             config.filesDir.toString(),
             DIFF_SCRIPT_NAME
         )
         val oldState =
-                SyftState.loadSyftState("${config.filesDir}/models/${model.pyGridModelId}.pb")
-        return model.createDiff(oldState, modulePath)
+                SyftState.loadSyftState("${config.filesDir}/models/${this.model.pyGridModelId}.pb")
+        return this.model.createDiff(oldState, modulePath)
     }
 
     /**
