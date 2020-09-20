@@ -43,7 +43,7 @@ KotlinSyft is available on maven and jcenter. To add the library as a dependency
 ```xml
 <dependency>
   <groupId>org.openmined.kotlinsyft</groupId>
-  <artifactId>syftlib</artifactId>
+  <artifactId>syft</artifactId>
   <version>0.1.3</version>
   <type>pom</type>
 </dependency>
@@ -52,7 +52,7 @@ KotlinSyft is available on maven and jcenter. To add the library as a dependency
 2. Gradle dependency:
 
 ```groovy
-implementation 'org.openmined.kotlinsyft:syftlib:0.1.3'
+implementation 'org.openmined.kotlinsyft:syft:0.1.3'
 ```
 
 ## Quick Start
