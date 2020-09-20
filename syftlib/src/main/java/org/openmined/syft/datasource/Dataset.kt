@@ -1,7 +1,7 @@
 package org.openmined.syft.datasource
 
 @ExperimentalUnsignedTypes
-open class Dataset {
+interface Dataset {
     /**
      * An abstract class representing a :class:`Dataset`.
      * All datasets that represent a map from keys to data samples should subclass
@@ -13,14 +13,12 @@ open class Dataset {
     /**
      * This method is called to return the size of the dataset, needs to be overridden.
      */
-    open fun len() : Int {
-        return 0
-    }
+    fun len() : Int {return  0}
 
     /**
      * This method is called to fetch a data sample for a given key.
      */
-    open fun getitem(index: Float) {}
+    fun getitem(index: Float) {}
 
 
 }

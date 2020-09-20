@@ -7,28 +7,29 @@ import org.pytorch.Tensor
  * Samples elements randomly. If without replacement, then sample from a shuffled dataset.
  * If with replacement, then user can specify :attr:`num_samples` to draw.
  * @param dataSource (Dataset): dataset to sample from
- * @param replacement (Boolean): samples are drawn on-demand with replacement if ``True``, default=``False``
  * @param numSamples (Int): number of samples to draw, default=`len(dataset)`. This argument
  *                          is supposed to be specified only when `replacement` is ``True``.
  */
-class RandomSampler(override var dataSource: Dataset, var replacement: Boolean = false,
-                    var numSamples: Int = dataSource.len()) : Sampler(dataSource) {
+class RandomSampler(val dataSource: Dataset, val numSamples: Int) :  Dataset, Sampler {
 
-     fun numsamples() : Int{
-
-         if (numSamples == null) {
-             return dataSource.len()
-         }
-         if (numSamples != null) {
+      @JvmName("getNumSamples1")
+      fun getNumSamples() : Int{
+        numSamples?.let {
             return numSamples
-         }
-         return 0
+        } ?:
+               return dataSource.len()
     }
 
-    override fun iter(){}
+    override fun getitem(index: Float) {
+        super<Sampler>.getitem(index)
+    }
+
+    override fun iter() {
+        super.iter()
+    }
 
     override fun len(): Int {
-        return numSamples
+        return super<Sampler>.len()
     }
 
 }

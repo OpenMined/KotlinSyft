@@ -6,7 +6,7 @@ package org.openmined.syft.datasource
  * way to iterate over indices of dataset elements, and a :meth:`__len__` method
  * that returns the length of the returned iterators.
  */
-open class Sampler (open var dataSource: Dataset){
-    open fun iter() {}
-    open fun len() {}
+interface Sampler: Dataset {
+    fun iter() {}
+    override fun len(): Int {return 0}
 }
