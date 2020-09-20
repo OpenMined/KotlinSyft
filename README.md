@@ -44,7 +44,7 @@ KotlinSyft is available on maven and jcenter. To add the library as a dependency
 <dependency>
   <groupId>org.openmined.kotlinsyft</groupId>
   <artifactId>syftlib</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.3</version>
   <type>pom</type>
 </dependency>
 ```
@@ -52,7 +52,7 @@ KotlinSyft is available on maven and jcenter. To add the library as a dependency
 2. Gradle dependency:
 
 ```groovy
-implementation 'org.openmined.kotlinsyft:syftlib:0.1.0'
+implementation 'org.openmined.kotlinsyft:syftlib:0.1.3'
 ```
 
 ## Quick Start
@@ -174,41 +174,34 @@ The demo app fetches the plans, protocols and model weights from pygrid server h
 
 Follow these steps to setup an environment to run the demo app:
 
-- Clone the repo [PyGrid](https://github.com/OpenMined/PyGrid) and change directory to it
+- Clone the repo [PyGrid](https://github.com/OpenMined/PyGrid) and change directory to it. At the moment PyGrid doesn't have official releases so please use this [commit](0e93aa645a63a02f45ae72b4ff3106c6402dbadf)  
 
 ```bash
 git clone https://github.com/OpenMined/PyGrid
 cd PyGrid
+git checkout 0e93aa645a63a02f45ae72b4ff3106c6402dbadf
 ```
 
-- Install [docker](https://github.com/OpenMined/PyGrid/#getting-started)
-- Install docker-compose.
-- Execute `docker-compose` in the command line to start pygrid server.
+- Follow [PyGrid: getting started](https://github.com/OpenMined/PyGrid/#getting-started) to run a local instance of PyGrid
+
+- Install [PySyft](https://github.com/OpenMined/PySyft) at `commit 9d4f8e3ebecc4a00428607403832c5628753f1fc` in the virtual environment.
 
 ```bash
-docker-compose up
-```
-
-- Install [PySyft](https://github.com/OpenMined/PySyft) `v0.2.7` in the virtual environment.
-
-```bash
-virtualenv -p python3 venv
-source venv/bin/activate
-pip install syft==0.2.7
-pip install jupyter==1.0.0
-pip install  notebook==5.7.8
 git clone https://github.com/OpenMined/PySyft
 cd PySyft
-git checkout tags/v0.2.7 -b v0.2.7
+git checkout 9d4f8e3ebecc4a00428607403832c5628753f1fc
+virtualenv -p python3 venv
+source venv/bin/activate
+make venv
 ```
 
-- Host Jupyter Notebook
+- Host Jupyter Notebook or (`make notebook` if you haven't run this already)
 
 ```bash
 jupyter notebook
 ```
 
-- Open a browser and navigate to [localhost:8888](http://localhost:8888/). You should be able to see the pysyft notebook console.
+- Open a browser and navigate to [localhost:8888](http://localhost:8888/). You should be able to see the PySyft notebook console.
 - In the Jupyter Notebook, navigate to `examples/tutorials/model-centric-fl`
 - Run the notebook `Create Plan`. It should host the model on PyGrid.
 - Optionally, run the notebook `Execute Plan`. This will train the model on the python worker of PySyft.
