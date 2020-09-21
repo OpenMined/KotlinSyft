@@ -23,7 +23,6 @@ task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'crea
 
     getSourceDirectories().setFrom(mainSrc)
     getClassDirectories().setFrom(files([debugTree]))
-//    classDirectories = files([debugTree])
     getExecutionData().setFrom(fileTree(dir: project.buildDir, includes: [
             'jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec'
     ]))
@@ -56,7 +55,7 @@ task javadocJar(type: Jar, dependsOn: dokkaJavaDoc) {
 publishing {
     publications {
         nebula(MavenPublication) {
-            artifact("$buildDir/outputs/aar/${artifactId}-release.aar")
+            artifact("$buildDir/outputs/aar/syft-release.aar")
             artifact sourcesJar
             artifact javadocJar
         }
