@@ -4,16 +4,13 @@ apply plugin: 'kotlinx-serialization'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'jacoco'
 apply plugin: 'org.jetbrains.dokka'
-apply from: 'publish.gradle'
+apply plugin: "nebula.maven-publish"
 
 jacoco {
     toolVersion = Versions.jacocoVersion
 }
 
-check.finalizedBy "jacocoTestReport"
-
 task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {
-
     reports {
         xml.enabled = true
         html.enabled = true
@@ -23,11 +20,17 @@ task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'crea
     def debugTree = fileTree(dir: "$project.buildDir/tmp/kotlin-classes/debug", excludes: fileFilter)
     def mainSrc = "$project.projectDir/src/main/java"
 
-    sourceDirectories = files([mainSrc])
-    classDirectories = files([debugTree])
-    executionData = fileTree(dir: project.buildDir, includes: [
-            'jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec'
-    ])
+    getSourceDirectories().setFrom(mainSrc)
+    getClassDirectories().setFrom(files([debugTree]))
+//    classDirectories = files([debugTree])
+    getExecutionData().setFrom(fileTree(dir: project.buildDir, includes: [
+            'jacoco/testDebugUnitTest.exec','outputs/code-coverage/connected/*coverage.ec'
+    ]))
+}
+
+check.finalizedBy "jacocoTestReport"
+tasks.withType(Test) {
+    jacoco.includeNoLocationClasses = true
 }
 
 dokka {
@@ -59,7 +62,7 @@ android {
 
     buildTypes {
         debug {
-            testCoverageEnabled = true
+            testCoverageEnabled true
         }
         release {
             minifyEnabled false
@@ -76,13 +79,9 @@ android {
     }
 
     testOptions {
-        unitTests.returnDefaultValues = true
-        unitTests.includeAndroidResources = true
-        unitTests.all {
-            jacoco {
-                jacoco.includeNoLocationClasses = true
-
-            }
+        unitTests{
+            returnDefaultValues = true
+            includeAndroidResources = true
         }
     }
 
