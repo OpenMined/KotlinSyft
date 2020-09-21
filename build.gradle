@@ -35,7 +35,6 @@ allprojects {
 
 allprojects {
     apply plugin: "nebula.release"
-    version = "1.0-SNAPSHOT"
     group = "org.openmined.kotlinsyft"
 }
 

@@ -1,23 +1,4 @@
-apply plugin: "nebula.maven-publish"
-
 apply plugin: "nebula.nebula-bintray-publishing"
-//tasks.create('sourceJar', Jar) {
-//    dependsOn tasks.classes
-//    from sourceSets.main.allSource
-//    archiveClassifier 'sources'
-//    archiveExtension 'jar'
-//    group 'build'
-//}
-//publishing {
-//    publications {
-//        nebula(MavenPublication) { // if maven-publish is applied
-//            artifact tasks.sourceJar
-//        }
-//        nebulaIvy(IvyPublication) { // if ivy-publish is applied
-//            artifact tasks.sourceJar
-//        }
-//    }
-//}
 def bintrayUser = System.getenv('BINTRAY_USERNAME')
 def bintrayKey = System.getenv('BINTRAY_KEY')
 

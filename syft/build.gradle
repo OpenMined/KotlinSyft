@@ -4,7 +4,8 @@ apply plugin: 'kotlinx-serialization'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'jacoco'
 apply plugin: 'org.jetbrains.dokka'
-apply plugin: "nebula.maven-publish"
+apply plugin: 'maven-publish'
+apply from: 'publish.gradle'
 
 jacoco {
     toolVersion = Versions.jacocoVersion
@@ -24,13 +25,42 @@ task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'crea
     getClassDirectories().setFrom(files([debugTree]))
 //    classDirectories = files([debugTree])
     getExecutionData().setFrom(fileTree(dir: project.buildDir, includes: [
-            'jacoco/testDebugUnitTest.exec','outputs/code-coverage/connected/*coverage.ec'
+            'jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec'
     ]))
 }
 
 check.finalizedBy "jacocoTestReport"
 tasks.withType(Test) {
     jacoco.includeNoLocationClasses = true
+}
+
+task sourcesJar(type: Jar) {
+    getArchiveClassifier().set('sources')
+    getArchiveExtension().set('jar')
+    from android.sourceSets.getByName("main").java.srcDirs
+    group 'build'
+}
+
+task dokkaJavaDoc(type: org.jetbrains.dokka.gradle.DokkaTask) {
+    outputFormat = 'javadoc'
+    outputDirectory = "$buildDir/javadoc"
+    inputs.dir 'src/main/java'
+}
+
+task javadocJar(type: Jar, dependsOn: dokkaJavaDoc) {
+    getArchiveClassifier().set('javadoc')
+    getArchiveExtension().set('jar')
+    from "$buildDir/javadoc"
+}
+
+publishing {
+    publications {
+        nebula(MavenPublication) {
+            artifact("$buildDir/outputs/aar/${artifactId}-release.aar")
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
 }
 
 dokka {
@@ -79,7 +109,7 @@ android {
     }
 
     testOptions {
-        unitTests{
+        unitTests {
             returnDefaultValues = true
             includeAndroidResources = true
         }
