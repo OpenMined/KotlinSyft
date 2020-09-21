@@ -37,7 +37,7 @@ object Versions {
     const val netflixPublishing = "17.3.2"
     const val netflixRelease = "15.2.0"
     const val netflixBintray = "3.5.4"
-    const val jacocoVersion = "0.8.5"
+    const val jacocoVersion = "0.8.2"
     const val dokkaVersion = "0.10.1"
 
     // Test

@@ -11,7 +11,7 @@ jacoco {
     toolVersion = Versions.jacocoVersion
 }
 
-task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'connectedDebugAndroidTest', 'createDebugCoverageReport']) {
+task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {
     reports {
         xml.enabled = true
         html.enabled = true
