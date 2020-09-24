@@ -8,7 +8,7 @@ object Versions {
     const val minSdk = 24
     const val targetSdk = 29
 
-    const val gradle = "3.6.0"
+    const val gradle = "4.0.1"
     const val kotlin = "1.3.61"
     const val buildTools = "29.0.2"
 
@@ -34,8 +34,8 @@ object Versions {
     const val coroutines = "1.3.7"
 
     // release management
-    const val netflixPublishing = "14.0.0"
-    const val netflixRelease = "13.0.0"
+    const val netflixPublishing = "17.3.2"
+    const val netflixRelease = "15.2.0"
     const val netflixBintray = "3.5.4"
     const val jacocoVersion = "0.8.2"
     const val dokkaVersion = "0.10.1"

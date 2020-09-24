@@ -1,9 +1,4 @@
-apply plugin: "nebula.maven-publish"
-apply plugin: "nebula.javadoc-jar"
-apply plugin: "nebula.source-jar"
-
 apply plugin: "nebula.nebula-bintray-publishing"
-
 def bintrayUser = System.getenv('BINTRAY_USERNAME')
 def bintrayKey = System.getenv('BINTRAY_KEY')
 
