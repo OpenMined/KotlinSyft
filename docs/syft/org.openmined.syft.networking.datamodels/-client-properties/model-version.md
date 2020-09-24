@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.networking.datamodels](../index.md) / [ClientProperties](index.md) / [modelVersion](./model-version.md)
+[syft](../../index.md) / [org.openmined.syft.networking.datamodels](../index.md) / [ClientProperties](index.md) / [modelVersion](./model-version.md)
 
 # modelVersion
 

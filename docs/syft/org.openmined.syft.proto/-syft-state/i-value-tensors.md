@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.proto](../index.md) / [SyftState](index.md) / [iValueTensors](./i-value-tensors.md)
+[syft](../../index.md) / [org.openmined.syft.proto](../index.md) / [SyftState](index.md) / [iValueTensors](./i-value-tensors.md)
 
 # iValueTensors
 

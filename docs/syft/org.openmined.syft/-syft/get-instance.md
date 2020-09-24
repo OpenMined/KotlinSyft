@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft](../index.md) / [Syft](index.md) / [getInstance](./get-instance.md)
+[syft](../../index.md) / [org.openmined.syft](../index.md) / [Syft](index.md) / [getInstance](./get-instance.md)
 
 # getInstance
 

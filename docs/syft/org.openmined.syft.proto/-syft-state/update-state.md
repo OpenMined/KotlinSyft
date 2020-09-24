@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.proto](../index.md) / [SyftState](index.md) / [updateState](./update-state.md)
+[syft](../../index.md) / [org.openmined.syft.proto](../index.md) / [SyftState](index.md) / [updateState](./update-state.md)
 
 # updateState
 

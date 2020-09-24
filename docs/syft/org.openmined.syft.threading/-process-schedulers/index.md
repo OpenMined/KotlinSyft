@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.threading](../index.md) / [ProcessSchedulers](./index.md)
+[syft](../../index.md) / [org.openmined.syft.threading](../index.md) / [ProcessSchedulers](./index.md)
 
 # ProcessSchedulers
 

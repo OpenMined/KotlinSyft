@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.proto](../index.md) / [org.openmined.syftproto.types.torch.v1.Tensor.TorchTensor](./index.md)
+[syft](../../index.md) / [org.openmined.syft.proto](../index.md) / [org.openmined.syftproto.types.torch.v1.Tensor.TorchTensor](./index.md)
 
 ### Extensions for org.openmined.syftproto.types.torch.v1.Tensor.TorchTensor
 

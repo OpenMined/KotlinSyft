@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.threading](../index.md) / [ProcessSchedulers](index.md) / [calleeThreadScheduler](./callee-thread-scheduler.md)
+[syft](../../index.md) / [org.openmined.syft.threading](../index.md) / [ProcessSchedulers](index.md) / [calleeThreadScheduler](./callee-thread-scheduler.md)
 
 # calleeThreadScheduler
 

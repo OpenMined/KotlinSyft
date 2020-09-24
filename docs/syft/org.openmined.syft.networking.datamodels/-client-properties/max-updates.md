@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.networking.datamodels](../index.md) / [ClientProperties](index.md) / [maxUpdates](./max-updates.md)
+[syft](../../index.md) / [org.openmined.syft.networking.datamodels](../index.md) / [ClientProperties](index.md) / [maxUpdates](./max-updates.md)
 
 # maxUpdates
 

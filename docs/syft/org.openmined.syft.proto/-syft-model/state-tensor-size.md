@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.proto](../index.md) / [SyftModel](index.md) / [stateTensorSize](./state-tensor-size.md)
+[syft](../../index.md) / [org.openmined.syft.proto](../index.md) / [SyftModel](index.md) / [stateTensorSize](./state-tensor-size.md)
 
 # stateTensorSize
 

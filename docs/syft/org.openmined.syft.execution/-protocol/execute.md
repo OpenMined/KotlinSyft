@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.execution](../index.md) / [Protocol](index.md) / [execute](./execute.md)
+[syft](../../index.md) / [org.openmined.syft.execution](../index.md) / [Protocol](index.md) / [execute](./execute.md)
 
 # execute
 

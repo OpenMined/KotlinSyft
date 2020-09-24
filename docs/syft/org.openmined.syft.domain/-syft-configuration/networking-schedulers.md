@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.domain](../index.md) / [SyftConfiguration](index.md) / [networkingSchedulers](./networking-schedulers.md)
+[syft](../../index.md) / [org.openmined.syft.domain](../index.md) / [SyftConfiguration](index.md) / [networkingSchedulers](./networking-schedulers.md)
 
 # networkingSchedulers
 

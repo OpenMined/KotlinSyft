@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.proto](../index.md) / [org.pytorch.IValue](./index.md)
+[syft](../../index.md) / [org.openmined.syft.proto](../index.md) / [org.pytorch.IValue](./index.md)
 
 ### Extensions for org.pytorch.IValue
 

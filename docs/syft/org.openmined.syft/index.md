@@ -1,4 +1,4 @@
-[syftlib](../index.md) / [org.openmined.syft](./index.md)
+[syft](../index.md) / [org.openmined.syft](./index.md)
 
 ## Package org.openmined.syft
 
