@@ -144,9 +144,9 @@ You can use KotlinSyft as a front-end or as a background service. The following 
                 }
             }
             // Once training finishes generate the model diff
-            val diff = mnistJob.createDiff()
+            val diff = newJob.createDiff()
             // Report the diff to PyGrid and finish the cycle
-            mnistJob.report(diff)
+            newJob.report(diff)
         }
 
         fun onRejected() {
