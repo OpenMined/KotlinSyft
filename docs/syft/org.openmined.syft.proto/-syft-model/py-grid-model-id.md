@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.proto](../index.md) / [SyftModel](index.md) / [pyGridModelId](./py-grid-model-id.md)
+[syft](../../index.md) / [org.openmined.syft.proto](../index.md) / [SyftModel](index.md) / [pyGridModelId](./py-grid-model-id.md)
 
 # pyGridModelId
 

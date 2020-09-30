@@ -1,4 +1,4 @@
-[syftlib](../index.md) / [org.openmined.syft.proto](./index.md)
+[syft](../index.md) / [org.openmined.syft.proto](./index.md)
 
 ## Package org.openmined.syft.proto
 

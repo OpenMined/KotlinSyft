@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.domain](../index.md) / [SyftConfiguration](index.md) / [batteryCheckEnabled](./battery-check-enabled.md)
+[syft](../../index.md) / [org.openmined.syft.domain](../index.md) / [SyftConfiguration](index.md) / [batteryCheckEnabled](./battery-check-enabled.md)
 
 # batteryCheckEnabled
 

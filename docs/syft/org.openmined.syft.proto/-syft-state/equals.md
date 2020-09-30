@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.proto](../index.md) / [SyftState](index.md) / [equals](./equals.md)
+[syft](../../index.md) / [org.openmined.syft.proto](../index.md) / [SyftState](index.md) / [equals](./equals.md)
 
 # equals
 

@@ -1,4 +1,4 @@
-[syftlib](../../../index.md) / [org.openmined.syft.execution](../../index.md) / [SyftJob](../index.md) / [JobID](index.md) / [matchWithResponse](./match-with-response.md)
+[syft](../../../index.md) / [org.openmined.syft.execution](../../index.md) / [SyftJob](../index.md) / [JobID](index.md) / [matchWithResponse](./match-with-response.md)
 
 # matchWithResponse
 

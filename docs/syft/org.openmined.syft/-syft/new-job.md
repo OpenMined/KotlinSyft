@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft](../index.md) / [Syft](index.md) / [newJob](./new-job.md)
+[syft](../../index.md) / [org.openmined.syft](../index.md) / [Syft](index.md) / [newJob](./new-job.md)
 
 # newJob
 

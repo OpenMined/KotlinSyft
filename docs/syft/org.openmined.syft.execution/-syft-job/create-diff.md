@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.execution](../index.md) / [SyftJob](index.md) / [createDiff](./create-diff.md)
+[syft](../../index.md) / [org.openmined.syft.execution](../index.md) / [SyftJob](index.md) / [createDiff](./create-diff.md)
 
 # createDiff
 

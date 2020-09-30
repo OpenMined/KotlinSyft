@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.execution](../index.md) / [JobStatusSubscriber](index.md) / [onError](./on-error.md)
+[syft](../../index.md) / [org.openmined.syft.execution](../index.md) / [JobStatusSubscriber](index.md) / [onError](./on-error.md)
 
 # onError
 

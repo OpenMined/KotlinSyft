@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.networking.datamodels](../index.md) / [ClientConfig](./index.md)
+[syft](../../index.md) / [org.openmined.syft.networking.datamodels](../index.md) / [ClientConfig](./index.md)
 
 # ClientConfig
 

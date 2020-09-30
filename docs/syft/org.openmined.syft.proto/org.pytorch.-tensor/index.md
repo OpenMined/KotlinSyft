@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.proto](../index.md) / [org.pytorch.Tensor](./index.md)
+[syft](../../index.md) / [org.openmined.syft.proto](../index.md) / [org.pytorch.Tensor](./index.md)
 
 ### Extensions for org.pytorch.Tensor
 
