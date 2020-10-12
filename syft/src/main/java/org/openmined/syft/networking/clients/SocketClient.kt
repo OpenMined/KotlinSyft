@@ -174,7 +174,7 @@ internal class SocketClient(
     override fun dispose() {
         compositeDisposable.clear()
         if (isDisposed) {
-            syftWebSocket.close()
+            syftWebSocket.dispose()
             socketClientSubscribed.set(false)
             Log.d(TAG, "Socket Client Disposed")
         } else
