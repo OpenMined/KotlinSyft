@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.proto](../index.md) / [Placeholder](index.md) / [description](./description.md)
+[syft](../../index.md) / [org.openmined.syft.proto](../index.md) / [Placeholder](index.md) / [description](./description.md)
 
 # description
 

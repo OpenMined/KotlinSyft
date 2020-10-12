@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.proto](../index.md) / [SyftTensor](index.md) / [shape](./shape.md)
+[syft](../../index.md) / [org.openmined.syft.proto](../index.md) / [SyftTensor](index.md) / [shape](./shape.md)
 
 # shape
 

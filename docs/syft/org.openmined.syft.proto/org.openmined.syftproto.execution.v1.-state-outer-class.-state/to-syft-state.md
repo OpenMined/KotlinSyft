@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.proto](../index.md) / [org.openmined.syftproto.execution.v1.StateOuterClass.State](index.md) / [toSyftState](./to-syft-state.md)
+[syft](../../index.md) / [org.openmined.syft.proto](../index.md) / [org.openmined.syftproto.execution.v1.StateOuterClass.State](index.md) / [toSyftState](./to-syft-state.md)
 
 # toSyftState
 

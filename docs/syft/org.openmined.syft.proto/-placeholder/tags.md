@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.proto](../index.md) / [Placeholder](index.md) / [tags](./tags.md)
+[syft](../../index.md) / [org.openmined.syft.proto](../index.md) / [Placeholder](index.md) / [tags](./tags.md)
 
 # tags
 

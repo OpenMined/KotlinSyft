@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.execution](../index.md) / [Plan](./index.md)
+[syft](../../index.md) / [org.openmined.syft.execution](../index.md) / [Plan](./index.md)
 
 # Plan
 

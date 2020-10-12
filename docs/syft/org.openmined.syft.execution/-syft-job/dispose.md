@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.execution](../index.md) / [SyftJob](index.md) / [dispose](./dispose.md)
+[syft](../../index.md) / [org.openmined.syft.execution](../index.md) / [SyftJob](index.md) / [dispose](./dispose.md)
 
 # dispose
 

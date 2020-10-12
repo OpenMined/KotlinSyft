@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.networking.datamodels](../index.md) / [ClientConfig](index.md) / [&lt;init&gt;](./-init-.md)
+[syft](../../index.md) / [org.openmined.syft.networking.datamodels](../index.md) / [ClientConfig](index.md) / [&lt;init&gt;](./-init-.md)
 
 # &lt;init&gt;
 

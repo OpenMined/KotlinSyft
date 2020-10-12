@@ -1,6 +1,9 @@
 package org.openmined.syft.networking.clients
 
+import androidx.annotation.VisibleForTesting
 import io.reactivex.Flowable
+import io.reactivex.disposables.Disposable
+import io.reactivex.functions.BiFunction
 import io.reactivex.processors.PublishProcessor
 import kotlinx.serialization.json.JsonObject
 import okhttp3.OkHttpClient
@@ -10,12 +13,23 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.openmined.syft.networking.requests.NetworkingProtocol
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.min
+
+private const val TAG = "SyftWebSocket"
 
 // Used in serializing data to be passed over the network
 internal const val TYPE = "type"
 internal const val DATA = "data"
+
 // Code used to close web socket connection
 private const val SOCKET_CLOSE_CLIENT = 1000
+
+// Max retry count to reconnect
+private const val MAX_RETRY_CONNECTS = 8
+
+// Max timeout after retry
+private const val MAX_RETRY_TIMEOUT = 20000L
 
 /**
  * SyftWebSocket initialize and configure Web Socket connection
@@ -28,7 +42,7 @@ internal class SyftWebSocket(
     protocol: NetworkingProtocol,
     address: String,
     keepAliveTimeout: UInt
-) {
+) : Disposable {
 
     /**
      * Required to create web socket connection
@@ -47,7 +61,8 @@ internal class SyftWebSocket(
     /**
      * Respond to WebSocket life cycle event
      */
-    private val syftSocketListener = SyftSocketListener()
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var syftSocketListener = SyftSocketListener()
 
     /**
      * Emit messages to subscribers
@@ -59,6 +74,23 @@ internal class SyftWebSocket(
      *  store the web socket connection
      */
     private var webSocket: WebSocket? = null
+
+    /**
+     *  Control socket connection and emit new socket
+     */
+    private val socketStatusProcessor = PublishProcessor.create<WebSocket>()
+
+    /**
+     * Check to manage resource usage
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @Volatile
+    internal var isConnected = AtomicBoolean(false)
+
+    /**
+     * Manage and free used resource
+     */
+    private lateinit var connectionDisposable: Disposable
 
     /**
      * connect socket to PyGrid, manage back-pressure with emitting messages
@@ -76,15 +108,45 @@ internal class SyftWebSocket(
     /**
      * Close web socket connection
      * */
-    fun close() = webSocket?.close(SOCKET_CLOSE_CLIENT, "Socket closed by client") ?: false
+    private fun close() = webSocket?.close(SOCKET_CLOSE_CLIENT, "Socket closed by client") ?: false
 
     /**
      * Create new web socket connection
      * */
     private fun connect() {
-        webSocket = client.newWebSocket(request, syftSocketListener)
+        if (isConnected.get()) return
+
+        var retryDelay = 1000L
+
+        connectionDisposable = socketStatusProcessor.retryWhen { errors ->
+            errors.zipWith(
+                Flowable.range(1, MAX_RETRY_CONNECTS + 1),
+                BiFunction<Throwable, Int, Int> { error: Throwable, retryCount: Int ->
+                    if (retryCount > MAX_RETRY_CONNECTS) throw error
+                    statusPublishProcessor.offer(NetworkMessage.SocketError(error))
+                    retryCount
+                }
+            ).flatMap {
+                retryDelay = min(retryDelay * 2, MAX_RETRY_TIMEOUT)
+                Flowable.timer(retryDelay, TimeUnit.MILLISECONDS)
+            }
+        }.subscribe {
+            if (isConnected.get()) return@subscribe
+            webSocket = it
+            isConnected.set(true)
+        }
+        socketStatusProcessor.offer(client.newWebSocket(request, syftSocketListener))
     }
 
+    override fun dispose() {
+        connectionDisposable.dispose()
+        if (isDisposed) {
+            close()
+            isConnected.set(false)
+        }
+    }
+
+    override fun isDisposed(): Boolean = isConnected.get()
 
      /**
       * Override WebSocketListener life cycle methods
@@ -113,8 +175,8 @@ internal class SyftWebSocket(
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             super.onFailure(webSocket, t, response)
             statusPublishProcessor.offer(NetworkMessage.SocketError(t))
-            // TODO we probably need here some backoff strategy
-            connect()
+             isConnected.set(false)
+             socketStatusProcessor.onError(t)
         }
     }
 }

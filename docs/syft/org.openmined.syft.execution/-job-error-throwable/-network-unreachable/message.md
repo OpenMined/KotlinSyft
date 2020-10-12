@@ -1,4 +1,4 @@
-[syftlib](../../../index.md) / [org.openmined.syft.execution](../../index.md) / [JobErrorThrowable](../index.md) / [NetworkUnreachable](index.md) / [message](./message.md)
+[syft](../../../index.md) / [org.openmined.syft.execution](../../index.md) / [JobErrorThrowable](../index.md) / [NetworkUnreachable](index.md) / [message](./message.md)
 
 # message
 

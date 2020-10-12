@@ -1,4 +1,4 @@
-[syftlib](../../../index.md) / [org.openmined.syft.domain](../../index.md) / [SyftConfiguration](../index.md) / [SyftConfigBuilder](index.md) / [setCacheTimeout](./set-cache-timeout.md)
+[syft](../../../index.md) / [org.openmined.syft.domain](../../index.md) / [SyftConfiguration](../index.md) / [SyftConfigBuilder](index.md) / [setCacheTimeout](./set-cache-timeout.md)
 
 # setCacheTimeout
 

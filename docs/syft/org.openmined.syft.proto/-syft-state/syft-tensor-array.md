@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.proto](../index.md) / [SyftState](index.md) / [syftTensorArray](./syft-tensor-array.md)
+[syft](../../index.md) / [org.openmined.syft.proto](../index.md) / [SyftState](index.md) / [syftTensorArray](./syft-tensor-array.md)
 
 # syftTensorArray
 

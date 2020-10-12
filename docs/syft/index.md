@@ -1,4 +1,4 @@
-[syftlib](./index.md)
+[syft](./index.md)
 
 ### Packages
 

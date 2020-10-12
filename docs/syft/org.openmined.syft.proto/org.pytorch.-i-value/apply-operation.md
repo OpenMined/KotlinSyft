@@ -1,4 +1,4 @@
-[syftlib](../../index.md) / [org.openmined.syft.proto](../index.md) / [org.pytorch.IValue](index.md) / [applyOperation](./apply-operation.md)
+[syft](../../index.md) / [org.openmined.syft.proto](../index.md) / [org.pytorch.IValue](index.md) / [applyOperation](./apply-operation.md)
 
 # applyOperation
 
