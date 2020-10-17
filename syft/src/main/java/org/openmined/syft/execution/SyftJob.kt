@@ -1,5 +1,6 @@
 package org.openmined.syft.execution
 
+import android.util.Base64
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import io.reactivex.Completable
@@ -19,6 +20,7 @@ import org.openmined.syft.domain.SyftLogger
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.datamodels.syft.ReportResponse
+import org.openmined.syft.networking.datamodels.syft.ReportRequest
 import org.openmined.syft.proto.SyftModel
 import org.openmined.syft.proto.SyftState
 import org.openmined.syft.threading.ProcessSchedulers
