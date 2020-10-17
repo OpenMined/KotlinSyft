@@ -16,7 +16,7 @@ import kotlinx.android.synthetic.main.activity_mnist.toolbar
 import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityMnistBinding
 import org.openmined.syft.demo.federated.datasource.LocalMNISTDataDataSource
-import org.openmined.syft.demo.federated.domain.MNISTDataRepository
+import org.openmined.syft.demo.federated.domain.MNISTDataLoader
 import org.openmined.syft.demo.federated.service.WorkerRepository
 import org.openmined.syft.domain.ContentState
 import org.openmined.syft.domain.ProcessData
@@ -76,7 +76,7 @@ class MnistActivity : AppCompatActivity() {
                 .setCacheTimeout(0L)
                 .build()
         val localMNISTDataDataSource = LocalMNISTDataDataSource(resources)
-        val dataRepository = MNISTDataRepository(localMNISTDataDataSource)
+        val dataRepository = MNISTDataLoader(localMNISTDataDataSource)
         viewModel.launchForegroundTrainer(config, dataRepository)
     }
 

@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap
 class TrainingTask(
     private val configuration: SyftConfiguration,
     private val authToken: String,
-    private val mnistDataRepository: MNISTDataRepository
+    private val mnistDataRepository: MNISTDataLoader
 ) {
     private var syftWorker: Syft? = null
 

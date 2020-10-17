@@ -1,6 +1,5 @@
 package org.openmined.syft.execution
 
-import android.util.Base64
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import io.reactivex.Completable
@@ -12,14 +11,13 @@ import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
 import org.openmined.syft.domain.ContentState
-import org.openmined.syft.domain.SyftDataRepository
+import org.openmined.syft.domain.SyftDataLoader
 import org.openmined.syft.domain.DownloadStatus
 import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.domain.SyftLogger
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
-import org.openmined.syft.networking.datamodels.syft.ReportRequest
 import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import org.openmined.syft.proto.SyftModel
 import org.openmined.syft.proto.SyftState
@@ -140,7 +138,7 @@ class SyftJob internal constructor(
     @ExperimentalStdlibApi
     fun train(
         plans: ConcurrentHashMap<String, Plan>,
-        syftDataRepository: SyftDataRepository,
+        syftDataLoader: SyftDataLoader,
         clientConfig: ClientConfig,
         logger: SyftLogger
     ) {
@@ -161,7 +159,7 @@ class SyftJob internal constructor(
                         longArrayOf(1)
                     )
                 )
-                val batchData = syftDataRepository.loadDataBatch(batchSize)
+                val batchData = syftDataLoader.loadDataBatch(batchSize)
                 val modelParams = model.paramArray ?: return
                 val paramIValue = IValue.listFrom(*modelParams)
                 val output = plan.execute(

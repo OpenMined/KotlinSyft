@@ -1,7 +1,5 @@
 package org.openmined.syft.unit.execution
 
-import android.util.Base64
-import android.util.Base64.encodeToString
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.anyOrNull
 import com.nhaarman.mockitokotlin2.capture
@@ -30,17 +28,14 @@ import org.openmined.syft.Syft
 import org.openmined.syft.domain.DownloadStatus
 import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.SyftConfiguration
-import org.openmined.syft.domain.SyftDataRepository
+import org.openmined.syft.domain.SyftDataLoader
 import org.openmined.syft.domain.SyftLogger
 import org.openmined.syft.execution.JobErrorThrowable
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.Plan
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.networking.datamodels.ClientConfig
-import org.openmined.syft.networking.datamodels.ClientProperties
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
-import org.openmined.syft.networking.datamodels.syft.ReportRequest
-import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import org.openmined.syft.networking.requests.CommunicationAPI
 import org.openmined.syft.proto.SyftState
 import org.openmined.syft.threading.ProcessSchedulers
@@ -248,7 +243,7 @@ class SyftJobTest {
 //            every { updateModel(any()) } just Runs
 //            every { createDiff(any(), eq(testModulePath)) } returns diffState
 //        }
-        val repository = mockk<SyftDataRepository>() {
+        val repository = mockk<SyftDataLoader>() {
             every { loadDataBatch(64) } returns Pair(IValue.from(1), IValue.from(1))
         }
         val clientProperties = ClientProperties("mnist", "1.0", 5)
