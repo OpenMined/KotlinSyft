@@ -246,7 +246,8 @@ class SyftJobTest {
         val repository = mockk<SyftDataLoader>() {
             every { loadDataBatch(64) } returns Pair(IValue.from(1), IValue.from(1))
         }
-        val clientProperties = ClientProperties("mnist", "1.0", 5)
+        val clientProperties =
+                org.openmined.syft.networking.datamodels.ClientProperties("mnist", "1.0", 5)
         val planArgs = mapOf(
             "batch_size" to "64",
             "lr" to "0.01"
@@ -337,7 +338,11 @@ internal class RobolectricJobTests {
         cut.cycleAccepted(responseData)
 
         val signallingClient = mock<CommunicationAPI>()
-        whenever(signallingClient.report(any())) doReturn Single.just(ReportResponse("any"))
+        whenever(signallingClient.report(any())) doReturn Single.just(
+            org.openmined.syft.networking.datamodels.syft.ReportResponse(
+                "any"
+            )
+        )
         whenever(config.getSignallingClient()).doReturn(signallingClient)
 
         whenever(worker.getSyftWorkerId()).thenReturn("workerId")
@@ -352,10 +357,10 @@ internal class RobolectricJobTests {
 
         verify(config).getSignallingClient()
         verify(signallingClient).report(
-            ReportRequest(
+            org.openmined.syft.networking.datamodels.syft.ReportRequest(
                 "workerId",
                 "requestKey",
-                encodeToString(diff, Base64.DEFAULT)
+                android.util.Base64.encodeToString(diff, android.util.Base64.DEFAULT)
             )
         )
     }

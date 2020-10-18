@@ -1,13 +1,21 @@
 package org.openmined.syft.domain
 
 interface SyftLogger {
-    fun postData(result: Float)
+    fun postData(result: Float) {
+        print(result)
+    }
 
-    fun postEpoch(epoch: Int)
+    fun postEpoch(epoch: Int) {
+        print(epoch)
+    }
 
-    fun postLog(message: String)
+    fun postLog(message: String) {
+        print(message)
+    }
 
-    fun postState(status: ContentState)
+    fun postState(status: ContentState) {
+        print(status)
+    }
 }
 
 sealed class ContentState {
