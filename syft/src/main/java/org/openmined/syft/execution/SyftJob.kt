@@ -117,7 +117,7 @@ class SyftJob internal constructor(
      * job.start(jobStatusSubscriber)
      * ```
      */
-    fun start(subscriber: JobStatusSubscriber = JobStatusSubscriber()) {
+    suspend fun start(subscriber: JobStatusSubscriber = JobStatusSubscriber()) {
         if (cycleStatus.get() == CycleStatus.REJECT) {
             Log.d(TAG, "job awaiting timer completion to resend the Cycle Request")
             return
@@ -194,7 +194,7 @@ class SyftJob internal constructor(
      * @param workerId The unique id assigned to the syft worker by PyGrid
      * @param responseData contains the cycle accept request key and training parameters
      */
-    internal fun downloadData(
+    internal suspend fun downloadData(
         workerId: String,
         responseData: CycleResponseData.CycleAccept
     ) {
@@ -207,7 +207,6 @@ class SyftJob internal constructor(
                 workerId,
                 config,
                 responseData.requestKey,
-                networkDisposable,
                 jobStatusProcessor,
                 responseData.clientConfig,
                 plans,

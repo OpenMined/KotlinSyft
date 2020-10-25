@@ -25,7 +25,7 @@ class TrainingTask(
 ) {
     private var syftWorker: Syft? = null
 
-    fun runTask(logger: MnistLogger): Single<Result> {
+    suspend fun runTask(logger: MnistLogger): Result {
         syftWorker = Syft.getInstance(configuration, authToken)
         val mnistJob = syftWorker!!.newJob("mnist", "1.0.0")
         val statusPublisher = PublishProcessor.create<Result>()
@@ -58,7 +58,8 @@ class TrainingTask(
             }
         }
         mnistJob.start(jobStatusSubscriber)
-        return statusPublisher.onBackpressureBuffer().firstOrError()
+        // TODO What to return here?
+        return Result.success()
     }
 
     fun disposeTraining() {

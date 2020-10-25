@@ -87,12 +87,12 @@ internal interface HttpAPI : CommunicationAPI {
      */
     //    @Streaming
     @GET("/model-centric/get-plan")
-    fun downloadPlan(
+    suspend fun downloadPlan(
         @Query("worker_id") workerId: String,
         @Query("request_key") requestKey: String,
         @Query("plan_id") planId: String,
         @Query("receive_operations_as") op_type: String
-    ): Single<Response<ResponseBody>>
+    ): Response<ResponseBody>
 
     /**
      * Downloads Protocols from PyGrid Server.
@@ -104,11 +104,11 @@ internal interface HttpAPI : CommunicationAPI {
      */
     //    @Streaming
     @GET("/model-centric/get-protocol")
-    fun downloadProtocol(
+    suspend fun downloadProtocol(
         @Query("worker_id") workerId: String,
         @Query("request_key") requestKey: String,
         @Query("protocol_id") protocolId: String
-    ): Single<Response<ResponseBody>>
+    ): Response<ResponseBody>
 
     /**
      * Download Model from PyGrid Server.
@@ -120,11 +120,11 @@ internal interface HttpAPI : CommunicationAPI {
      */
     //    @Streaming
     @GET("/model-centric/get-model")
-    fun downloadModel(
+    suspend fun downloadModel(
         @Query("worker_id") workerId: String,
         @Query("request_key") requestKey: String,
         @Query("model_id") modelId: String
-    ): Single<Response<ResponseBody>>
+    ): Response<ResponseBody>
 
     /**
      * Calls **model-centric/authenticate** for authentication.

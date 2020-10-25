@@ -4,6 +4,10 @@ import android.util.Log
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.JobErrorThrowable
 import org.openmined.syft.execution.JobStatusSubscriber
@@ -60,6 +64,8 @@ class Syft internal constructor(
     private var workerJob: SyftJob? = null
     private val compositeDisposable = CompositeDisposable()
     private val isDisposed = AtomicBoolean(false)
+    // https://github.com/Kotlin/kotlinx.coroutines/issues/1003
+    private val scope = MainScope()
 
     @Volatile
     private var workerId: String? = null
@@ -100,7 +106,7 @@ class Syft internal constructor(
 
     internal fun getSyftWorkerId() = workerId
 
-    internal fun executeCycleRequest(job: SyftJob) {
+    internal suspend fun executeCycleRequest(job: SyftJob) {
         if (job.throwErrorIfBatteryInvalid() || job.throwErrorIfNetworkInvalid())
             return
 
@@ -120,7 +126,7 @@ class Syft internal constructor(
                         .subscribe(
                             { response: CycleResponseData ->
                                 when (response) {
-                                    is CycleResponseData.CycleAccept -> handleCycleAccept(response)
+                                    is CycleResponseData.CycleAccept -> scope.launch { handleCycleAccept(response) }
                                     is CycleResponseData.CycleReject -> handleCycleReject(response)
                                 }
                             },
@@ -200,7 +206,7 @@ class Syft internal constructor(
         workerJob?.cycleRejected(responseData)
     }
 
-    private fun handleCycleAccept(responseData: CycleResponseData.CycleAccept) {
+    private suspend fun handleCycleAccept(responseData: CycleResponseData.CycleAccept) {
         val job = workerJob ?: throw IllegalStateException("job deleted and accessed")
         job.cycleAccepted(responseData)
         if (job.throwErrorIfBatteryInvalid() ||
@@ -214,7 +220,7 @@ class Syft internal constructor(
 
     }
 
-    private fun executeAuthentication(job: SyftJob) {
+    private suspend fun executeAuthentication(job: SyftJob) {
         compositeDisposable.add(
             syftConfig.getSignallingClient().authenticate(
                 AuthenticationRequest(
@@ -225,18 +231,24 @@ class Syft internal constructor(
             )
                     .compose(syftConfig.networkingSchedulers.applySingleSchedulers())
                     .subscribe({ response: AuthenticationResponse ->
-                        when (response) {
-                            is AuthenticationResponse.AuthenticationSuccess -> {
-                                if (workerId == null) {
-                                    setSyftWorkerId(response.workerId)
+                        scope.launch {
+                            when (response) {
+                                is AuthenticationResponse.AuthenticationSuccess -> {
+                                    if (workerId == null) {
+                                        setSyftWorkerId(response.workerId)
+                                    }
+                                    //todo eventually requires_speed test will be migrated to it's own endpoint
+                                    job.requiresSpeedTest.set(response.requiresSpeedTest)
+                                    executeCycleRequest(job)
                                 }
-                                //todo eventually requires_speed test will be migrated to it's own endpoint
-                                job.requiresSpeedTest.set(response.requiresSpeedTest)
-                                executeCycleRequest(job)
-                            }
-                            is AuthenticationResponse.AuthenticationError -> {
-                                job.publishError(JobErrorThrowable.AuthenticationFailure(response.errorMessage))
-                                Log.d(TAG, response.errorMessage)
+                                is AuthenticationResponse.AuthenticationError -> {
+                                    job.publishError(
+                                        JobErrorThrowable.AuthenticationFailure(
+                                            response.errorMessage
+                                        )
+                                    )
+                                    Log.d(TAG, response.errorMessage)
+                                }
                             }
                         }
                     }, {

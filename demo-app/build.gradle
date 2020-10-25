@@ -50,6 +50,7 @@ dependencies {
     implementation CommonDependencies.kotlinSerialization
     implementation CommonDependencies.rxJava
     implementation CommonDependencies.rxAndroid
+    implementation CommonDependencies.coroutines
 
     implementation DemoAppDependencies.mpAndroidChart
     implementation DemoAppDependencies.materialAndroid
@@ -57,7 +58,7 @@ dependencies {
     implementation DemoAppDependencies.workKtx
     implementation DemoAppDependencies.workGCM
     implementation DemoAppDependencies.workRX
-    implementation DemoAppDependencies.coroutines
+    implementation CommonDependencies.coroutines
     implementation DemoAppDependencies.lifecycle
     implementation DemoAppDependencies.lifeCycleProcess
 

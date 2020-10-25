@@ -136,6 +136,8 @@ dependencies {
     implementation CommonDependencies.kotlinSerializationFactory
     implementation SyftlibDependencies.retrofitAdapter
     implementation SyftlibDependencies.retrofit
+    implementation CommonDependencies.coroutines
+    implementation CommonDependencies.lifecycleViewModel
 
     implementation SyftlibDependencies.syftProto
     implementation SyftlibDependencies.protobuf

@@ -16,6 +16,9 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import org.openmined.syft.demo.federated.datasource.LocalMNISTDataDataSource
 import org.openmined.syft.demo.federated.domain.MNISTDataRepository
 import org.openmined.syft.demo.federated.domain.TrainingTask
@@ -43,6 +46,8 @@ class FederatedWorker(
     workerParameters: WorkerParameters
 ) : CoroutineWorker(serviceContext, workerParameters) {
 
+    private val scope = MainScope()
+
     override suspend fun doWork(): Result {
         val authToken = inputData.getString(AUTH_TOKEN) ?: return Result.failure()
         val baseUrl = inputData.getString(BASE_URL) ?: return Result.failure()
@@ -63,9 +68,8 @@ class FederatedWorker(
         )
     }
 
-    private suspend fun awaitTask(task: TrainingTask) = suspendCoroutine<Result> { continuation ->
-        task.runTask(WorkLogger()).subscribe { result: Result -> continuation.resume(result) }
-    }
+    private suspend fun awaitTask(task: TrainingTask) = task.runTask(WorkLogger())
+
 
     private fun createForegroundInfo(progress: Int): ForegroundInfo {
         val intent = WorkManager.getInstance(applicationContext)
@@ -80,7 +84,8 @@ class FederatedWorker(
             createChannel()
         }
 
-        val notification = NotificationCompat.Builder(applicationContext,
+        val notification = NotificationCompat.Builder(
+            applicationContext,
             CHANNEL_ID
         )
                 .setContentTitle("Federated Trainer")

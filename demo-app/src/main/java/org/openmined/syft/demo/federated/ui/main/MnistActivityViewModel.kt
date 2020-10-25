@@ -6,6 +6,9 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.work.WorkInfo
 import io.reactivex.disposables.CompositeDisposable
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import org.openmined.syft.demo.federated.domain.MNISTDataRepository
 import org.openmined.syft.demo.federated.domain.TrainingTask
 import org.openmined.syft.demo.federated.logging.MnistLogger
@@ -66,12 +69,15 @@ class MnistActivityViewModel(
     }
 
     fun launchForegroundTrainer(config: SyftConfiguration, dataRepository: MNISTDataRepository) {
-        trainingTask = TrainingTask(
-            config,
-            authToken,
-            dataRepository
-        )
-        compositeDisposable.add(trainingTask!!.runTask(this).subscribe())
+        // TODO This must be the view model coroutine scope?
+        GlobalScope.launch {
+            trainingTask = TrainingTask(
+                config,
+                authToken,
+                dataRepository
+            )
+            trainingTask!!.runTask(this@MnistActivityViewModel)
+        }
     }
 
     fun disposeTraining() {

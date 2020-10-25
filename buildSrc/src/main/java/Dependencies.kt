@@ -20,6 +20,7 @@ object Versions {
     const val material="1.1.0"
     const val workManagerVersion = "2.3.4"
     const val lifecycleVersion = "2.2.0"
+    const val lifeCycleViewModelVersion = "2.1.0-beta01"
     // Tools
     const val rxJava = "2.2.12"
     const val rxAndroid = "2.1.1"
@@ -50,9 +51,8 @@ object Versions {
     const val adxCore = "1.1.0"
     const val adxRunner = "1.1.1"
     const val adxExtTruth = "1.1.0"
-    const val robolectric = "4.4-SNAPSHOT"
+    const val robolectric = "4.4"
     const val mockk = "1.10.0"
-
 }
 
 object ProjectDependencies {
@@ -69,12 +69,13 @@ object ProjectDependencies {
 object CommonDependencies {
     const val appCompat = "androidx.appcompat:appcompat:${Versions.appCompat}"
     const val coreKtx = "androidx.core:core-ktx:${Versions.coreKtx}"
+    const val lifecycleViewModel = "androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.lifeCycleViewModelVersion}"
     const val kotlinSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-runtime:${Versions.kotlinSerialization}"
     const val kotlinSerializationFactory = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:${Versions.kotlinConverter}"
     const val rxJava = "io.reactivex.rxjava2:rxjava:${Versions.rxJava}"
     const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"
     const val constraintLayout = "androidx.constraintlayout:constraintlayout:${Versions.constraintLayout}"
-
+    const val coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutines}"
     const val espresso = "androidx.test.espresso:espresso-core:${Versions.espresso}"
     const val adxTest = "androidx.test:core:${Versions.adxCore}"
     const val adxExtJunit = "androidx.test.ext:junit:${Versions.extJunit}"
@@ -91,7 +92,6 @@ object DemoAppDependencies {
     const val kotlinJDK = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
     const val materialAndroid = "com.google.android.material:material:${Versions.material}"
     const val mpAndroidChart = "com.github.PhilJay:MPAndroidChart:${Versions.mpAndroidChart}"
-    const val coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutines}"
     const val lifecycle = "androidx.lifecycle:lifecycle-livedata-ktx:${Versions.lifecycleVersion}"
     const val lifeCycleProcess = "androidx.lifecycle:lifecycle-process:${Versions.lifecycleVersion}"
 
