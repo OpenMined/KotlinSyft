@@ -64,8 +64,9 @@ internal class DeviceMonitor(
         return userValidity.get()
     }
 
-    fun getNetworkStatus(workerId: String, requiresSpeedTest: Boolean) =
+    suspend fun getNetworkStatus(workerId: String, requiresSpeedTest: Boolean) =
             networkStatusRepository.getNetworkStatus(workerId, requiresSpeedTest)
+
     fun getBatteryStatus() = batteryStatusRepository.getBatteryState()
 
     private fun subscribe() {

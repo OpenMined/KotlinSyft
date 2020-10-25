@@ -10,11 +10,11 @@ private const val TAG = "NetworkStateRepository"
 
 
 @ExperimentalUnsignedTypes
-internal class NetworkStatusRepository (
+internal class NetworkStatusRepository(
     private val networkConstraints: List<Int>,
     private val cacheService: NetworkStatusCache,
     private val realTimeDataService: NetworkStatusRealTimeDataSource
-) : BroadCastListener{
+) : BroadCastListener {
 
     companion object {
         fun initialize(
@@ -31,12 +31,12 @@ internal class NetworkStatusRepository (
         }
     }
 
-    fun getNetworkStatus(workerId: String, requiresSpeedTest: Boolean): Single<NetworkStatusModel> {
+    suspend fun getNetworkStatus(workerId: String, requiresSpeedTest: Boolean): NetworkStatusModel {
         return if (requiresSpeedTest) {
-            cacheService.getNetworkStatusCache()
-                    .switchIfEmpty(getNetworkStatusUncached(workerId))
+            cacheService.getNetworkStatusCache() ?: getNetworkStatusUncached(workerId)
         } else {
-            Single.just(NetworkStatusModel(-1, 0.0f, 0.0f))
+            // TODO Maybe create an InvalidNetworkStatus?
+            NetworkStatusModel(-1, 0.0f, 0.0f)
         }
     }
 
@@ -50,20 +50,19 @@ internal class NetworkStatusRepository (
         realTimeDataService.unsubscribeStateChange()
     }
 
-    private fun getNetworkStatusUncached(workerId: String): Single<NetworkStatusModel> {
-        val networkStatus = NetworkStatusModel()
+    private suspend fun getNetworkStatusUncached(workerId: String): NetworkStatusModel {
         // TODO Must ping be excluded if requiresSpeedTest is false?
-        return realTimeDataService.updatePing(workerId, networkStatus)
-                .andThen(realTimeDataService.updateDownloadSpeed(workerId, networkStatus))
-                .andThen(realTimeDataService.updateUploadSpeed(workerId, networkStatus))
-                .andThen(Single.create {
-                    networkStatus.networkValidity = realTimeDataService.getNetworkValidity(
-                        networkConstraints
-                    )
-                    networkStatus.cacheTimeStamp = System.currentTimeMillis()
-                    cacheService.networkStateCache = networkStatus
-                    it.onSuccess(networkStatus)
-                })
+        val ping = realTimeDataService.updatePing(workerId)
+
+        val downloadSpeed = realTimeDataService.updateDownloadSpeed(workerId)
+        val uploadSpeed = realTimeDataService.updateUploadSpeed(workerId)
+
+        val networkValidity = realTimeDataService.getNetworkValidity(
+            networkConstraints
+        )
+        val networkStatus = NetworkStatusModel(ping, downloadSpeed, uploadSpeed, networkValidity, System.currentTimeMillis())
+        cacheService.networkStateCache = networkStatus
+        return networkStatus
     }
 
 }

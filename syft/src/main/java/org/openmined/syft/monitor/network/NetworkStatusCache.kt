@@ -1,19 +1,20 @@
 package org.openmined.syft.monitor.network
 
-import io.reactivex.Maybe
-
 internal class NetworkStatusCache(private val cacheTimeOut: Long) {
 
     var networkStateCache = NetworkStatusModel()
-    fun getNetworkStatusCache(): Maybe<NetworkStatusModel> {
+
+    fun getNetworkStatusCache(): NetworkStatusModel? {
         return if (isCacheValid())
-            Maybe.just(networkStateCache)
+            networkStateCache
         else
-            Maybe.empty()
+            // TODO Better return an InvalidNetworkStatus
+            null
     }
 
+    // TODO This is not used anywhere. If still required, set it as a property independent of NetworkStatusModel
     fun setCacheInvalid() {
-        networkStateCache.networkValidity = false
+        networkStateCache = networkStateCache.copy(networkValidity = false)
     }
 
     private fun isCacheValid(): Boolean {

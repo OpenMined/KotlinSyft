@@ -8,6 +8,8 @@ import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.spy
 import com.nhaarman.mockitokotlin2.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.openmined.syft.Syft
 import org.openmined.syft.common.AbstractSyftWorkerTest
@@ -21,6 +23,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadow.api.Shadow
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 class DeviceMonitorTest : AbstractSyftWorkerTest() {
     private val socketClient = SocketClientMock(
@@ -61,7 +64,9 @@ class DeviceMonitorTest : AbstractSyftWorkerTest() {
         context.sendBroadcast(chargingStatus)
         shadowOf(getMainLooper()).idle();
 
-        job.start(jobStatusSubscriber)
+        runBlocking {
+            job.request()
+        }
         argumentCaptor<Throwable>().apply {
             verify(jobStatusSubscriber).onError(capture())
             assert(firstValue is JobErrorThrowable.BatteryConstraintsFailure)
@@ -89,7 +94,9 @@ class DeviceMonitorTest : AbstractSyftWorkerTest() {
         context.sendBroadcast(laterCharge)
         shadowOf(getMainLooper()).idle();
 
-        job.start(jobStatusSubscriber)
+        runBlocking {
+            job.request()
+        }
         verify(jobStatusSubscriber).onReady(any(), any(), any())
         syftWorker.dispose()
         verify(jobStatusSubscriber).onComplete()
@@ -107,7 +114,9 @@ class DeviceMonitorTest : AbstractSyftWorkerTest() {
             it.onLost(getConnectivityManager().activeNetwork!!)
         }
         shadowOf(getMainLooper()).idle();
-        job.start(jobStatusSubscriber)
+        runBlocking {
+            job.request()
+        }
         argumentCaptor<Throwable>().apply {
             verify(jobStatusSubscriber).onError(capture())
             assert(firstValue is JobErrorThrowable.NetworkConstraintsFailure)
@@ -135,7 +144,9 @@ class DeviceMonitorTest : AbstractSyftWorkerTest() {
         }
         shadowOf(getMainLooper()).idle();
 
-        job.start(jobStatusSubscriber)
+        runBlocking {
+            job.request()
+        }
         verify(jobStatusSubscriber).onReady(any(), any(), any())
         syftWorker.dispose()
         verify(jobStatusSubscriber).onComplete()

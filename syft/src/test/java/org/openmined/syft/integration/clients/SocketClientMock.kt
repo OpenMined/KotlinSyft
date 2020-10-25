@@ -1,10 +1,11 @@
 package org.openmined.syft.integration.clients
 
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.refEq
 import com.nhaarman.mockitokotlin2.stub
-import io.reactivex.Single
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.json.json
@@ -21,6 +22,7 @@ import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import org.openmined.syft.networking.requests.REQUESTS
 import org.robolectric.annotation.Implements
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 @Implements(SocketClient::class)
 internal class SocketClientMock(
@@ -122,16 +124,13 @@ internal class SocketClientMock(
 
     init {
         mockedClient.stub {
-            on { authenticate(any()) }.thenReturn(
-                Single.just(
+            onBlocking  { it.authenticate(any()) } doReturn
                     deserializeSocket(
                         authenticationResponse
                     ).data as AuthenticationResponse
-                )
-            )
 
-            on {
-                getCycle(
+            onBlocking {
+                it.getCycle(
                     refEq(
                         cycleRequest1,
                         "workerId",
@@ -140,12 +139,10 @@ internal class SocketClientMock(
                         "uploadSpeed"
                     )
                 )
-            }.thenReturn(
-                Single.just(deserializeSocket(socketResponseTest1).data as CycleResponseData)
-            )
+            } doReturn deserializeSocket(socketResponseTest1).data as CycleResponseData
 
-            on {
-                getCycle(
+            onBlocking {
+                it.getCycle(
                     refEq(
                         cycleRequest2,
                         "workerId",
@@ -154,17 +151,11 @@ internal class SocketClientMock(
                         "uploadSpeed"
                     )
                 )
-            }.thenReturn(
-                Single.just(deserializeSocket(socketResponseTest2).data as CycleResponseData)
-            )
+            } doReturn deserializeSocket(socketResponseTest2).data as CycleResponseData
 
-            on { report(any()) }.thenReturn(
-                Single.just(ReportResponse("success"))
-            )
+            onBlocking { it.report(any()) } doReturn ReportResponse("success")
 
-            on { dispose() }.then {
-                // do nothing
-            }
+//            on { it.dispose() } doReturn Unit
         }
     }
 

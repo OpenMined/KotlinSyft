@@ -5,6 +5,8 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.spy
 import com.nhaarman.mockitokotlin2.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.openmined.syft.Syft
 import org.openmined.syft.common.AbstractSyftWorkerTest
@@ -15,6 +17,7 @@ import org.openmined.syft.integration.clients.SocketClientMock
 import org.openmined.syft.integration.execution.ShadowPlan
 import org.robolectric.annotation.Config
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 class DownloadablesTest : AbstractSyftWorkerTest() {
 
@@ -49,7 +52,9 @@ class DownloadablesTest : AbstractSyftWorkerTest() {
         val syftWorker = Syft.getInstance(syftConfiguration)
         val job = syftWorker.newJob("test", "1")
         val jobStatusSubscriber = spy<JobStatusSubscriber>()
-        job.start(jobStatusSubscriber)
+        runBlocking {
+            job.request()
+        }
         verify(jobStatusSubscriber).onError(any())
         syftWorker.dispose()
         verify(jobStatusSubscriber, never()).onComplete()
@@ -86,7 +91,9 @@ class DownloadablesTest : AbstractSyftWorkerTest() {
         val syftWorker = Syft.getInstance(syftConfiguration)
         val job = syftWorker.newJob("test", "1")
         val jobStatusSubscriber = spy<JobStatusSubscriber>()
-        job.start(jobStatusSubscriber)
+        runBlocking {
+            job.request()
+        }
         verify(jobStatusSubscriber).onError(any())
         syftWorker.dispose()
         verify(jobStatusSubscriber, never()).onComplete()

@@ -1,119 +1,149 @@
 package org.openmined.syft.demo.federated.domain
 
+import android.util.Log
 import androidx.work.ListenableWorker.Result
-import io.reactivex.Single
 import io.reactivex.processors.PublishProcessor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.withContext
 import org.openmined.syft.Syft
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.ui.ContentState
+import org.openmined.syft.domain.InputParamType
+import org.openmined.syft.domain.PlanInputSpec
 import org.openmined.syft.domain.SyftConfiguration
-import org.openmined.syft.execution.JobStatusSubscriber
-import org.openmined.syft.execution.Plan
+import org.openmined.syft.domain.TrainingParameters
+import org.openmined.syft.execution.JobStatusMessage
 import org.openmined.syft.execution.SyftJob
-import org.openmined.syft.networking.datamodels.ClientConfig
-import org.openmined.syft.proto.SyftModel
-import org.pytorch.IValue
-import org.pytorch.Tensor
-import java.util.concurrent.ConcurrentHashMap
+import org.openmined.syft.execution.TrainingState
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class TrainingTask(
-    private val configuration: SyftConfiguration,
-    private val authToken: String,
-    private val mnistDataRepository: MNISTDataRepository
+    configuration: SyftConfiguration,
+    authToken: String,
+    private val mnistDataRepository: MNISTDataRepository,
+    private val modelName: String,
+    private val modelVersion: String
 ) {
-    private var syftWorker: Syft? = null
+    private val syftWorker = Syft.getInstance(configuration, authToken)
 
-    fun runTask(logger: MnistLogger): Single<Result> {
-        syftWorker = Syft.getInstance(configuration, authToken)
-        val mnistJob = syftWorker!!.newJob("mnist", "1.0.0")
+    suspend fun runTask(logger: MnistLogger) {
+        val mnistJob = syftWorker.newJob(modelName, modelVersion)
+
         val statusPublisher = PublishProcessor.create<Result>()
 
         logger.postLog("MNIST job started \n\nChecking for download and upload speeds")
         logger.postState(ContentState.Loading)
-        val jobStatusSubscriber = object : JobStatusSubscriber() {
-            override fun onReady(
-                model: SyftModel,
-                plans: ConcurrentHashMap<String, Plan>,
-                clientConfig: ClientConfig
-            ) {
-                logger.postLog("Model ${model.modelName} received.\n\nStarting training process")
-                trainingProcess(mnistJob, model, plans, clientConfig, logger)
+
+        when (val requestResult = mnistJob.request()) {
+            is JobStatusMessage.JobReady -> {
+                executeTraining(logger, mnistJob, requestResult)
             }
 
-            override fun onComplete() {
-                syftWorker?.dispose()
-                statusPublisher.offer(Result.success())
-            }
+            JobStatusMessage.JobInit -> logger.postLog("Job initialised")
 
-            override fun onRejected(timeout: String) {
-                logger.postLog("We've been rejected for the time $timeout")
+            is JobStatusMessage.JobCycleRejected -> {
+                logger.postLog("We've been rejected for the time $requestResult.timeout")
                 statusPublisher.offer(Result.retry())
             }
 
-            override fun onError(throwable: Throwable) {
-                logger.postLog("There was an error $throwable")
+            JobStatusMessage.Complete -> {
+                syftWorker.dispose()
+                statusPublisher.offer(Result.success())
+            }
+
+            is JobStatusMessage.Error -> {
+                logger.postLog("There was an error $requestResult.throwable")
+                statusPublisher.offer(Result.failure())
+            }
+
+            is JobStatusMessage.UnexpectedDownloadStatus -> {
+                logger.postLog("Job was in an unexpected status ${requestResult.downloadStatus}")
+                statusPublisher.offer(Result.failure())
+            }
+
+            JobStatusMessage.ConditionsNotMet -> {
+                // TODO Offer more info why conditions were not met
+                logger.postLog("Battery/network conditions were not met. Stopping process")
                 statusPublisher.offer(Result.failure())
             }
         }
-        mnistJob.start(jobStatusSubscriber)
-        return statusPublisher.onBackpressureBuffer().firstOrError()
+    }
+
+    private suspend fun executeTraining(
+        logger: MnistLogger,
+        mnistJob: SyftJob,
+        requestResult: JobStatusMessage.JobReady
+    ) {
+        val startTime = System.currentTimeMillis()
+        logger.postLog("Starting training!")
+        logger.postState(ContentState.Training)
+
+        mnistJob.train(requestResult.plans,
+            requestResult.clientConfig!!,
+            mnistDataRepository,
+            generateTrainingParameters()
+        ).collect {
+            // collect happens in IO Dispatcher. Change context to process the training state.
+            withContext(Dispatchers.Main) {
+                processTrainingState(it, logger)
+            }
+        }
+
+        logger.postLog("Training Finished in ${System.currentTimeMillis() - startTime} ms")
+    }
+
+    // Observe training state flow changes
+    // Note that this flow must be launched in the Main scope to interact with the UI
+    private fun processTrainingState(trainingState: TrainingState, logger: MnistLogger) {
+        Log.d("TrainingTask", "Processing $trainingState")
+        when (trainingState) {
+            is TrainingState.Message -> {
+                logger.postLog(trainingState.message)
+            }
+            is TrainingState.Epoch -> {
+                logger.postEpoch(trainingState.epoch)
+            }
+            is TrainingState.Data -> {
+                logger.postData(trainingState.result)
+            }
+            is TrainingState.Error -> {
+                logger.postState(ContentState.Error)
+            }
+            is TrainingState.Complete -> {
+                logger.postLog("Training completed!")
+            }
+        }
     }
 
     fun disposeTraining() {
-        syftWorker?.dispose()
+        syftWorker.dispose()
     }
 
-    private fun trainingProcess(
-        mnistJob: SyftJob,
-        model: SyftModel,
-        plans: ConcurrentHashMap<String, Plan>,
-        clientConfig: ClientConfig,
-        logger: MnistLogger
-    ) {
-        var result = -0.0f
-        plans["training_plan"]?.let { plan ->
-            repeat(clientConfig.properties.maxUpdates) { step ->
-                logger.postEpoch(step + 1)
-                val batchSize = (clientConfig.planArgs["batch_size"]
-                                 ?: error("batch_size doesn't exist")).toInt()
-                val batchIValue = IValue.from(
-                    Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
-                )
-                val lr = IValue.from(
-                    Tensor.fromBlob(
-                        floatArrayOf(
-                            (clientConfig.planArgs["lr"] ?: error("lr doesn't exist")).toFloat()
-                        ),
-                        longArrayOf(1)
-                    )
-                )
-                val batchData =
-                        mnistDataRepository.loadDataBatch(batchSize)
-                val modelParams = model.paramArray ?: return
-                val paramIValue = IValue.listFrom(*modelParams)
-                val output = plan.execute(
-                    batchData.first,
-                    batchData.second,
-                    batchIValue,
-                    lr, paramIValue
-                )?.toTuple()
-                output?.let { outputResult ->
-                    val paramSize = model.stateTensorSize!!
-                    val beginIndex = outputResult.size - paramSize
-                    val updatedParams =
-                            outputResult.slice(beginIndex until outputResult.size)
-                    model.updateModel(updatedParams)
-                    result = outputResult[0].toTensor().dataAsFloatArray.last()
-                }
-                logger.postState(ContentState.Training)
-                logger.postData(result)
-            }
-            logger.postLog("Training done!\n reporting diff")
-            val diff = mnistJob.createDiff()
-            mnistJob.report(diff)
-            logger.postLog("reported the model to PyGrid")
+    companion object MnistTrainingParameters {
+        //      outputs: [
+        //        new PlanOutputSpec(PlanOutputSpec.TYPE_LOSS),
+        //        new PlanOutputSpec(PlanOutputSpec.TYPE_METRIC, 'accuracy'),
+        //        new PlanOutputSpec(PlanOutputSpec.TYPE_MODEL_PARAM, 'W1', 0),
+        //        new PlanOutputSpec(PlanOutputSpec.TYPE_MODEL_PARAM, 'b1', 1),
+        //        new PlanOutputSpec(PlanOutputSpec.TYPE_MODEL_PARAM, 'W2', 2),
+        //        new PlanOutputSpec(PlanOutputSpec.TYPE_MODEL_PARAM, 'b2', 3),
+        //      ],
+        fun generateTrainingParameters(): TrainingParameters {
+            val planInputSpec = listOf(
+                PlanInputSpec(InputParamType.Data),
+                PlanInputSpec(InputParamType.Target),
+                PlanInputSpec(InputParamType.BatchSize),
+                PlanInputSpec(InputParamType.Value, name = "lr"),
+                PlanInputSpec(InputParamType.ModelParameter)
+//                PlanInputSpec(InputParamType.ModelParameter, name = "b1", index = 1),
+//                PlanInputSpec(InputParamType.ModelParameter, name = "W2", index = 2),
+//                PlanInputSpec(InputParamType.ModelParameter, name = "b1", index = 3)
+            )
+            return TrainingParameters(planInputSpec)
         }
     }
 }

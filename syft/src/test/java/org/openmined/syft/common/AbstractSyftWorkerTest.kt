@@ -8,8 +8,11 @@ import android.os.BatteryManager
 import androidx.test.core.app.ApplicationProvider
 import io.reactivex.Scheduler
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.junit.After
 import org.junit.Before
 import org.junit.runner.RunWith
+import org.openmined.syft.Syft
 import org.openmined.syft.threading.ProcessSchedulers
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
@@ -67,5 +70,11 @@ abstract class AbstractSyftWorkerTest {
 
     fun getShadowConnectivityManager(): ShadowConnectivityManager {
         return Shadows.shadowOf(getConnectivityManager())
+    }
+
+    @ExperimentalCoroutinesApi
+    @After
+    fun dispose() {
+        Syft.getCurrentInstance().dispose()
     }
 }

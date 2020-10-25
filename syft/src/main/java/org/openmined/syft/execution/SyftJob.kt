@@ -1,12 +1,14 @@
 package org.openmined.syft.execution
 
-import android.util.Base64
 import android.util.Log
 import androidx.annotation.VisibleForTesting
-import io.reactivex.Completable
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
-import io.reactivex.processors.PublishProcessor
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import org.openmined.syft.Syft
 import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
 import org.openmined.syft.datasource.JobLocalDataSource
@@ -14,12 +16,14 @@ import org.openmined.syft.datasource.JobRemoteDataSource
 import org.openmined.syft.domain.DownloadStatus
 import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.domain.SyftDataLoader
+import org.openmined.syft.domain.TrainingParameters
+import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
-import org.openmined.syft.networking.datamodels.syft.ReportRequest
-import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import org.openmined.syft.proto.SyftModel
 import org.openmined.syft.proto.SyftState
-import org.openmined.syft.threading.ProcessSchedulers
+import org.pytorch.IValue
+import org.pytorch.Tensor
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -33,6 +37,7 @@ private const val TAG = "SyftJob"
  * @property config : The configuration class for schedulers and clients
  * @property jobRepository : The repository dealing data downloading and file writing of job
  */
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 class SyftJob internal constructor(
     modelName: String,
@@ -40,7 +45,7 @@ class SyftJob internal constructor(
     private val worker: Syft,
     private val config: SyftConfiguration,
     private val jobRepository: JobRepository
-) : Disposable {
+) {
 
     companion object {
 
@@ -75,7 +80,6 @@ class SyftJob internal constructor(
     val jobId = JobID(modelName, version)
     internal var cycleStatus = AtomicReference(CycleStatus.APPLY)
     internal val requiresSpeedTest = AtomicBoolean(true)
-    private val jobStatusProcessor = PublishProcessor.create<JobStatusMessage>()
     private val isDisposed = AtomicBoolean(false)
 
     private val plans = ConcurrentHashMap<String, Plan>()
@@ -84,82 +88,104 @@ class SyftJob internal constructor(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val model = SyftModel(modelName, version)
 
-    private val networkDisposable = CompositeDisposable()
-    private var statusDisposable: Disposable? = null
-    private val computeDisposable = CompositeDisposable()
     private var requestKey = ""
 
+    private val jobScope = CoroutineScope(Dispatchers.IO)
 
     /**
      * Starts the job by asking syft worker to request for cycle.
      * Initialises Socket connection if not initialised already.
-     * @param subscriber (Optional) Contains the methods overridden by the user to be called upon job success/error
-     * @see org.openmined.syft.execution.JobStatusSubscriber for available methods
+     * @return jobStatusMessage Status of this job after requesting a cycle.
+     * @see org.openmined.syft.execution.JobStatusMessage
+     *
      *
      * ```kotlin
-     * job.start()
-     * // OR
-     * val jobStatusSubscriber = object : JobStatusSubscriber() {
-     *      override fun onReady(
-     *      model: SyftModel,
-     *      plans: ConcurrentHashMap<String, Plan>,
-     *      clientConfig: ClientConfig
-     *      ) {
-     *      }
+     * val jobStatusMessage = job.request()
      *
-     *      override fun onRejected(timeout: String) {
-     *      }
-     *
-     *      override fun onError(throwable: Throwable) {
-     *      }
-     * }
-     *
-     * job.start(jobStatusSubscriber)
+     * job.train(...)
      * ```
      */
-    fun start(subscriber: JobStatusSubscriber = JobStatusSubscriber()) {
-        if (cycleStatus.get() == CycleStatus.REJECT) {
-            Log.d(TAG, "job awaiting timer completion to resend the Cycle Request")
-            return
+    suspend fun request(): JobStatusMessage {
+        return when {
+            cycleStatus.get() == CycleStatus.REJECT -> {
+                Log.d(TAG, "job awaiting timer completion to resend the Cycle Request")
+                JobStatusMessage.JobCycleAwaiting
+            }
+            isDisposed.get() -> {
+                Log.e(TAG, "cannot start a disposed job")
+                JobStatusMessage.Error(JobErrorThrowable.RunningDisposedJob)
+            }
+            else -> {
+                worker.executeCycleRequest(this)
+            }
         }
-        if (isDisposed.get()) {
-            Log.e(TAG, "cannot start a disposed job")
-            subscriber.onError(JobErrorThrowable.RunningDisposedJob)
-            return
-        }
-        subscribe(subscriber, config.computeSchedulers)
-        worker.executeCycleRequest(this)
     }
 
-    /**
-     * This method can be called when the user needs to attach a listener to the job but do not wish to start it
-     * @param subscriber (Optional) Contains the methods overridden by the user to be called upon job success/error
-     * @see org.openmined.syft.execution.JobStatusSubscriber for available methods
-     * @sample org.openmined.syft.Syft.newJob
-     */
-    fun subscribe(
-        subscriber: JobStatusSubscriber,
-        schedulers: ProcessSchedulers
-    ) {
-        statusDisposable = jobStatusProcessor.onBackpressureBuffer()
-                .subscribeOn(schedulers.calleeThreadScheduler)
-                .subscribe(
-                    { message ->
-                        computeDisposable.add(Completable.create {
-                            subscriber.onJobStatusMessage(message)
-                            it.onComplete()
-                        }.subscribeOn(schedulers.computeThreadScheduler).subscribe({}, {
-                            subscriber.onError(it)
-                        }))
-                    },
-                    { error ->
-                        subscriber.onError(error)
-                        computeDisposable.clear()
-                        computeDisposable.dispose()
-                    },
-                    { subscriber.onComplete() }
-                )
+    @ExperimentalStdlibApi
+    fun train(
+        plans: ConcurrentHashMap<String, Plan>,
+        clientConfig: ClientConfig,
+        syftDataLoader: SyftDataLoader,
+        trainingParameters: TrainingParameters
+    ): Flow<TrainingState> = flow {
 
+        var result = -0.0f
+        plans["training_plan"]?.let { plan ->
+
+            val batchSize = (clientConfig.planArgs["batch_size"]
+                             ?: error("batch_size doesn't exist")).toInt()
+            val batchIValue = IValue.from(
+                Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
+            )
+            repeat(clientConfig.properties.maxUpdates) { step ->
+
+                emit(TrainingState.Epoch(step + 1))
+                // TODO This must be treated as a generic config value from clientConfig
+                val lr = IValue.from(
+                    Tensor.fromBlob(
+                        floatArrayOf(
+                            (clientConfig.planArgs["lr"] ?: error("lr doesn't exist")).toFloat()
+                        ),
+                        longArrayOf(1)
+                    )
+                )
+                val batchData = syftDataLoader.loadDataBatch(batchSize)
+                // TODO We should check requirements before arriving to this point
+//                    emit(TrainingState.Error(IllegalStateException("No params in the model")))
+                val modelParams = model.paramArray ?: emptyArray()
+                val paramIValue = IValue.listFrom(*modelParams)
+
+                val output = plan.execute(
+                    batchData.first,
+                    batchData.second,
+                    batchIValue,
+                    lr,
+                    paramIValue
+                )?.toTuple()
+
+                output?.let { outputResult ->
+                    val paramSize = model.stateTensorSize!!
+                    val beginIndex = outputResult.size - paramSize
+                    val updatedParams =
+                            outputResult.slice(beginIndex until outputResult.size)
+                    model.updateModel(updatedParams)
+                    result = outputResult[0].toTensor().dataAsFloatArray.last()
+                }
+                emit(TrainingState.Data(result))
+            }
+        }
+
+        emit(TrainingState.Message("Training done!\n Reporting diff"))
+        val diff = createDiff()
+        when (val reportStatus = report(diff)) {
+            is JobStatusMessage.Complete -> {
+                emit(TrainingState.Message("Model reported to PyGrid"))
+                emit(TrainingState.Complete)
+            }
+            else -> {
+                emit(TrainingState.Error(IllegalStateException("Report finished with an error")))
+            }
+        }
     }
 
     /**
@@ -184,9 +210,9 @@ class SyftJob internal constructor(
      * This method is called by [Syft Worker][org.openmined.syft.Syft] on being rejected by PyGrid into a cycle
      * @param responseData The timeout returned by PyGrid after which the worker should retry
      */
-    internal fun cycleRejected(responseData: CycleResponseData.CycleReject) {
+    internal fun cycleRejected(responseData: CycleResponseData.CycleReject): JobStatusMessage {
         cycleStatus.set(CycleStatus.REJECT)
-        jobStatusProcessor.offer(JobStatusMessage.JobCycleRejected(responseData.timeout))
+        return JobStatusMessage.JobCycleRejected(responseData.timeout)
     }
 
     /**
@@ -194,26 +220,46 @@ class SyftJob internal constructor(
      * @param workerId The unique id assigned to the syft worker by PyGrid
      * @param responseData contains the cycle accept request key and training parameters
      */
-    internal fun downloadData(
+    internal suspend fun downloadData(
         workerId: String,
         responseData: CycleResponseData.CycleAccept
-    ) {
-        if (cycleStatus.get() != CycleStatus.ACCEPTED) {
-            publishError(JobErrorThrowable.CycleNotAccepted("Cycle not accepted. Download cannot start"))
-            return
-        }
-        if (jobRepository.status == DownloadStatus.NOT_STARTED) {
-            jobRepository.downloadData(
-                workerId,
-                config,
-                responseData.requestKey,
-                networkDisposable,
-                jobStatusProcessor,
-                responseData.clientConfig,
-                plans,
-                model,
-                protocols
-            )
+    ): JobStatusMessage {
+        return when {
+            cycleStatus.get() != CycleStatus.ACCEPTED -> {
+                publishError(JobErrorThrowable.CycleNotAccepted("Cycle not accepted. Download cannot start"))
+                JobStatusMessage.Error(JobErrorThrowable.CycleNotAccepted("Cycle not accepted. Download cannot start"))
+            }
+            jobRepository.status == DownloadStatus.NOT_STARTED -> {
+                val planRetriever = jobScope.async {
+                    jobRepository.retrievePlanData(
+                        workerId,
+                        config,
+                        responseData.requestKey,
+                        plans
+                    )
+                }
+                val protocolRetriever = jobScope.async {
+                    jobRepository.retrieveProtocolData(
+                        workerId,
+                        config,
+                        responseData.requestKey,
+                        protocols
+                    )
+                }
+                val modelRetriever = jobScope.async {
+                    jobRepository.retrieveModel(workerId, config, responseData.requestKey, model)
+                }
+
+                Log.d(TAG, "Start downloading all data")
+                planRetriever.await() + protocolRetriever.await() + modelRetriever.await()
+
+                Log.d(TAG, "Data downloaded")
+
+                JobStatusMessage.JobReady(model, plans, responseData.clientConfig)
+            }
+            else -> {
+                JobStatusMessage.UnexpectedDownloadStatus(jobRepository.status)
+            }
         }
     }
 
@@ -221,7 +267,7 @@ class SyftJob internal constructor(
      * Create a diff between the model parameters downloaded from the PyGrid with the current state of model parameters
      * The diff is sent to [report] for sending it to PyGrid
      */
-    fun createDiff(): SyftState {
+    private fun createDiff(): SyftState {
         val modulePath = jobRepository.persistToLocalStorage(
             jobRepository.getDiffScript(config),
             config.filesDir.toString(),
@@ -236,34 +282,40 @@ class SyftJob internal constructor(
      * Once training is finished submit the new model weights to PyGrid to complete the cycle
      * @param diff the difference of the new and old model weights serialised into [State][org.openmined.syft.proto.SyftState]
      */
-    fun report(diff: SyftState) {
+    private suspend fun report(diff: SyftState): JobStatusMessage {
         val workerId = worker.getSyftWorkerId()
         if (throwErrorIfNetworkInvalid() ||
             throwErrorIfBatteryInvalid()
-        ) return
+        ) return JobStatusMessage.ConditionsNotMet
 
-        if (!workerId.isNullOrEmpty() && requestKey.isNotEmpty())
-            networkDisposable.add(
-                config.getSignallingClient()
-                        .report(
-                            ReportRequest(
-                                workerId,
-                                requestKey,
-                                Base64.encodeToString(
-                                    diff.serialize().toByteArray(),
-                                    Base64.DEFAULT
-                                )
+        return if (!workerId.isNullOrEmpty() && requestKey.isNotEmpty()) {
+            val reportResponse = config.getSignallingClient()
+                    .report(
+                        org.openmined.syft.networking.datamodels.syft.ReportRequest(
+                            workerId,
+                            requestKey,
+                            android.util.Base64.encodeToString(
+                                diff.serialize().toByteArray(),
+                                android.util.Base64.DEFAULT
                             )
                         )
-                        .compose(config.networkingSchedulers.applySingleSchedulers())
-                        .subscribe { reportResponse: ReportResponse ->
-                            if (reportResponse.error != null)
-                                publishError(JobErrorThrowable.NetworkResponseFailure(reportResponse.error))
-                            if (reportResponse.status != null) {
-                                Log.d(TAG, "report status ${reportResponse.status}")
-                                jobStatusProcessor.onComplete()
-                            }
-                        })
+                    )
+            when {
+                reportResponse.error != null -> {
+                    publishError(JobErrorThrowable.NetworkResponseFailure(reportResponse.error))
+                    JobStatusMessage.Error(JobErrorThrowable.NetworkResponseFailure(reportResponse.error))
+                }
+                reportResponse.status != null -> {
+                    Log.d(TAG, "report status ${reportResponse.status}")
+                    JobStatusMessage.Complete
+                }
+                else -> {
+                    JobStatusMessage.Error(JobErrorThrowable.IllegalJobState(IllegalStateException("Could not send report")))
+                }
+            }
+        } else {
+            JobStatusMessage.Error(JobErrorThrowable.IllegalJobState(IllegalStateException("Could not send report")))
+        }
     }
 
     /**
@@ -298,8 +350,6 @@ class SyftJob internal constructor(
      * Notify all the listeners about the error and dispose the job
      */
     internal fun publishError(throwable: JobErrorThrowable) {
-        jobStatusProcessor.onError(throwable)
-        networkDisposable.clear()
         isDisposed.set(true)
     }
 
@@ -307,7 +357,6 @@ class SyftJob internal constructor(
      * Throw the error to be caught by error handlers
      */
     private fun throwError(throwable: JobErrorThrowable) {
-        networkDisposable.clear()
         isDisposed.set(true)
         throw throwable
     }
@@ -315,15 +364,13 @@ class SyftJob internal constructor(
     /**
      * Identifies if the job is already disposed
      */
-    override fun isDisposed() = isDisposed.get()
+    private fun isDisposed() = isDisposed.get()
 
     /**
      * Dispose the job. Once disposed, a job cannot be resumed again.
      */
-    override fun dispose() {
+    fun dispose() {
         if (!isDisposed()) {
-            jobStatusProcessor.onComplete()
-            networkDisposable.clear()
             isDisposed.set(true)
             Log.d(TAG, "job $jobId disposed")
         } else

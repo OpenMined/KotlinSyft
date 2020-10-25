@@ -1,9 +1,7 @@
 package org.openmined.syft.domain
 
-import android.util.Log
-import io.reactivex.Single
-import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.processors.PublishProcessor
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
 import org.openmined.syft.execution.JobStatusMessage
@@ -16,8 +14,9 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
 internal const val PLAN_OP_TYPE = "torchscript"
-private const val TAG = "JobDownloader"
+private const val TAG = "JobRepository"
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 internal class JobRepository(
     private val jobLocalDataSource: JobLocalDataSource,
@@ -28,10 +27,10 @@ internal class JobRepository(
     val status: DownloadStatus
         get() = trainingParamsStatus.get()
 
-    fun getDiffScript(config: SyftConfiguration) =
+    internal fun getDiffScript(config: SyftConfiguration) =
             jobLocalDataSource.getDiffScript(config)
 
-    fun persistToLocalStorage(
+    internal fun persistToLocalStorage(
         input: InputStream,
         parentDir: String,
         fileName: String,
@@ -40,164 +39,103 @@ internal class JobRepository(
         return jobLocalDataSource.save(input, parentDir, fileName, overwrite)
     }
 
-    fun downloadData(
+    suspend fun retrievePlanData(
         workerId: String,
         config: SyftConfiguration,
         requestKey: String,
-        networkDisposable: CompositeDisposable,
-        jobStatusProcessor: PublishProcessor<JobStatusMessage>,
-        clientConfig: ClientConfig?,
-        plans: ConcurrentHashMap<String, Plan>,
-        model: SyftModel,
-        protocols: ConcurrentHashMap<String, Protocol>
-    ) {
-        Log.d(TAG, "beginning download")
-        trainingParamsStatus.set(DownloadStatus.RUNNING)
-
-        networkDisposable.add(
-            Single.zip(
-                getDownloadables(
-                    workerId,
-                    config,
-                    requestKey,
-                    model,
-                    plans,
-                    protocols
-                )
-            ) { successMessages ->
-                successMessages.joinToString(
-                    ",",
-                    prefix = "files ",
-                    postfix = " downloaded successfully"
-                )
-            }
-                    .compose(config.networkingSchedulers.applySingleSchedulers())
-                    .subscribe(
-                        { successMsg: String ->
-                            Log.d(TAG, successMsg)
-                            trainingParamsStatus.set(DownloadStatus.COMPLETE)
-                            jobStatusProcessor.offer(
-                                JobStatusMessage.JobReady(
-                                    model,
-                                    plans,
-                                    clientConfig
-                                )
-                            )
-                        },
-                        { e -> jobStatusProcessor.onError(e) }
-                    )
-        )
+        plans: ConcurrentHashMap<String, Plan>
+    ): List<String> {
+        return plans.values.map { plan ->
+            processPlans(
+                workerId,
+                requestKey,
+                "${config.filesDir}/plans",
+                plan
+            )
+        }
     }
 
-    private fun getDownloadables(
+    suspend fun retrieveProtocolData(
         workerId: String,
         config: SyftConfiguration,
-        request: String,
-        model: SyftModel,
-        plans: ConcurrentHashMap<String, Plan>,
+        requestKey: String,
         protocols: ConcurrentHashMap<String, Protocol>
-    ): List<Single<String>> {
-        val downloadList = mutableListOf<Single<String>>()
-        plans.forEach { (_, plan) ->
-            downloadList.add(
-                processPlans(
-                    workerId,
-                    config,
-                    request,
-                    "${config.filesDir}/plans",
-                    plan
-                )
-            )
-        }
-        protocols.forEach { (_, protocol) ->
+    ): List<String?> {
+        return protocols.values.map { protocol ->
             protocol.protocolFileLocation = "${config.filesDir}/protocols"
-            downloadList.add(
-                processProtocols(
-                    workerId,
-                    config,
-                    request,
-                    protocol.protocolFileLocation,
-                    protocol.protocolId
-                )
+            processProtocols(
+                workerId,
+                requestKey,
+                protocol.protocolFileLocation,
+                protocol.protocolId
             )
         }
-        downloadList.add(processModel(workerId, config, request, model))
-        return downloadList
     }
 
-    private fun processModel(
+    internal suspend fun retrieveModel(
         workerId: String,
         config: SyftConfiguration,
         requestKey: String,
         model: SyftModel
-    ): Single<String> {
+    ): String? {
         val modelId = model.pyGridModelId ?: throw IllegalStateException("Model id not initiated")
         return jobRemoteDataSource.downloadModel(workerId, requestKey, modelId)
-                .flatMap { modelInputStream ->
-                    jobLocalDataSource.saveAsync(
+                ?.let { modelInputStream ->
+                    val modelFile = jobLocalDataSource.saveAsync(
                         modelInputStream,
                         "${config.filesDir}/models",
                         "$modelId.pb"
                     )
-                }.flatMap { modelFile ->
-                    Single.create<String> { emitter ->
-                        model.loadModelState(modelFile)
-                        emitter.onSuccess(modelFile)
-                    }
+                    model.loadModelState(modelFile)
+                    modelFile
                 }
-                .compose(config.networkingSchedulers.applySingleSchedulers())
     }
 
-    private fun processPlans(
+    private suspend fun processPlans(
         workerId: String,
-        config: SyftConfiguration,
         requestKey: String,
         destinationDir: String,
         plan: Plan
-    ): Single<String> {
-        return jobRemoteDataSource.downloadPlan(
+    ): String {
+        val planInputStream = jobRemoteDataSource.downloadPlan(
             workerId,
             requestKey,
             plan.planId,
             PLAN_OP_TYPE
         )
-                .flatMap { planInputStream ->
-                    jobLocalDataSource.saveAsync(
-                        planInputStream,
-                        destinationDir,
-                        "${plan.planId}.pb"
-                    )
-                }.flatMap { filepath ->
-                    Single.create<String> { emitter ->
-                        val torchscriptLocation = jobLocalDataSource.saveTorchScript(
-                            destinationDir,
-                            filepath,
-                            "torchscript_${plan.planId}.pt"
-                        )
-                        plan.loadScriptModule(torchscriptLocation)
-                        emitter.onSuccess(filepath)
-                    }
-                }
-                .compose(config.networkingSchedulers.applySingleSchedulers())
+        return if (planInputStream != null) {
+            val filepath = jobLocalDataSource.saveAsync(
+                planInputStream,
+                destinationDir,
+                "${plan.planId}.pb"
+            )
 
+            val torchscriptLocation = jobLocalDataSource.saveTorchScript(
+                destinationDir,
+                filepath,
+                "torchscript_${plan.planId}.pt"
+            )
+            plan.loadScriptModule(torchscriptLocation)
+            filepath
+        } else {
+            ""
+        }
     }
 
-    private fun processProtocols(
+    private suspend fun processProtocols(
         workerId: String,
-        config: SyftConfiguration,
         requestKey: String,
         destinationDir: String,
         protocolId: String
-    ): Single<String> {
+    ): String? {
         return jobRemoteDataSource.downloadProtocol(workerId, requestKey, protocolId)
-                .flatMap { protocolInputStream ->
+                ?.let { protocolInputStream ->
                     jobLocalDataSource.saveAsync(
                         protocolInputStream,
                         destinationDir,
                         "$protocolId.pb"
                     )
                 }
-                .compose(config.networkingSchedulers.applySingleSchedulers())
     }
 }
 

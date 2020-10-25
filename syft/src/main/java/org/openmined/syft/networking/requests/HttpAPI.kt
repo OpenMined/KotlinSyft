@@ -40,11 +40,11 @@ internal interface HttpAPI : CommunicationAPI {
      * @param random A random integer bit stream.
      */
     @GET("model-centric/speed-test")
-    fun checkPing(
+    suspend fun checkPing(
         @Query("is_ping") isPing: Int = 1,
         @Query("worker_id") workerId: String,
         @Query("random") random: String
-    ): Single<Response<SpeedCheckResponse>>
+    ): Response<SpeedCheckResponse>
 
     /**
      * Check download speed from PyGrid Server.
@@ -54,10 +54,10 @@ internal interface HttpAPI : CommunicationAPI {
      */
     @Streaming
     @GET("model-centric/speed-test")
-    fun downloadSpeedTest(
+    suspend fun downloadSpeedTest(
         @Query("worker_id") workerId: String,
         @Query("random") random: String
-    ): Single<Response<ResponseBody>>
+    ): Response<ResponseBody>
 
     /**
      * Check upload speed to PyGrid Server by uploading a file using multipart post request.
@@ -69,12 +69,12 @@ internal interface HttpAPI : CommunicationAPI {
      */
     @Multipart
     @POST("model-centric/speed-test")
-    fun uploadSpeedTest(
+    suspend fun uploadSpeedTest(
         @Query("worker_id") workerId: String,
         @Query("random") random: String,
         @Part("description") description: RequestBody,
         @Part file_body: MultipartBody.Part
-    ): Single<Response<SpeedCheckResponse>>
+    ): Response<SpeedCheckResponse>
 
     /**
      * Download Plans from PyGrid Server.
@@ -87,12 +87,12 @@ internal interface HttpAPI : CommunicationAPI {
      */
     //    @Streaming
     @GET("/model-centric/get-plan")
-    fun downloadPlan(
+    suspend fun downloadPlan(
         @Query("worker_id") workerId: String,
         @Query("request_key") requestKey: String,
         @Query("plan_id") planId: String,
         @Query("receive_operations_as") op_type: String
-    ): Single<Response<ResponseBody>>
+    ): Response<ResponseBody>
 
     /**
      * Downloads Protocols from PyGrid Server.
@@ -104,11 +104,11 @@ internal interface HttpAPI : CommunicationAPI {
      */
     //    @Streaming
     @GET("/model-centric/get-protocol")
-    fun downloadProtocol(
+    suspend fun downloadProtocol(
         @Query("worker_id") workerId: String,
         @Query("request_key") requestKey: String,
         @Query("protocol_id") protocolId: String
-    ): Single<Response<ResponseBody>>
+    ): Response<ResponseBody>
 
     /**
      * Download Model from PyGrid Server.
@@ -120,11 +120,11 @@ internal interface HttpAPI : CommunicationAPI {
      */
     //    @Streaming
     @GET("/model-centric/get-model")
-    fun downloadModel(
+    suspend fun downloadModel(
         @Query("worker_id") workerId: String,
         @Query("request_key") requestKey: String,
         @Query("model_id") modelId: String
-    ): Single<Response<ResponseBody>>
+    ): Response<ResponseBody>
 
     /**
      * Calls **model-centric/authenticate** for authentication.
@@ -135,7 +135,7 @@ internal interface HttpAPI : CommunicationAPI {
         "Content-Type: application/json"
     )
     @POST(AUTH_TYPE)
-    override fun authenticate(@Body authRequest: AuthenticationRequest): Single<AuthenticationResponse>
+    override suspend fun authenticate(@Body authRequest: AuthenticationRequest): AuthenticationResponse
 
     /**
      * Calls **model-centric/cycle-request** for requesting PyGrid server for training cycle.
@@ -147,7 +147,7 @@ internal interface HttpAPI : CommunicationAPI {
      */
     @Headers("Content-Type: application/json")
     @POST(CYCLE_TYPE)
-    override fun getCycle(@Body cycleRequest: CycleRequest): Single<CycleResponseData>
+    override suspend fun getCycle(@Body cycleRequest: CycleRequest): CycleResponseData
 
     /**
      * Calls **model-centric/report** for sending the updated model back to PyGrid.
@@ -156,5 +156,5 @@ internal interface HttpAPI : CommunicationAPI {
      */
     @Headers("Content-Type: application/json")
     @POST(REPORT_TYPE)
-    override fun report(@Body reportRequest: ReportRequest): Single<ReportResponse>
+    override suspend fun report(@Body reportRequest: ReportRequest): ReportResponse
 }
