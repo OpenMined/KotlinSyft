@@ -3,10 +3,12 @@ package org.openmined.syft.demo.federated.domain
 import androidx.work.ListenableWorker.Result
 import io.reactivex.Single
 import io.reactivex.processors.PublishProcessor
+import kotlinx.coroutines.flow.collect
 import org.openmined.syft.Syft
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.ui.ContentState
 import org.openmined.syft.domain.SyftConfiguration
+import org.openmined.syft.execution.JobStatusMessage
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.Plan
 import org.openmined.syft.execution.SyftJob
@@ -58,6 +60,20 @@ class TrainingTask(
             }
         }
         mnistJob.start(jobStatusSubscriber)
+        mnistJob.getStateFlow().collect { jobStatus ->
+            when (jobStatus) {
+                is JobStatusMessage.JobCycleRejected -> {
+
+                }
+                is JobStatusMessage.JobReady -> {
+                    logger.postLog("Model ${jobStatus.model.modelName} received.\n\nStarting training process")
+                    trainingProcess(mnistJob, jobStatus.model, jobStatus.plans, jobStatus.clientConfig!!, logger)
+                }
+                else -> {
+
+                }
+            }
+        }
         // TODO What to return here?
         return Result.success()
     }

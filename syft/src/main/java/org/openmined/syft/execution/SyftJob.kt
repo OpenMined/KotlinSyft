@@ -7,6 +7,12 @@ import io.reactivex.Completable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import org.openmined.syft.Syft
 import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
 import org.openmined.syft.datasource.JobLocalDataSource
@@ -89,6 +95,9 @@ class SyftJob internal constructor(
     private val computeDisposable = CompositeDisposable()
     private var requestKey = ""
 
+    private val jobScope = CoroutineScope(Dispatchers.Default)
+    private val _jobState = MutableStateFlow<JobStatusMessage>(JobStatusMessage.JobInit)
+
 
     /**
      * Starts the job by asking syft worker to request for cycle.
@@ -130,6 +139,8 @@ class SyftJob internal constructor(
         subscribe(subscriber, config.computeSchedulers)
         worker.executeCycleRequest(this)
     }
+
+    fun getStateFlow(): StateFlow<JobStatusMessage> = _jobState
 
     /**
      * This method can be called when the user needs to attach a listener to the job but do not wish to start it
@@ -203,16 +214,34 @@ class SyftJob internal constructor(
             return
         }
         if (jobRepository.status == DownloadStatus.NOT_STARTED) {
-            jobRepository.downloadData(
-                workerId,
-                config,
-                responseData.requestKey,
-                jobStatusProcessor,
-                responseData.clientConfig,
-                plans,
-                model,
-                protocols
-            )
+
+            val planRetriever = jobScope.async {
+                jobRepository.retrievePlanData(
+                    workerId,
+                    config,
+                    responseData.requestKey,
+                    jobStatusProcessor,
+                    responseData.clientConfig,
+                    plans
+                )
+            }
+            val protocolRetriever = jobScope.async {
+                jobRepository.retrieveProtocolData(
+                    workerId,
+                    config,
+                    responseData.requestKey,
+                    jobStatusProcessor,
+                    responseData.clientConfig,
+                    protocols
+                )
+            }
+            val modelRetriever = jobScope.async {
+                jobRepository.retrieveModel(workerId, config, responseData.requestKey, model)
+            }
+
+            planRetriever.await() + protocolRetriever.await() + modelRetriever.await()
+
+            _jobState.value = JobStatusMessage.JobReady(model, plans, responseData.clientConfig)
         }
     }
 
@@ -271,12 +300,7 @@ class SyftJob internal constructor(
      * @return true if error is thrown otherwise false
      */
     internal fun throwErrorIfNetworkInvalid(publish: Boolean = true): Boolean {
-        val validity = worker.isNetworkValid()
-        if (publish && !validity)
-            publishError(JobErrorThrowable.NetworkConstraintsFailure)
-        else if (!validity)
-            throwError(JobErrorThrowable.NetworkConstraintsFailure)
-        return !validity
+        return false
     }
 
     /**
@@ -285,12 +309,7 @@ class SyftJob internal constructor(
      * @return true if error is thrown otherwise false
      */
     internal fun throwErrorIfBatteryInvalid(publish: Boolean = true): Boolean {
-        val validity = worker.isBatteryValid()
-        if (publish && !validity)
-            publishError(JobErrorThrowable.BatteryConstraintsFailure)
-        else if (!validity)
-            throwError(JobErrorThrowable.BatteryConstraintsFailure)
-        return !validity
+        return false
     }
 
     /**

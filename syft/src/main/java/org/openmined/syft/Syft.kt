@@ -4,12 +4,19 @@ import android.util.Log
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.forEach
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.JobErrorThrowable
+import org.openmined.syft.execution.JobStatusMessage
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.fp.Either
@@ -30,7 +37,7 @@ class Syft internal constructor(
     private val syftConfig: SyftConfiguration,
     private val deviceMonitor: DeviceMonitor,
     private val authToken: String?
-) : Disposable {
+) {
     companion object {
         @Volatile
         private var INSTANCE: Syft? = null
@@ -64,8 +71,9 @@ class Syft internal constructor(
     private var workerJob: SyftJob? = null
     private val compositeDisposable = CompositeDisposable()
     private val isDisposed = AtomicBoolean(false)
+
     // https://github.com/Kotlin/kotlinx.coroutines/issues/1003
-    private val scope = MainScope()
+    private val scope = CoroutineScope(context = Dispatchers.Default)
 
     @Volatile
     private var workerId: String? = null
@@ -90,18 +98,25 @@ class Syft internal constructor(
             throw IndexOutOfBoundsException("maximum number of allowed jobs reached")
 
         workerJob = job
-        job.subscribe(object : JobStatusSubscriber() {
-            override fun onComplete() {
-                workerJob = null
-            }
-
-            override fun onError(throwable: Throwable) {
-                Log.e(TAG, throwable.message.toString())
-                workerJob = null
-            }
-        }, syftConfig.networkingSchedulers)
-
+        startProcessingJobStates(job)
         return job
+    }
+
+    private fun startProcessingJobStates(job: SyftJob) {
+
+        job.getStateFlow().onEach { jobStatus ->
+            when (jobStatus) {
+                is JobStatusMessage.JobCycleRejected -> {
+
+                }
+                is JobStatusMessage.JobReady -> {
+
+                }
+                else -> {
+
+                }
+            }
+        }
     }
 
     internal fun getSyftWorkerId() = workerId
@@ -126,7 +141,11 @@ class Syft internal constructor(
                         .subscribe(
                             { response: CycleResponseData ->
                                 when (response) {
-                                    is CycleResponseData.CycleAccept -> scope.launch { handleCycleAccept(response) }
+                                    is CycleResponseData.CycleAccept -> scope.launch {
+                                        handleCycleAccept(
+                                            response
+                                        )
+                                    }
                                     is CycleResponseData.CycleReject -> handleCycleReject(response)
                                 }
                             },
@@ -143,16 +162,10 @@ class Syft internal constructor(
     }
 
     /**
-     * Check if the syft worker has been disposed
-     * @return True/False
-     */
-    override fun isDisposed() = isDisposed.get()
-
-    /**
      * Explicitly dispose off the worker. All the jobs running in the worker will be disposed off as well.
      * Clears the current singleton worker instance so the immediately next [getInstance] call creates a new syft worker
      */
-    override fun dispose() {
+    fun dispose() {
         Log.d(TAG, "disposing syft worker")
         deviceMonitor.dispose()
         compositeDisposable.clear()

@@ -1,11 +1,6 @@
 package org.openmined.syft.domain
 
-import android.util.Log
-import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.processors.PublishProcessor
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
 import org.openmined.syft.execution.JobStatusMessage
@@ -18,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
 internal const val PLAN_OP_TYPE = "torchscript"
-private const val TAG = "JobDownloader"
+private const val TAG = "JobRepository"
 
 @ExperimentalUnsignedTypes
 internal class JobRepository(
@@ -30,10 +25,10 @@ internal class JobRepository(
     val status: DownloadStatus
         get() = trainingParamsStatus.get()
 
-    fun getDiffScript(config: SyftConfiguration) =
+    internal fun getDiffScript(config: SyftConfiguration) =
             jobLocalDataSource.getDiffScript(config)
 
-    fun persistToLocalStorage(
+    internal fun persistToLocalStorage(
         input: InputStream,
         parentDir: String,
         fileName: String,
@@ -42,80 +37,44 @@ internal class JobRepository(
         return jobLocalDataSource.save(input, parentDir, fileName, overwrite)
     }
 
-    suspend fun downloadData(
+    suspend fun retrievePlanData(
         workerId: String,
         config: SyftConfiguration,
         requestKey: String,
         jobStatusProcessor: PublishProcessor<JobStatusMessage>,
         clientConfig: ClientConfig?,
-        plans: ConcurrentHashMap<String, Plan>,
-        model: SyftModel,
-        protocols: ConcurrentHashMap<String, Protocol>
-    ) {
-        Log.d(TAG, "beginning download")
-        trainingParamsStatus.set(DownloadStatus.RUNNING)
-
-        // We need to launch all the downloadables at the same time
-
-        coroutineScope {
-            val planFunctions = plans.values.map { plan ->
-                async {
-                    processPlans(
-                        workerId,
-                        requestKey,
-                        "${config.filesDir}/plans",
-                        plan
-                    )
-                }
-            }
-            val protocolFunctions = protocols.values.map { protocol ->
-                async {
-                    protocol.protocolFileLocation = "${config.filesDir}/protocols"
-                    processProtocols(
-                        workerId,
-                        requestKey,
-                        protocol.protocolFileLocation,
-                        protocol.protocolId
-                    )
-                }
-            }
-            val modelFunction = async {
-                processModel(
-                    workerId,
-                    config,
-                    requestKey,
-                    model
-                )
-            }
-            planFunctions.awaitAll() + protocolFunctions.awaitAll() + modelFunction.await()
+        plans: ConcurrentHashMap<String, Plan>
+    ): List<String> {
+        return plans.values.map { plan ->
+            processPlans(
+                workerId,
+                requestKey,
+                "${config.filesDir}/plans",
+                plan
+            )
         }
     }
-//            )
-//        { successMessages ->
-//                successMessages.joinToString(
-//                    ",",
-//                    prefix = "files ",
-//                    postfix = " downloaded successfully"
-//                )
-//            }
-//                    .compose(config.networkingSchedulers.applySingleSchedulers())
-//                    .subscribe(
-//                        { successMsg: String ->
-//                            Log.d(TAG, successMsg)
-//                            trainingParamsStatus.set(DownloadStatus.COMPLETE)
-//                            jobStatusProcessor.offer(
-//                                JobStatusMessage.JobReady(
-//                                    model,
-//                                    plans,
-//                                    clientConfig
-//                                )
-//                            )
-//                        },
-//                        { e -> jobStatusProcessor.onError(e) }
-//                    )
-//        )
 
-    private suspend fun processModel(
+    suspend fun retrieveProtocolData(
+        workerId: String,
+        config: SyftConfiguration,
+        requestKey: String,
+        jobStatusProcessor: PublishProcessor<JobStatusMessage>,
+        clientConfig: ClientConfig?,
+        protocols: ConcurrentHashMap<String, Protocol>
+    ): List<String?> {
+        return protocols.values.map { protocol ->
+            protocol.protocolFileLocation = "${config.filesDir}/protocols"
+            processProtocols(
+                workerId,
+                requestKey,
+                protocol.protocolFileLocation,
+                protocol.protocolId
+            )
+        }
+    }
+
+    internal suspend fun retrieveModel(
         workerId: String,
         config: SyftConfiguration,
         requestKey: String,
@@ -131,7 +90,6 @@ internal class JobRepository(
                     )
                     model.loadModelState(modelFile)
                     modelFile
-//                emitter.onSuccess(modelFile)
                 }
     }
 
