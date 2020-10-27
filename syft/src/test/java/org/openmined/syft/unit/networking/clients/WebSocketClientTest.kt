@@ -53,4 +53,12 @@ internal class WebSocketClientTest {
         assert(webSocket.isConnected.get())
     }
 
+    @Test
+    fun `close will stop socket connection`() {
+        webSocket.start()
+        assert(webSocket.isConnected.get())
+        assert(webSocket.close())
+        assert(!webSocket.isConnected.get())
+    }
+
 }
