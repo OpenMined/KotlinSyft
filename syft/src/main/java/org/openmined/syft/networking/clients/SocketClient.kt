@@ -84,7 +84,7 @@ internal class SocketClient(
      * Request or get current active federated learning cycle
      * @see {@link org.openmined.syft.networking.datamodels.syft.CycleRequest CycleRequest}
      * */
-    override fun getCycle(cycleRequest: CycleRequest): Single<CycleResponseData> {
+    override suspend fun getCycle(cycleRequest: CycleRequest): CycleResponseData {
         connectWebSocket()
         Log.d(
             TAG,
@@ -94,6 +94,8 @@ internal class SocketClient(
         return messageProcessor.onBackpressureBuffer()
                 .ofType(CycleResponseData::class.java)
                 .firstOrError()
+                // TODO This must be a Flow
+                .blockingGet()
     }
 
     //todo handle backpressure and first or error

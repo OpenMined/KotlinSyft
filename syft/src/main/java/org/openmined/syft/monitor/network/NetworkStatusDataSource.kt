@@ -82,27 +82,22 @@ internal class NetworkStatusRealTimeDataSource internal constructor(
         } ?: throw Exception("Unknown network. Cannot detect network properties")
     }
 
-    fun updatePing(workerId: String, networkStatusModel: NetworkStatusModel): Completable {
+    suspend fun updatePing(workerId: String): Int {
         val start = System.currentTimeMillis()
-        return downloader.checkPing(
+        val pingResponse = downloader.checkPing(
             workerId = workerId,
             random = Random().ints(128).toString()
         )
-                .flatMapCompletable { response ->
-                    if (response.code() == 200 && response.body()?.error == null) {
-                        networkStatusModel.ping = (System.currentTimeMillis() - start).toInt()
-                        Log.d(TAG, "Ping is ${networkStatusModel.ping} ms")
-                        Completable.complete()
-                    } else
-                        Completable.error(NetworkErrorException("unable to get ping"))
-
-                }
+        return if (pingResponse.code() == 200 && pingResponse.body()?.error == null) {
+            val ping = (System.currentTimeMillis() - start).toInt()
+            Log.d(TAG, "Ping is $ping ms")
+            ping
+        }
+        // TODO Error Management Else error
+        else throw NetworkErrorException("unable to get ping")
     }
 
-    fun updateUploadSpeed(
-        workerId: String,
-        networkStatusModel: NetworkStatusModel
-    ): Completable {
+    suspend fun updateUploadSpeed(workerId: String): Float {
         val fileSize = 64
         val file = File(filesDir, "uploadFile").apply {
             bufferedWriter().use { output ->
@@ -116,81 +111,74 @@ internal class NetworkStatusRealTimeDataSource internal constructor(
         val description = "uploadFile".toRequestBody()
         val start = System.currentTimeMillis() / 1000.0f
 
-        return downloader.uploadSpeedTest(
+        val uploadSpeedResponse = downloader.uploadSpeedTest(
             workerId, Random().ints(128).toString(),
             description,
             body
         )
-                .flatMapCompletable { response ->
-                    if (response.body()?.error == null && response.code() == 200) {
-                        var speed = fileSize * 1024 / (System.currentTimeMillis() / 1000.0f - start)
-                        if (speed > 100000)
-                        //capping infinity
-                            speed = 100000.0f
-                        networkStatusModel.uploadSpeed = speed
-                        Log.d(TAG, "Upload Speed is ${networkStatusModel.uploadSpeed} KBps")
-                        file.delete()
-                        Completable.complete()
 
-                    } else {
-                        file.delete()
-                        Completable.error(NetworkErrorException("unable to verify upload speed"))
-                    }
-                }
+        return if (uploadSpeedResponse.body()?.error == null && uploadSpeedResponse.code() == 200) {
+            var speed = fileSize * 1024 / (System.currentTimeMillis() / 1000.0f - start)
+            if (speed > 100000)
+            //capping infinity
+                speed = 100000.0f
+            Log.d(TAG, "Upload Speed is $speed KBps")
+            file.delete()
+            speed
+        } else {
+            file.delete()
+            // TODO Error Management
+            throw NetworkErrorException("unable to verify upload speed")
+        }
     }
 
-    fun updateDownloadSpeed(workerId: String, networkStatusModel: NetworkStatusModel) =
-            downloader
-                    .downloadSpeedTest(workerId, Random().ints(128).toString())
-                    .flatMap { response ->
-                        evaluateDownloadSpeed(response.body())
-                    }.flatMapCompletable { speed ->
-                        networkStatusModel.downloadSpeed = speed
-                        Log.d(TAG, "Download Speed is ${networkStatusModel.downloadSpeed} KBps")
-                        Completable.complete()
-                    }
+    suspend fun updateDownloadSpeed(workerId: String): Float {
+        val downloadSpeedResponse = downloader
+                .downloadSpeedTest(workerId, Random().ints(128).toString())
+        val evaluateDownloadSpeed = evaluateDownloadSpeed(downloadSpeedResponse.body())
+        Log.d(TAG, "Download Speed is $evaluateDownloadSpeed KBps")
+        return evaluateDownloadSpeed
+    }
 
-    private fun evaluateDownloadSpeed(input: ResponseBody?): Single<Float> {
-        if (input == null)
-            return Single.error(UninitializedPropertyAccessException())
+    private suspend fun evaluateDownloadSpeed(input: ResponseBody?): Float {
+        if (input == null) {
+            throw UninitializedPropertyAccessException()
+        }
 
-        return Single.create { emitter ->
-            var begin = 0
-            var bufferSize = DEFAULT_BUFFER_SIZE
-            val avgSpeedWindow = Array(SPEED_BUFFER_WINDOW) { 0.0f }
-            var start = System.currentTimeMillis()
-            input.byteStream().use { inputStream ->
-                while (true) {
-                    val count = inputStream.readNBuffers(bufferSize)
-                    if (count == 0)
-                        break
-                    val timeTaken = (System.currentTimeMillis() - start) / 1000.0f
-                    if (timeTaken < 0.5) {
-                        bufferSize = Integer.min(
-                            bufferSize * SPEED_MULTIPLICATION_FACTOR,
-                            MAX_SPEED_TESTING_BYTES
-                        )
-                        continue
-                    }
-                    val newSpeed = bufferSize / (timeTaken * 1024)
-                    if (begin % SPEED_BUFFER_WINDOW == 0) {
-                        val avg = avgSpeedWindow.sum() / SPEED_BUFFER_WINDOW
-                        val deviation = avg - avgSpeedWindow.min()!!
-                        if (deviation < 20 && avg > 0) {
-                            break
-                        }
-                    }
-                    avgSpeedWindow[begin % SPEED_BUFFER_WINDOW] = newSpeed
-                    begin += 1
-                    start = System.currentTimeMillis()
-                }
-                emitter.onSuccess(
-                    avgSpeedWindow.sum() / Integer.min(
-                        begin,
-                        SPEED_BUFFER_WINDOW
+        var begin = 0
+        var bufferSize = DEFAULT_BUFFER_SIZE
+        val avgSpeedWindow = Array(SPEED_BUFFER_WINDOW) { 0.0f }
+        var start = System.currentTimeMillis()
+        input.byteStream().use { inputStream ->
+            while (true) {
+                val count = inputStream.readNBuffers(bufferSize)
+                if (count == 0)
+                    break
+                val timeTaken = (System.currentTimeMillis() - start) / 1000.0f
+                if (timeTaken < 0.5) {
+                    bufferSize = Integer.min(
+                        bufferSize * SPEED_MULTIPLICATION_FACTOR,
+                        MAX_SPEED_TESTING_BYTES
                     )
-                )
+                    continue
+                }
+                val newSpeed = bufferSize / (timeTaken * 1024)
+                if (begin % SPEED_BUFFER_WINDOW == 0) {
+                    val avg = avgSpeedWindow.sum() / SPEED_BUFFER_WINDOW
+                    val deviation = avg - avgSpeedWindow.min()!!
+                    if (deviation < 20 && avg > 0) {
+                        break
+                    }
+                }
+                avgSpeedWindow[begin % SPEED_BUFFER_WINDOW] = newSpeed
+                begin += 1
+                start = System.currentTimeMillis()
             }
+
+            return avgSpeedWindow.sum() / Integer.min(
+                begin,
+                SPEED_BUFFER_WINDOW
+            )
         }
     }
 

@@ -45,7 +45,6 @@ internal class JobLocalDataSource {
                         inputStream.copyTo(outputFile)
                     }
                     Log.d(TAG, "file written at ${this.absolutePath}")
-                    return (this.absolutePath)
                 }
             }
             file.absolutePath

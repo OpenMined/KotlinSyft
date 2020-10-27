@@ -110,7 +110,7 @@ class Syft internal constructor(
 
                 }
                 is JobStatusMessage.JobReady -> {
-
+                    // TODO Should we invoke train internally here?
                 }
                 else -> {
 
@@ -126,38 +126,32 @@ class Syft internal constructor(
             return
 
         workerId?.let { id ->
-            compositeDisposable.add(
-                deviceMonitor.getNetworkStatus(id, job.requiresSpeedTest.get())
-                        .flatMap { networkState ->
-                            requestCycle(
-                                id,
-                                job,
-                                networkState.ping,
-                                networkState.downloadSpeed,
-                                networkState.uploadSpeed
-                            )
-                        }
-                        .compose(syftConfig.networkingSchedulers.applySingleSchedulers())
-                        .subscribe(
-                            { response: CycleResponseData ->
-                                when (response) {
-                                    is CycleResponseData.CycleAccept -> scope.launch {
-                                        handleCycleAccept(
-                                            response
-                                        )
-                                    }
-                                    is CycleResponseData.CycleReject -> handleCycleReject(response)
-                                }
-                            },
-                            { errorMsg: Throwable ->
-                                job.publishError(
-                                    JobErrorThrowable.ExternalException(
-                                        errorMsg.message,
-                                        errorMsg.cause
-                                    )
-                                )
-                            })
+            val networkStatus = deviceMonitor.getNetworkStatus(id, job.requiresSpeedTest.get())
+            val cycleResponse = requestCycle(
+                id,
+                job,
+                networkStatus.ping,
+                networkStatus.downloadSpeed,
+                networkStatus.uploadSpeed
             )
+            when (cycleResponse) {
+                is CycleResponseData.CycleAccept -> scope.launch {
+                    handleCycleAccept(
+                        cycleResponse
+                    )
+                }
+                is CycleResponseData.CycleReject -> handleCycleReject(cycleResponse)
+            }
+
+            // TODO Error Management
+//                            job.publishError(
+//                                JobErrorThrowable.ExternalException(
+//                                    errorMsg.message,
+//                                    errorMsg.cause
+//                                )
+//                            )
+//                        })
+
         } ?: executeAuthentication(job)
     }
 
@@ -176,16 +170,16 @@ class Syft internal constructor(
     internal fun isNetworkValid() = deviceMonitor.isNetworkStateValid()
     internal fun isBatteryValid() = deviceMonitor.isBatteryStateValid()
 
-    private fun requestCycle(
+    private suspend fun requestCycle(
         id: String,
         job: SyftJob,
         ping: Int?,
         downloadSpeed: Float?,
         uploadSpeed: Float?
-    ): Single<CycleResponseData> {
+    ): CycleResponseData {
 
         return when (val check = checkConditions(ping, downloadSpeed, uploadSpeed)) {
-            is Either.Left -> Single.error(JobErrorThrowable.NetworkUnreachable(check.a))
+            is Either.Left -> throw(JobErrorThrowable.NetworkUnreachable(check.a))
             is Either.Right -> syftConfig.getSignallingClient().getCycle(
                 CycleRequest(
                     id,
@@ -277,9 +271,4 @@ class Syft internal constructor(
         else if (workerJob == null)
             this.workerId = workerId
     }
-
-    private fun disposeSocketClient() {
-        syftConfig.getWebRTCSignallingClient().dispose()
-    }
-
 }

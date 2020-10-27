@@ -40,11 +40,11 @@ internal interface HttpAPI : CommunicationAPI {
      * @param random A random integer bit stream.
      */
     @GET("model-centric/speed-test")
-    fun checkPing(
+    suspend fun checkPing(
         @Query("is_ping") isPing: Int = 1,
         @Query("worker_id") workerId: String,
         @Query("random") random: String
-    ): Single<Response<SpeedCheckResponse>>
+    ): Response<SpeedCheckResponse>
 
     /**
      * Check download speed from PyGrid Server.
@@ -54,10 +54,10 @@ internal interface HttpAPI : CommunicationAPI {
      */
     @Streaming
     @GET("model-centric/speed-test")
-    fun downloadSpeedTest(
+    suspend fun downloadSpeedTest(
         @Query("worker_id") workerId: String,
         @Query("random") random: String
-    ): Single<Response<ResponseBody>>
+    ): Response<ResponseBody>
 
     /**
      * Check upload speed to PyGrid Server by uploading a file using multipart post request.
@@ -69,12 +69,12 @@ internal interface HttpAPI : CommunicationAPI {
      */
     @Multipart
     @POST("model-centric/speed-test")
-    fun uploadSpeedTest(
+    suspend fun uploadSpeedTest(
         @Query("worker_id") workerId: String,
         @Query("random") random: String,
         @Part("description") description: RequestBody,
         @Part file_body: MultipartBody.Part
-    ): Single<Response<SpeedCheckResponse>>
+    ): Response<SpeedCheckResponse>
 
     /**
      * Download Plans from PyGrid Server.
@@ -147,7 +147,7 @@ internal interface HttpAPI : CommunicationAPI {
      */
     @Headers("Content-Type: application/json")
     @POST(CYCLE_TYPE)
-    override fun getCycle(@Body cycleRequest: CycleRequest): Single<CycleResponseData>
+    override suspend fun getCycle(@Body cycleRequest: CycleRequest): CycleResponseData
 
     /**
      * Calls **model-centric/report** for sending the updated model back to PyGrid.
