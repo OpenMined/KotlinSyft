@@ -135,7 +135,7 @@ internal interface HttpAPI : CommunicationAPI {
         "Content-Type: application/json"
     )
     @POST(AUTH_TYPE)
-    override fun authenticate(@Body authRequest: AuthenticationRequest): Single<AuthenticationResponse>
+    override suspend fun authenticate(@Body authRequest: AuthenticationRequest): AuthenticationResponse
 
     /**
      * Calls **model-centric/cycle-request** for requesting PyGrid server for training cycle.

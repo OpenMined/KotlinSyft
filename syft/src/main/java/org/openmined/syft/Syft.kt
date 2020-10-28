@@ -1,23 +1,14 @@
 package org.openmined.syft
 
 import android.util.Log
-import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.execution.JobErrorThrowable
 import org.openmined.syft.execution.JobStatusMessage
-import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.fp.Either
 import org.openmined.syft.monitor.DeviceMonitor
@@ -180,8 +171,8 @@ class Syft internal constructor(
 
         return when (val check = checkConditions(ping, downloadSpeed, uploadSpeed)) {
             is Either.Left -> throw(JobErrorThrowable.NetworkUnreachable(check.a))
-            is Either.Right -> syftConfig.getSignallingClient().getCycle(
-                CycleRequest(
+            is Either.Right -> {
+                val cycleRequest = CycleRequest(
                     id,
                     job.jobId.modelName,
                     job.jobId.version,
@@ -189,7 +180,8 @@ class Syft internal constructor(
                     downloadSpeed ?: 0.0f,
                     uploadSpeed ?: 0.0f
                 )
-            )
+                syftConfig.getSignallingClient().getCycle(cycleRequest)
+            }
         }
     }
 
@@ -228,40 +220,34 @@ class Syft internal constructor(
     }
 
     private suspend fun executeAuthentication(job: SyftJob) {
-        compositeDisposable.add(
-            syftConfig.getSignallingClient().authenticate(
-                AuthenticationRequest(
-                    authToken,
-                    job.jobId.modelName,
-                    job.jobId.version
-                )
-            )
-                    .compose(syftConfig.networkingSchedulers.applySingleSchedulers())
-                    .subscribe({ response: AuthenticationResponse ->
-                        scope.launch {
-                            when (response) {
-                                is AuthenticationResponse.AuthenticationSuccess -> {
-                                    if (workerId == null) {
-                                        setSyftWorkerId(response.workerId)
-                                    }
-                                    //todo eventually requires_speed test will be migrated to it's own endpoint
-                                    job.requiresSpeedTest.set(response.requiresSpeedTest)
-                                    executeCycleRequest(job)
-                                }
-                                is AuthenticationResponse.AuthenticationError -> {
-                                    job.publishError(
-                                        JobErrorThrowable.AuthenticationFailure(
-                                            response.errorMessage
-                                        )
-                                    )
-                                    Log.d(TAG, response.errorMessage)
-                                }
-                            }
-                        }
-                    }, {
-                        job.publishError(JobErrorThrowable.ExternalException(it.message, it.cause))
-                    })
+        val authRequest = AuthenticationRequest(
+            authToken,
+            job.jobId.modelName,
+            job.jobId.version
         )
+        val response = syftConfig.getSignallingClient().authenticate(authRequest)
+        when (response) {
+            is AuthenticationResponse.AuthenticationSuccess -> {
+                if (workerId == null) {
+                    setSyftWorkerId(response.workerId)
+                }
+                //todo eventually requires_speed test will be migrated to it's own endpoint
+                job.requiresSpeedTest.set(response.requiresSpeedTest)
+                executeCycleRequest(job)
+            }
+            is AuthenticationResponse.AuthenticationError -> {
+                job.publishError(
+                    JobErrorThrowable.AuthenticationFailure(
+                        response.errorMessage
+                    )
+                )
+                Log.d(TAG, response.errorMessage)
+            }
+        }
+//                    , {
+//                        job.publishError(JobErrorThrowable.ExternalException(it.message, it.cause))
+//                    })
+
     }
 
     @Synchronized

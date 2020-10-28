@@ -2,13 +2,16 @@ package org.openmined.syft.networking.clients
 
 import android.util.Log
 import io.reactivex.Single
-import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.json.json
-import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.networking.datamodels.NetworkModels
 import org.openmined.syft.networking.datamodels.SocketResponse
 import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
@@ -38,6 +41,7 @@ private const val TAG = "SocketClient"
  * @property timeout Timeout period
  * @property schedulers Manage multi-threading operations
  * */
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 internal class SocketClient(
     private val syftWebSocket: SyftWebSocket,
@@ -57,15 +61,13 @@ internal class SocketClient(
 
     // Emit socket messages to subscribers
     private val messageProcessor = PublishProcessor.create<NetworkModels>()
-
-    // Manage and clear Disposables
-    private val compositeDisposable = CompositeDisposable()
+    private val messageFlow = MutableStateFlow<NetworkModels?>(null)
 
     /**
      * Authenticate socket connection with PyGrid
      * @see {@link org.openmined.syft.networking.datamodels.syft.AuthenticationRequest AuthenticationRequest}
      * */
-    override fun authenticate(authRequest: AuthenticationRequest): Single<AuthenticationResponse> {
+    override suspend fun authenticate(authRequest: AuthenticationRequest): AuthenticationResponse {
         connectWebSocket()
         Log.d(
             TAG,
@@ -75,9 +77,7 @@ internal class SocketClient(
             ).toString()
         )
         syftWebSocket.send(serializeNetworkModel(REQUESTS.AUTHENTICATION, authRequest))
-        return messageProcessor.onBackpressureLatest()
-                .ofType(AuthenticationResponse::class.java)
-                .firstOrError()
+        return messageFlow.filterIsInstance<AuthenticationResponse>().first()
     }
 
     /**
@@ -91,11 +91,7 @@ internal class SocketClient(
             "sending message: " + serializeNetworkModel(REQUESTS.CYCLE_REQUEST, cycleRequest)
         )
         syftWebSocket.send(serializeNetworkModel(REQUESTS.CYCLE_REQUEST, cycleRequest))
-        return messageProcessor.onBackpressureBuffer()
-                .ofType(CycleResponseData::class.java)
-                .firstOrError()
-                // TODO This must be a Flow
-                .blockingGet()
+        return messageFlow.filterIsInstance<CycleResponseData>().first()
     }
 
     //todo handle backpressure and first or error
@@ -105,6 +101,7 @@ internal class SocketClient(
     override fun report(reportRequest: ReportRequest): Single<ReportResponse> {
         connectWebSocket()
         syftWebSocket.send(serializeNetworkModel(REQUESTS.REPORT, reportRequest))
+//        messageFlow.filterIsInstance<ReportResponse>().first()
         return messageProcessor.onBackpressureDrop()
                 .ofType(ReportResponse::class.java)
                 .firstOrError()
@@ -122,6 +119,7 @@ internal class SocketClient(
                 joinRoomRequest
             )
         )
+//        return messageFlow.filterIsInstance<JoinRoomResponse>().first()
         return messageProcessor.onBackpressureBuffer()
                 .ofType(JoinRoomResponse::class.java)
                 .firstOrError()
@@ -142,9 +140,9 @@ internal class SocketClient(
     /**
      * Listen and handle socket events
      * */
-    fun initiateNewWebSocket() {
-        compositeDisposable.add(syftWebSocket.start()
-                .map {
+    private fun initiateNewWebSocket() {
+        syftWebSocket.start()
+                .onEach {
                     when (it) {
                         is NetworkMessage.SocketOpen -> {
                         }
@@ -157,16 +155,12 @@ internal class SocketClient(
                             Log.d(TAG, "received the message " + it.message)
                             emitMessage(deserializeSocket(it.message))
                         }
+                        else -> {
+                        }
                     }
-                }
-                .subscribeOn(schedulers.computeThreadScheduler)
-                .observeOn(schedulers.calleeThreadScheduler)
-                .doOnEach {
                     if (!socketClientSubscribed.get())
                         socketClientSubscribed.set(true)
                 }
-                .subscribe()
-        )
     }
 
     // Check socket status to free resources
@@ -174,13 +168,12 @@ internal class SocketClient(
 
     // Free resources
     override fun dispose() {
-        compositeDisposable.clear()
         if (isDisposed) {
             syftWebSocket.dispose()
             socketClientSubscribed.set(false)
             Log.d(TAG, "Socket Client Disposed")
         } else
-            Log.d(TAG,"socket client already disposed")
+            Log.d(TAG, "socket client already disposed")
     }
 
     /**
@@ -196,6 +189,7 @@ internal class SocketClient(
      * Emit message to the subscribers
      * */
     private fun emitMessage(response: SocketResponse) {
+        messageFlow.value = response.data
         messageProcessor.offer(response.data)
     }
 
@@ -211,10 +205,10 @@ internal class SocketClient(
      * */
     private fun serializeNetworkModel(types: MessageTypes, data: NetworkModels) = json {
         TYPE to types.value
-            if (types is ResponseMessageTypes)
-                DATA to types.serialize(data)
-            else
-            //todo change this appropriately when needed
-                DATA to data.toString()
-        }
+        if (types is ResponseMessageTypes)
+            DATA to types.serialize(data)
+        else
+        //todo change this appropriately when needed
+            DATA to data.toString()
+    }
 }

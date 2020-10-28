@@ -10,7 +10,7 @@ import org.openmined.syft.networking.datamodels.syft.ReportResponse
 
 
 internal interface CommunicationAPI {
-    fun authenticate(authRequest: AuthenticationRequest): Single<AuthenticationResponse>
+    suspend fun authenticate(authRequest: AuthenticationRequest): AuthenticationResponse
 
     suspend fun getCycle(cycleRequest: CycleRequest): CycleResponseData
 

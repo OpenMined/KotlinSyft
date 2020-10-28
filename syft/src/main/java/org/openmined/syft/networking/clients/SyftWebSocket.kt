@@ -5,6 +5,9 @@ import io.reactivex.Flowable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.BiFunction
 import io.reactivex.processors.PublishProcessor
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.JsonObject
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -37,6 +40,7 @@ private const val MAX_RETRY_TIMEOUT = 20000L
  * @param address Address to connect
  * @param keepAliveTimeout Timeout period
  * */
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 internal class SyftWebSocket(
     protocol: NetworkingProtocol,
@@ -65,12 +69,6 @@ internal class SyftWebSocket(
     internal var syftSocketListener = SyftSocketListener()
 
     /**
-     * Emit messages to subscribers
-     */
-    private val statusPublishProcessor: PublishProcessor<NetworkMessage> =
-            PublishProcessor.create<NetworkMessage>()
-
-    /**
      *  store the web socket connection
      */
     private var webSocket: WebSocket? = null
@@ -87,6 +85,8 @@ internal class SyftWebSocket(
     @Volatile
     internal var isConnected = AtomicBoolean(false)
 
+    private val statusPublishFlow = MutableStateFlow<NetworkMessage>(NetworkMessage.Started)
+
     /**
      * Manage and free used resource
      */
@@ -95,9 +95,9 @@ internal class SyftWebSocket(
     /**
      * connect socket to PyGrid, manage back-pressure with emitting messages
      * */
-    fun start(): Flowable<NetworkMessage> {
+    fun start(): StateFlow<NetworkMessage> {
         connect()
-        return statusPublishProcessor.onBackpressureBuffer()
+        return statusPublishFlow
     }
 
     /**
@@ -118,12 +118,13 @@ internal class SyftWebSocket(
 
         var retryDelay = 1000L
 
+        // TODO retry process. Extract to its own function.
         connectionDisposable = socketStatusProcessor.retryWhen { errors ->
             errors.zipWith(
                 Flowable.range(1, MAX_RETRY_CONNECTS + 1),
                 BiFunction<Throwable, Int, Int> { error: Throwable, retryCount: Int ->
                     if (retryCount > MAX_RETRY_CONNECTS) throw error
-                    statusPublishProcessor.offer(NetworkMessage.SocketError(error))
+                    statusPublishFlow.value = NetworkMessage.SocketError(error)
                     retryCount
                 }
             ).flatMap {
@@ -148,35 +149,35 @@ internal class SyftWebSocket(
 
     override fun isDisposed(): Boolean = isConnected.get()
 
-     /**
-      * Override WebSocketListener life cycle methods
-      */
+    /**
+     * Override WebSocketListener life cycle methods
+     */
     inner class SyftSocketListener : WebSocketListener() {
 
-         /**
-          * Connection accepted by PyGrid and notify subscribers
-          */
+        /**
+         * Connection accepted by PyGrid and notify subscribers
+         */
         override fun onOpen(webSocket: WebSocket, response: Response) {
             super.onOpen(webSocket, response)
             this@SyftWebSocket.webSocket = webSocket
-            statusPublishProcessor.offer(NetworkMessage.SocketOpen)
+            statusPublishFlow.value = NetworkMessage.SocketOpen
         }
 
-         /**
-          * Message received and emit the message to the subscribers
-          */
+        /**
+         * Message received and emit the message to the subscribers
+         */
         override fun onMessage(webSocket: WebSocket, text: String) {
-            statusPublishProcessor.offer(NetworkMessage.MessageReceived(text))
+            statusPublishFlow.value = NetworkMessage.MessageReceived(text)
         }
 
-         /**
-          *  Handle socket failure and notify subscribers. And try to reconnect
-          */
+        /**
+         *  Handle socket failure and notify subscribers. And try to reconnect
+         */
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             super.onFailure(webSocket, t, response)
-            statusPublishProcessor.offer(NetworkMessage.SocketError(t))
-             isConnected.set(false)
-             socketStatusProcessor.onError(t)
+            statusPublishFlow.value = NetworkMessage.SocketError(t)
+            isConnected.set(false)
+            socketStatusProcessor.onError(t)
         }
     }
 }
