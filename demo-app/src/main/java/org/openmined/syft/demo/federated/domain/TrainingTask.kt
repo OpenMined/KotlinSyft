@@ -29,7 +29,7 @@ class TrainingTask(
 
     suspend fun runTask(logger: MnistLogger): Result {
         syftWorker = Syft.getInstance(configuration, authToken)
-        val mnistJob = syftWorker!!.newJob("mnist", "1.0.0")
+        val mnistJob = syftWorker!!.newJob("mnist", "1.0.1")
         val statusPublisher = PublishProcessor.create<Result>()
 
         logger.postLog("MNIST job started \n\nChecking for download and upload speeds")
@@ -60,20 +60,6 @@ class TrainingTask(
             }
         }
         mnistJob.start(jobStatusSubscriber)
-        mnistJob.getStateFlow().collect { jobStatus ->
-            when (jobStatus) {
-                is JobStatusMessage.JobCycleRejected -> {
-
-                }
-                is JobStatusMessage.JobReady -> {
-                    logger.postLog("Model ${jobStatus.model.modelName} received.\n\nStarting training process")
-                    trainingProcess(mnistJob, jobStatus.model, jobStatus.plans, jobStatus.clientConfig!!, logger)
-                }
-                else -> {
-
-                }
-            }
-        }
         // TODO What to return here?
         return Result.success()
     }

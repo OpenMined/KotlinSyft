@@ -89,25 +89,7 @@ class Syft internal constructor(
             throw IndexOutOfBoundsException("maximum number of allowed jobs reached")
 
         workerJob = job
-        startProcessingJobStates(job)
         return job
-    }
-
-    private fun startProcessingJobStates(job: SyftJob) {
-
-        job.getStateFlow().onEach { jobStatus ->
-            when (jobStatus) {
-                is JobStatusMessage.JobCycleRejected -> {
-
-                }
-                is JobStatusMessage.JobReady -> {
-                    // TODO Should we invoke train internally here?
-                }
-                else -> {
-
-                }
-            }
-        }
     }
 
     internal fun getSyftWorkerId() = workerId

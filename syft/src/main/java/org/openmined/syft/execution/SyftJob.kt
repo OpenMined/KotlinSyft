@@ -9,9 +9,14 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.openmined.syft.Syft
 import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
@@ -39,6 +44,7 @@ private const val TAG = "SyftJob"
  * @property config : The configuration class for schedulers and clients
  * @property jobRepository : The repository dealing data downloading and file writing of job
  */
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 class SyftJob internal constructor(
     modelName: String,
@@ -136,11 +142,9 @@ class SyftJob internal constructor(
             subscriber.onError(JobErrorThrowable.RunningDisposedJob)
             return
         }
-        subscribe(subscriber, config.computeSchedulers)
+        subscribe(subscriber)
         worker.executeCycleRequest(this)
     }
-
-    fun getStateFlow(): StateFlow<JobStatusMessage> = _jobState
 
     /**
      * This method can be called when the user needs to attach a listener to the job but do not wish to start it
@@ -148,29 +152,24 @@ class SyftJob internal constructor(
      * @see org.openmined.syft.execution.JobStatusSubscriber for available methods
      * @sample org.openmined.syft.Syft.newJob
      */
-    fun subscribe(
-        subscriber: JobStatusSubscriber,
-        schedulers: ProcessSchedulers
+    private fun subscribe(
+        subscriber: JobStatusSubscriber
     ) {
-        statusDisposable = jobStatusProcessor.onBackpressureBuffer()
-                .subscribeOn(schedulers.calleeThreadScheduler)
-                .subscribe(
-                    { message ->
-                        computeDisposable.add(Completable.create {
-                            subscriber.onJobStatusMessage(message)
-                            it.onComplete()
-                        }.subscribeOn(schedulers.computeThreadScheduler).subscribe({}, {
-                            subscriber.onError(it)
-                        }))
-                    },
-                    { error ->
-                        subscriber.onError(error)
-                        computeDisposable.clear()
-                        computeDisposable.dispose()
-                    },
-                    { subscriber.onComplete() }
-                )
-
+        _jobState.onEach { jobStatus ->
+            Log.d(TAG, "Received $jobStatus")
+            when (jobStatus) {
+                is JobStatusMessage.JobCycleRejected -> {
+                    subscriber.onRejected(jobStatus.timeout)
+                }
+                is JobStatusMessage.JobReady -> {
+                    Log.d(TAG, "Job Ready. Notifyting subscriber")
+                    subscriber.onReady(jobStatus.model, jobStatus.plans, jobStatus.clientConfig!!)
+                }
+                else -> {
+                    // TODO Other job states to be handled
+                }
+            }
+        }.launchIn(jobScope)
     }
 
     /**
@@ -239,7 +238,10 @@ class SyftJob internal constructor(
                 jobRepository.retrieveModel(workerId, config, responseData.requestKey, model)
             }
 
+            Log.d(TAG, "Start downloading all data")
             planRetriever.await() + protocolRetriever.await() + modelRetriever.await()
+
+            Log.d(TAG, "Data downloaded")
 
             _jobState.value = JobStatusMessage.JobReady(model, plans, responseData.clientConfig)
         }
