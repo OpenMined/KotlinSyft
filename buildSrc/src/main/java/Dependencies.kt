@@ -20,7 +20,7 @@ object Versions {
     const val material="1.1.0"
     const val workManagerVersion = "2.3.4"
     const val lifecycleVersion = "2.2.0"
-    const val lifeCycleViewModelVersion = "2.1.0-beta01"
+    const val lifeCycleViewModelVersion = "2.2.0"
     // Tools
     const val rxJava = "2.2.12"
     const val rxAndroid = "2.1.1"
@@ -32,7 +32,7 @@ object Versions {
     const val kotlinConverter = "0.4.0"
     const val pytorchAndroid = "1.4.0"
     const val mpAndroidChart = "v3.1.0"
-    const val coroutines = "1.3.7"
+    const val coroutines = "1.4.0"
 
     // release management
     const val netflixPublishing = "17.3.2"
@@ -69,7 +69,6 @@ object ProjectDependencies {
 object CommonDependencies {
     const val appCompat = "androidx.appcompat:appcompat:${Versions.appCompat}"
     const val coreKtx = "androidx.core:core-ktx:${Versions.coreKtx}"
-    const val lifecycleViewModel = "androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.lifeCycleViewModelVersion}"
     const val kotlinSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-runtime:${Versions.kotlinSerialization}"
     const val kotlinSerializationFactory = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:${Versions.kotlinConverter}"
     const val rxJava = "io.reactivex.rxjava2:rxjava:${Versions.rxJava}"
@@ -92,8 +91,9 @@ object DemoAppDependencies {
     const val kotlinJDK = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
     const val materialAndroid = "com.google.android.material:material:${Versions.material}"
     const val mpAndroidChart = "com.github.PhilJay:MPAndroidChart:${Versions.mpAndroidChart}"
-    const val lifecycle = "androidx.lifecycle:lifecycle-livedata-ktx:${Versions.lifecycleVersion}"
+    const val lifecycleLiveData = "androidx.lifecycle:lifecycle-livedata-ktx:${Versions.lifecycleVersion}"
     const val lifeCycleProcess = "androidx.lifecycle:lifecycle-process:${Versions.lifecycleVersion}"
+    const val lifecycleViewModel = "androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.lifeCycleViewModelVersion}"
 
     const val workKtx = "androidx.work:work-runtime-ktx:${Versions.workManagerVersion}"
     const val workRX = "androidx.work:work-rxjava2:${Versions.workManagerVersion}"

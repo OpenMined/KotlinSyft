@@ -12,6 +12,7 @@ import org.openmined.syft.networking.requests.CommunicationAPI
 import org.openmined.syft.threading.ProcessSchedulers
 import java.io.File
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 class SyftConfiguration internal constructor(
     val context: Context,
@@ -28,6 +29,7 @@ class SyftConfiguration internal constructor(
     private val httpClient: HttpClient,
     private val messagingClient: NetworkingClients
 ) {
+    @ExperimentalCoroutinesApi
     companion object {
         fun builder(context: Context, baseUrl: String) = SyftConfigBuilder(context, baseUrl)
     }

@@ -99,7 +99,8 @@ class SyftJob internal constructor(
     private val networkDisposable = CompositeDisposable()
     private var requestKey = ""
 
-    private val jobScope = CoroutineScope(Dispatchers.Default)
+    private val jobScope = CoroutineScope(Dispatchers.IO)
+    // TODO This is only used internally. It can be replaced by direct calls to the subscriber
     private val _jobState = MutableStateFlow<JobStatusMessage>(JobStatusMessage.JobInit)
 
 
@@ -302,7 +303,12 @@ class SyftJob internal constructor(
      * @return true if error is thrown otherwise false
      */
     internal fun throwErrorIfNetworkInvalid(publish: Boolean = true): Boolean {
-        return false
+        val validity = worker.isNetworkValid()
+        if (publish && !validity)
+            publishError(JobErrorThrowable.NetworkConstraintsFailure)
+        else if (!validity)
+            throwError(JobErrorThrowable.NetworkConstraintsFailure)
+        return !validity
     }
 
     /**
@@ -311,7 +317,12 @@ class SyftJob internal constructor(
      * @return true if error is thrown otherwise false
      */
     internal fun throwErrorIfBatteryInvalid(publish: Boolean = true): Boolean {
-        return false
+        val validity = worker.isBatteryValid()
+        if (publish && !validity)
+            publishError(JobErrorThrowable.BatteryConstraintsFailure)
+        else if (!validity)
+            throwError(JobErrorThrowable.BatteryConstraintsFailure)
+        return !validity
     }
 
     /**

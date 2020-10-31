@@ -27,9 +27,10 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
 
-    dataBinding {
-        enabled true
+    buildFeatures {
+        dataBinding true
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -58,9 +59,9 @@ dependencies {
     implementation DemoAppDependencies.workKtx
     implementation DemoAppDependencies.workGCM
     implementation DemoAppDependencies.workRX
-    implementation CommonDependencies.coroutines
-    implementation DemoAppDependencies.lifecycle
+    implementation DemoAppDependencies.lifecycleLiveData
     implementation DemoAppDependencies.lifeCycleProcess
+    implementation DemoAppDependencies.lifecycleViewModel
 
     // TODO During the first stages of the project, include the library here. Later on we should use the library from the repository
     implementation project(path: ':syft')

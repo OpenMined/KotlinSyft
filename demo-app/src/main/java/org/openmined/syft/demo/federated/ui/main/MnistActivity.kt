@@ -13,6 +13,7 @@ import com.github.mikephil.charting.data.LineDataSet
 import kotlinx.android.synthetic.main.activity_mnist.chart
 import kotlinx.android.synthetic.main.activity_mnist.progressBar
 import kotlinx.android.synthetic.main.activity_mnist.toolbar
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityMnistBinding
 import org.openmined.syft.demo.federated.datasource.LocalMNISTDataDataSource
@@ -26,6 +27,7 @@ const val AUTH_TOKEN = "authToken"
 const val BASE_URL = "baseUrl"
 private const val TAG = "MnistActivity"
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class MnistActivity : AppCompatActivity() {
@@ -74,6 +76,7 @@ class MnistActivity : AppCompatActivity() {
         val config = SyftConfiguration.builder(this, viewModel.baseUrl)
                 .setMessagingClient(SyftConfiguration.NetworkingClients.HTTP)
                 .setCacheTimeout(0L)
+                .disableBatteryCheck()
                 .build()
         val localMNISTDataDataSource = LocalMNISTDataDataSource(resources)
         val dataRepository = MNISTDataRepository(localMNISTDataDataSource)
