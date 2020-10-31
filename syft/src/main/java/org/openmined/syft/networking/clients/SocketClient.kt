@@ -98,13 +98,11 @@ internal class SocketClient(
     /**
      * Report model state to PyGrid after the cycle completes
      * */
-    override fun report(reportRequest: ReportRequest): Single<ReportResponse> {
+    override suspend fun report(reportRequest: ReportRequest): ReportResponse {
         connectWebSocket()
         syftWebSocket.send(serializeNetworkModel(REQUESTS.REPORT, reportRequest))
-//        messageFlow.filterIsInstance<ReportResponse>().first()
-        return messageProcessor.onBackpressureDrop()
-                .ofType(ReportResponse::class.java)
-                .firstOrError()
+        // TODO Error management. Return null as error?
+        return messageFlow.filterIsInstance<ReportResponse>().first()
     }
 
     //todo handle backpressure and first or error

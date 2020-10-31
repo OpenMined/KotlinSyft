@@ -97,8 +97,6 @@ class SyftJob internal constructor(
     internal val model = SyftModel(modelName, version)
 
     private val networkDisposable = CompositeDisposable()
-    private var statusDisposable: Disposable? = null
-    private val computeDisposable = CompositeDisposable()
     private var requestKey = ""
 
     private val jobScope = CoroutineScope(Dispatchers.Default)
@@ -164,6 +162,9 @@ class SyftJob internal constructor(
                 is JobStatusMessage.JobReady -> {
                     Log.d(TAG, "Job Ready. Notifyting subscriber")
                     subscriber.onReady(jobStatus.model, jobStatus.plans, jobStatus.clientConfig!!)
+                }
+                is JobStatusMessage.Complete -> {
+                    subscriber.onComplete()
                 }
                 else -> {
                     // TODO Other job states to be handled
@@ -266,34 +267,33 @@ class SyftJob internal constructor(
      * Once training is finished submit the new model weights to PyGrid to complete the cycle
      * @param diff the difference of the new and old model weights serialised into [State][org.openmined.syft.proto.SyftState]
      */
-    fun report(diff: SyftState) {
+    suspend fun report(diff: SyftState) {
         val workerId = worker.getSyftWorkerId()
         if (throwErrorIfNetworkInvalid() ||
             throwErrorIfBatteryInvalid()
         ) return
 
-        if (!workerId.isNullOrEmpty() && requestKey.isNotEmpty())
-            networkDisposable.add(
-                config.getSignallingClient()
-                        .report(
-                            ReportRequest(
-                                workerId,
-                                requestKey,
-                                Base64.encodeToString(
-                                    diff.serialize().toByteArray(),
-                                    Base64.DEFAULT
-                                )
+        if (!workerId.isNullOrEmpty() && requestKey.isNotEmpty()) {
+            config.getSignallingClient()
+                    .report(
+                        ReportRequest(
+                            workerId,
+                            requestKey,
+                            Base64.encodeToString(
+                                diff.serialize().toByteArray(),
+                                Base64.DEFAULT
                             )
                         )
-                        .compose(config.networkingSchedulers.applySingleSchedulers())
-                        .subscribe { reportResponse: ReportResponse ->
-                            if (reportResponse.error != null)
-                                publishError(JobErrorThrowable.NetworkResponseFailure(reportResponse.error))
-                            if (reportResponse.status != null) {
-                                Log.d(TAG, "report status ${reportResponse.status}")
-                                jobStatusProcessor.onComplete()
-                            }
-                        })
+                    )
+            _jobState.value = JobStatusMessage.Complete
+        }
+        // TODO Error management
+//                            if (reportResponse.error != null)
+//                                publishError(JobErrorThrowable.NetworkResponseFailure(reportResponse.error))
+//                            if (reportResponse.status != null) {
+//                                Log.d(TAG, "report status ${reportResponse.status}")
+//                                jobStatusProcessor.onComplete()
+//                            }
     }
 
     /**

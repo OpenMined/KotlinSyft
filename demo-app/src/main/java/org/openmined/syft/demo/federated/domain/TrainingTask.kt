@@ -1,14 +1,15 @@
 package org.openmined.syft.demo.federated.domain
 
 import androidx.work.ListenableWorker.Result
-import io.reactivex.Single
 import io.reactivex.processors.PublishProcessor
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import org.openmined.syft.Syft
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.ui.ContentState
 import org.openmined.syft.domain.SyftConfiguration
-import org.openmined.syft.execution.JobStatusMessage
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.Plan
 import org.openmined.syft.execution.SyftJob
@@ -18,18 +19,19 @@ import org.pytorch.IValue
 import org.pytorch.Tensor
 import java.util.concurrent.ConcurrentHashMap
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class TrainingTask(
-    private val configuration: SyftConfiguration,
-    private val authToken: String,
+    configuration: SyftConfiguration,
+    authToken: String,
     private val mnistDataRepository: MNISTDataRepository
 ) {
-    private var syftWorker: Syft? = null
+    private val syftWorker = Syft.getInstance(configuration, authToken)
+    private val taskScope = CoroutineScope(Dispatchers.Default)
 
     suspend fun runTask(logger: MnistLogger): Result {
-        syftWorker = Syft.getInstance(configuration, authToken)
-        val mnistJob = syftWorker!!.newJob("mnist", "1.0.1")
+        val mnistJob = syftWorker.newJob("mnist", "1.0.1")
         val statusPublisher = PublishProcessor.create<Result>()
 
         logger.postLog("MNIST job started \n\nChecking for download and upload speeds")
@@ -41,11 +43,14 @@ class TrainingTask(
                 clientConfig: ClientConfig
             ) {
                 logger.postLog("Model ${model.modelName} received.\n\nStarting training process")
-                trainingProcess(mnistJob, model, plans, clientConfig, logger)
+                // TODO This will be changed when trainingProcess is moved to SyftJob
+                taskScope.launch {
+                    trainingProcess(mnistJob, model, plans, clientConfig, logger)
+                }
             }
 
             override fun onComplete() {
-                syftWorker?.dispose()
+                syftWorker.dispose()
                 statusPublisher.offer(Result.success())
             }
 
@@ -65,10 +70,10 @@ class TrainingTask(
     }
 
     fun disposeTraining() {
-        syftWorker?.dispose()
+        syftWorker.dispose()
     }
 
-    private fun trainingProcess(
+    private suspend fun trainingProcess(
         mnistJob: SyftJob,
         model: SyftModel,
         plans: ConcurrentHashMap<String, Plan>,

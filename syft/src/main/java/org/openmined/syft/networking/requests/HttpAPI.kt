@@ -156,5 +156,5 @@ internal interface HttpAPI : CommunicationAPI {
      */
     @Headers("Content-Type: application/json")
     @POST(REPORT_TYPE)
-    override fun report(@Body reportRequest: ReportRequest): Single<ReportResponse>
+    override suspend fun report(@Body reportRequest: ReportRequest): ReportResponse
 }
