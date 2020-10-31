@@ -52,7 +52,7 @@ class SyftJob internal constructor(
     private val worker: Syft,
     private val config: SyftConfiguration,
     private val jobRepository: JobRepository
-) : Disposable {
+) {
 
     companion object {
 
@@ -335,12 +335,12 @@ class SyftJob internal constructor(
     /**
      * Identifies if the job is already disposed
      */
-    override fun isDisposed() = isDisposed.get()
+    private fun isDisposed() = isDisposed.get()
 
     /**
      * Dispose the job. Once disposed, a job cannot be resumed again.
      */
-    override fun dispose() {
+    fun dispose() {
         if (!isDisposed()) {
             jobStatusProcessor.onComplete()
             networkDisposable.clear()

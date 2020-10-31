@@ -1,12 +1,15 @@
 package org.openmined.syft.networking.clients
 
 import android.util.Log
-import io.reactivex.disposables.CompositeDisposable
-import org.openmined.syft.networking.datamodels.webRTC.InternalMessageRequest
-import org.openmined.syft.networking.datamodels.webRTC.JoinRoomRequest
-import org.openmined.syft.networking.datamodels.webRTC.JoinRoomResponse
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import org.openmined.syft.networking.requests.WebRTCMessageTypes
-import org.openmined.syft.threading.ProcessSchedulers
+import org.openmined.syft.networking.datamodels.webRTC.JoinRoomResponse
+import org.openmined.syft.networking.datamodels.webRTC.JoinRoomRequest
+import org.openmined.syft.networking.datamodels.webRTC.InternalMessageRequest
+import org.openmined.syft.networking.datamodels.webRTC.InternalMessageResponse
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
 import org.webrtc.MediaStream
@@ -17,34 +20,29 @@ import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
 import java.nio.ByteBuffer
 
-
 internal typealias SDP_Type = SessionDescription.Type
-
 
 private const val TAG = "WebRTCClient"
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 internal class WebRTCClient(
     private val peerConnectionFactory: PeerConnectionFactory,
     private val peerConfig: PeerConnection.RTCConfiguration,
-    private val socketClient: SocketClient,
-    private val schedulers: ProcessSchedulers
+    private val socketClient: SocketClient
 ) {
 
     private val peers = HashMap<String, Peer>()
-    private val compositeDisposable = CompositeDisposable()
     private lateinit var workerId: String
     private lateinit var scopeId: String
+    private val clientScope = CoroutineScope(Dispatchers.IO)
 
-    fun start(workerId: String, scopeId: String) {
+    suspend fun start(workerId: String, scopeId: String) {
         Log.d(TAG, "Joining room $scopeId")
 
         this.workerId = workerId
         this.scopeId = scopeId
-        compositeDisposable.add(socketClient.joinRoom(JoinRoomRequest(workerId, scopeId))
-                .compose(schedulers.applySingleSchedulers())
-                .subscribe { _: JoinRoomResponse?, _: Throwable? -> }
-        )
+        socketClient.joinRoom(JoinRoomRequest(workerId, scopeId))
     }
 
     fun stop() {
@@ -114,19 +112,21 @@ internal class WebRTCClient(
      * @param type
      * @param message
      */
-    private fun sendInternalMessage(type: WebRTCMessageTypes, message: String, target: String) {
+    private suspend fun sendInternalMessage(
+        type: WebRTCMessageTypes,
+        message: String,
+        target: String
+    ) {
         if (target != workerId) {
             Log.d(TAG, "Sending Internal WebRTC message via PyGrid")
-            compositeDisposable.add(
-                this.socketClient.sendInternalMessage(
-                    InternalMessageRequest(
-                        workerId,
-                        scopeId,
-                        target,
-                        type.value,
-                        message
-                    )
-                ).compose(schedulers.applySingleSchedulers()).subscribe()
+            this.socketClient.sendInternalMessage(
+                InternalMessageRequest(
+                    workerId,
+                    scopeId,
+                    target,
+                    type.value,
+                    message
+                )
             )
         }
     }
@@ -215,11 +215,13 @@ internal class WebRTCClient(
             val connection = peers[newWorkerId]?.connection ?: return
             val sendIce = {
                 peers[newWorkerId]!!.candidateQueue.forEach {
-                    sendInternalMessage(
-                        WebRTCMessageTypes.CANDIDATE,
-                        it.sdp,
-                        newWorkerId
-                    )
+                    clientScope.launch {
+                        sendInternalMessage(
+                            WebRTCMessageTypes.CANDIDATE,
+                            it.sdp,
+                            newWorkerId
+                        )
+                    }
                 }
             }
 
@@ -233,11 +235,13 @@ internal class WebRTCClient(
                         "successfully finished setting ${creatorType.canonicalForm()} as Local description"
                     )
                     Log.d(TAG, "sending ${creatorType.canonicalForm()} and stored ICE candidates")
-                    sendInternalMessage(
-                        WebRTCMessageTypes.OFFER,
-                        connection.localDescription.description,
-                        newWorkerId
-                    )
+                    clientScope.launch {
+                        sendInternalMessage(
+                            WebRTCMessageTypes.OFFER,
+                            connection.localDescription.description,
+                            newWorkerId
+                        )
+                    }
                 } else {
                     Log.d(TAG, "successfully set Remote description")
                     sendIce()
@@ -252,12 +256,14 @@ internal class WebRTCClient(
                         "successfully finished setting ${creatorType.canonicalForm()} as Local description"
                     )
                     Log.d(TAG, "sending ${creatorType.canonicalForm()} and stored ICE candidates")
-                    sendInternalMessage(
-                        WebRTCMessageTypes.ANSWER,
-                        connection.localDescription.description,
-                        newWorkerId
-                    )
-                    sendIce()
+                    clientScope.launch {
+                        sendInternalMessage(
+                            WebRTCMessageTypes.ANSWER,
+                            connection.localDescription.description,
+                            newWorkerId
+                        )
+                        sendIce()
+                    }
                 } else {
                     // We've just set remote SDP - do nothing for now -
                     // answer will be created soon.

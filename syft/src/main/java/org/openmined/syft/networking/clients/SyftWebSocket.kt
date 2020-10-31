@@ -46,7 +46,7 @@ internal class SyftWebSocket(
     protocol: NetworkingProtocol,
     address: String,
     keepAliveTimeout: UInt
-) : Disposable {
+) {
 
     /**
      * Required to create web socket connection
@@ -139,15 +139,15 @@ internal class SyftWebSocket(
         socketStatusProcessor.offer(client.newWebSocket(request, syftSocketListener))
     }
 
-    override fun dispose() {
+    fun dispose() {
         connectionDisposable.dispose()
-        if (isDisposed) {
+        if (isDisposed()) {
             close()
             isConnected.set(false)
         }
     }
 
-    override fun isDisposed(): Boolean = isConnected.get()
+    private fun isDisposed(): Boolean = isConnected.get()
 
     /**
      * Override WebSocketListener life cycle methods

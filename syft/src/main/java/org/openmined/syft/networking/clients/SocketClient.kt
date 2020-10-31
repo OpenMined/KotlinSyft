@@ -1,9 +1,7 @@
 package org.openmined.syft.networking.clients
 
 import android.util.Log
-import io.reactivex.Single
 import io.reactivex.disposables.Disposable
-import io.reactivex.processors.PublishProcessor
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterIsInstance
@@ -30,7 +28,6 @@ import org.openmined.syft.networking.requests.REQUESTS
 import org.openmined.syft.networking.requests.ResponseMessageTypes
 import org.openmined.syft.networking.requests.SocketAPI
 import org.openmined.syft.networking.requests.WebRTCMessageTypes
-import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val TAG = "SocketClient"
@@ -39,18 +36,16 @@ private const val TAG = "SocketClient"
  * Used to communicate and exchange data throw web socket with PyGrid
  * @property syftWebSocket Create web socket connection
  * @property timeout Timeout period
- * @property schedulers Manage multi-threading operations
  * */
 @ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 internal class SocketClient(
     private val syftWebSocket: SyftWebSocket,
-    private val timeout: UInt = 20000u,
-    private val schedulers: ProcessSchedulers
-) : SocketAPI, Disposable {
+    private val timeout: UInt = 20000u
+) : SocketAPI {
 
-    constructor(baseUrl: String, timeout: UInt, schedulers: ProcessSchedulers) :
-            this(SyftWebSocket(NetworkingProtocol.WSS, baseUrl, timeout), timeout, schedulers)
+    constructor(baseUrl: String, timeout: UInt) :
+            this(SyftWebSocket(NetworkingProtocol.WSS, baseUrl, timeout), timeout)
 
     //Choosing stable kotlin serialization over default
     private val Json = Json(JsonConfiguration.Stable)
@@ -60,7 +55,6 @@ internal class SocketClient(
     private var socketClientSubscribed = AtomicBoolean(false)
 
     // Emit socket messages to subscribers
-    private val messageProcessor = PublishProcessor.create<NetworkModels>()
     private val messageFlow = MutableStateFlow<NetworkModels?>(null)
 
     /**
@@ -109,7 +103,7 @@ internal class SocketClient(
     /**
      * Used by WebRTC to request PyGrid joining a FL cycle
      * */
-    override fun joinRoom(joinRoomRequest: JoinRoomRequest): Single<JoinRoomResponse> {
+    override suspend fun joinRoom(joinRoomRequest: JoinRoomRequest): JoinRoomResponse {
         connectWebSocket()
         syftWebSocket.send(
             serializeNetworkModel(
@@ -117,22 +111,17 @@ internal class SocketClient(
                 joinRoomRequest
             )
         )
-//        return messageFlow.filterIsInstance<JoinRoomResponse>().first()
-        return messageProcessor.onBackpressureBuffer()
-                .ofType(JoinRoomResponse::class.java)
-                .firstOrError()
+        return messageFlow.filterIsInstance<JoinRoomResponse>().first()
     }
 
     //todo handle backpressure and first or error
     /**
      * Used by WebRTC connection to send message via PyGrid
      * */
-    override fun sendInternalMessage(internalMessageRequest: InternalMessageRequest): Single<InternalMessageResponse> {
+    override suspend fun sendInternalMessage(internalMessageRequest: InternalMessageRequest): InternalMessageResponse {
         connectWebSocket()
         syftWebSocket.send(serializeNetworkModel(REQUESTS.WEBRTC_INTERNAL, internalMessageRequest))
-        return messageProcessor.onBackpressureBuffer()
-                .ofType(InternalMessageResponse::class.java)
-                .first(null)
+        return messageFlow.filterIsInstance<InternalMessageResponse>().first()
     }
 
     /**
@@ -162,11 +151,11 @@ internal class SocketClient(
     }
 
     // Check socket status to free resources
-    override fun isDisposed() = socketClientSubscribed.get()
+    private fun isDisposed() = socketClientSubscribed.get()
 
     // Free resources
-    override fun dispose() {
-        if (isDisposed) {
+    fun dispose() {
+        if (isDisposed()) {
             syftWebSocket.dispose()
             socketClientSubscribed.set(false)
             Log.d(TAG, "Socket Client Disposed")
@@ -188,7 +177,6 @@ internal class SocketClient(
      * */
     private fun emitMessage(response: SocketResponse) {
         messageFlow.value = response.data
-        messageProcessor.offer(response.data)
     }
 
     /**
