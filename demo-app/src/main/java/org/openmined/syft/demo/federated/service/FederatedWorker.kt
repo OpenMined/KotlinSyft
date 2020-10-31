@@ -16,21 +16,22 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import org.openmined.syft.demo.federated.datasource.LocalMNISTDataDataSource
 import org.openmined.syft.demo.federated.domain.MNISTDataRepository
 import org.openmined.syft.demo.federated.domain.TrainingTask
 import org.openmined.syft.demo.federated.logging.MnistLogger
-import org.openmined.syft.demo.federated.ui.main.AUTH_TOKEN
-import org.openmined.syft.demo.federated.ui.main.BASE_URL
 import org.openmined.syft.demo.federated.ui.ContentState
 import org.openmined.syft.demo.federated.ui.ProcessData
+import org.openmined.syft.demo.federated.ui.main.AUTH_TOKEN
+import org.openmined.syft.demo.federated.ui.main.BASE_URL
 import org.openmined.syft.demo.federated.ui.work.WorkInfoActivity
 import org.openmined.syft.domain.SyftConfiguration
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 const val LOSS_LIST = "loss"
 const val STATUS = "status"
@@ -39,6 +40,7 @@ const val LOG = "log"
 const val NOTIFICATION_ID = 1
 private const val CHANNEL_ID = "worker"
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class FederatedWorker(
@@ -46,30 +48,29 @@ class FederatedWorker(
     workerParameters: WorkerParameters
 ) : CoroutineWorker(serviceContext, workerParameters) {
 
-    private val scope = MainScope()
-
     override suspend fun doWork(): Result {
         val authToken = inputData.getString(AUTH_TOKEN) ?: return Result.failure()
         val baseUrl = inputData.getString(BASE_URL) ?: return Result.failure()
 
-        val config = SyftConfiguration.builder(serviceContext, baseUrl)
-                .enableBackgroundServiceExecution()
-                .setCacheTimeout(0L)
-                .build()
-        val localMNISTDataDataSource = LocalMNISTDataDataSource(serviceContext.resources)
-        val dataRepository = MNISTDataRepository(localMNISTDataDataSource)
-        setForegroundAsync(createForegroundInfo(0))
-        return awaitTask(
-            TrainingTask(
-                config,
-                authToken,
-                dataRepository
-            )
-        )
+        return coroutineScope {
+
+            val config = SyftConfiguration.builder(serviceContext, baseUrl)
+                    .enableBackgroundServiceExecution()
+                    .setCacheTimeout(0L)
+                    .build()
+            val localMNISTDataDataSource = LocalMNISTDataDataSource(serviceContext.resources)
+            val dataRepository = MNISTDataRepository(localMNISTDataDataSource)
+            setForegroundAsync(createForegroundInfo(0))
+            withContext(Dispatchers.Default) {
+                TrainingTask(
+                    config,
+                    authToken,
+                    dataRepository
+                ).runTask(WorkLogger())
+            }
+            Result.success()
+        }
     }
-
-    private suspend fun awaitTask(task: TrainingTask) = task.runTask(WorkLogger())
-
 
     private fun createForegroundInfo(progress: Int): ForegroundInfo {
         val intent = WorkManager.getInstance(applicationContext)

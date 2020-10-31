@@ -30,7 +30,7 @@ class TrainingTask(
     private val syftWorker = Syft.getInstance(configuration, authToken)
     private val taskScope = CoroutineScope(Dispatchers.Default)
 
-    suspend fun runTask(logger: MnistLogger): Result {
+    suspend fun runTask(logger: MnistLogger) {
         val mnistJob = syftWorker.newJob("mnist", "1.0.1")
         val statusPublisher = PublishProcessor.create<Result>()
 
@@ -65,8 +65,6 @@ class TrainingTask(
             }
         }
         mnistJob.start(jobStatusSubscriber)
-        // TODO What to return here?
-        return Result.success()
     }
 
     fun disposeTraining() {
