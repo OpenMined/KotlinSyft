@@ -221,8 +221,6 @@ class SyftJob internal constructor(
                     workerId,
                     config,
                     responseData.requestKey,
-                    jobStatusProcessor,
-                    responseData.clientConfig,
                     plans
                 )
             }
@@ -231,8 +229,6 @@ class SyftJob internal constructor(
                     workerId,
                     config,
                     responseData.requestKey,
-                    jobStatusProcessor,
-                    responseData.clientConfig,
                     protocols
                 )
             }

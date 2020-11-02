@@ -6,6 +6,8 @@ import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.spy
 import com.nhaarman.mockitokotlin2.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.openmined.syft.Syft
 import org.openmined.syft.common.AbstractSyftWorkerTest
@@ -17,6 +19,7 @@ import org.openmined.syft.integration.clients.SocketClientMock
 import org.openmined.syft.integration.execution.ShadowPlan
 import org.robolectric.annotation.Config
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 class AuthenticationTest : AbstractSyftWorkerTest() {
 
@@ -51,7 +54,9 @@ class AuthenticationTest : AbstractSyftWorkerTest() {
         val syftWorker = Syft.getInstance(syftConfiguration, "test token")
         val job = syftWorker.newJob("test", "1")
         val jobStatusSubscriber = spy<JobStatusSubscriber>()
-        job.start(jobStatusSubscriber)
+        runBlocking {
+            job.start(jobStatusSubscriber)
+        }
         verify(jobStatusSubscriber).onReady(any(), any(), any())
         syftWorker.dispose()
         verify(jobStatusSubscriber).onComplete()
@@ -88,7 +93,9 @@ class AuthenticationTest : AbstractSyftWorkerTest() {
         val syftWorker = Syft.getInstance(syftConfiguration)
         val job = syftWorker.newJob("test", "1")
         val jobStatusSubscriber = spy<JobStatusSubscriber>()
-        job.start(jobStatusSubscriber)
+        runBlocking {
+            job.start(jobStatusSubscriber)
+        }
         verify(jobStatusSubscriber).onReady(any(), any(), any())
         syftWorker.dispose()
         verify(jobStatusSubscriber).onComplete()
@@ -125,7 +132,9 @@ class AuthenticationTest : AbstractSyftWorkerTest() {
         val syftWorker = Syft.getInstance(syftConfiguration)
         val job = syftWorker.newJob("test", "1")
         val jobStatusSubscriber = spy<JobStatusSubscriber>()
-        job.start(jobStatusSubscriber)
+        runBlocking {
+            job.start(jobStatusSubscriber)
+        }
         argumentCaptor<Throwable>().apply {
             verify(jobStatusSubscriber).onError(capture())
             assert(firstValue is JobErrorThrowable.AuthenticationFailure)
@@ -164,7 +173,9 @@ class AuthenticationTest : AbstractSyftWorkerTest() {
         val syftWorker = Syft.getInstance(syftConfiguration)
         val job = syftWorker.newJob("test", "1")
         val jobStatusSubscriber = spy<JobStatusSubscriber>()
-        job.start(jobStatusSubscriber)
+        runBlocking {
+            job.start(jobStatusSubscriber)
+        }
         verify(jobStatusSubscriber).onRejected(any())
         syftWorker.dispose()
         verify(jobStatusSubscriber).onComplete()

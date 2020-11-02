@@ -13,6 +13,7 @@ import org.openmined.syft.demo.federated.service.WorkerRepository
 import org.openmined.syft.demo.federated.ui.ContentState
 import org.openmined.syft.demo.federated.ui.ProcessData
 
+@ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class WorkInfoViewModel(private val workerRepository: WorkerRepository) : MnistLogger, ViewModel() {
 

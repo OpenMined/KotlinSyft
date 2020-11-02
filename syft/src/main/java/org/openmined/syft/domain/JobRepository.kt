@@ -1,6 +1,7 @@
 package org.openmined.syft.domain
 
 import io.reactivex.processors.PublishProcessor
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
 import org.openmined.syft.execution.JobStatusMessage
@@ -15,6 +16,7 @@ import java.util.concurrent.atomic.AtomicReference
 internal const val PLAN_OP_TYPE = "torchscript"
 private const val TAG = "JobRepository"
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 internal class JobRepository(
     private val jobLocalDataSource: JobLocalDataSource,
@@ -41,8 +43,6 @@ internal class JobRepository(
         workerId: String,
         config: SyftConfiguration,
         requestKey: String,
-        jobStatusProcessor: PublishProcessor<JobStatusMessage>,
-        clientConfig: ClientConfig?,
         plans: ConcurrentHashMap<String, Plan>
     ): List<String> {
         return plans.values.map { plan ->
@@ -59,8 +59,6 @@ internal class JobRepository(
         workerId: String,
         config: SyftConfiguration,
         requestKey: String,
-        jobStatusProcessor: PublishProcessor<JobStatusMessage>,
-        clientConfig: ClientConfig?,
         protocols: ConcurrentHashMap<String, Protocol>
     ): List<String?> {
         return protocols.values.map { protocol ->
