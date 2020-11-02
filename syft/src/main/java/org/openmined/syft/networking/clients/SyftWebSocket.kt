@@ -108,7 +108,11 @@ internal class SyftWebSocket(
     /**
      * Close web socket connection
      * */
-    private fun close() = webSocket?.close(SOCKET_CLOSE_CLIENT, "Socket closed by client") ?: false
+    @VisibleForTesting
+    internal fun close() = webSocket?.let {
+        isConnected.set(false)
+        it.close(SOCKET_CLOSE_CLIENT, "Socket closed by client")
+    } ?: false
 
     /**
      * Create new web socket connection
@@ -142,7 +146,6 @@ internal class SyftWebSocket(
         connectionDisposable.dispose()
         if (isDisposed) {
             close()
-            isConnected.set(false)
         }
     }
 
