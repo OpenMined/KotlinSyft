@@ -63,7 +63,7 @@ As a developer, there are few steps to building your own secure federated learni
 2. :earth_americas: Host your model and plans on [PyGrid](https://github.com/OpenMined/PyGrid) which will deal with all the federated learning components of your pipeline. You will need to set up a PyGrid server somewhere, please see their installation instructions on how to do this.
 3. :tada: Start training on the device!
 
-**:notebook: The entire workflow and process is described in greater detail in our [project roadmap](https://github.com/OpenMined/Roadmap/blob/master/web_and_mobile_team/projects/federated_learning.md).**
+**:notebook: The entire workflow and process is described in greater detail in our [project roadmap](https://github.com/OpenMined/Roadmap/blob/master/federated_learning/projects/model_centric_fl.md).**
 
 You can use KotlinSyft as a front-end or as a background service. The following is a quick start example usage:
 
@@ -182,7 +182,7 @@ cd PyGrid
 git checkout 0e93aa645a63a02f45ae72b4ff3106c6402dbadf
 ```
 
-- Follow [PyGrid: getting started](https://github.com/OpenMined/PyGrid/#getting-started) to run a local instance of PyGrid
+- Follow [PyGrid: getting started](https://github.com/OpenMined/PyGrid/#getting-started) to run a local instance of PyGrid Node
 
 - Install [PySyft](https://github.com/OpenMined/PySyft) at `commit 9d4f8e3ebecc4a00428607403832c5628753f1fc` in the virtual environment.
 
@@ -195,16 +195,16 @@ source venv/bin/activate
 make venv
 ```
 
-- Host Jupyter Notebook or (`make notebook` if you haven't run this already)
+- From PyGrid folder, start Jupyter Notebook
 
 ```bash
 jupyter notebook
 ```
 
-- Open a browser and navigate to [localhost:8888](http://localhost:8888/). You should be able to see the PySyft notebook console.
-- In the Jupyter Notebook, navigate to `examples/tutorials/model-centric-fl`
-- Run the notebook `Create Plan`. It should host the model on PyGrid.
-- Optionally, run the notebook `Execute Plan`. This will train the model on the python worker of PySyft.
+- Open a browser and navigate to [localhost:8888](http://localhost:8888/). You should be able to see the PyGrid files.
+- In the Jupyter Notebook, navigate to `examples/model-centric`
+- Run the notebook `01-Create-plan.ipynb`. It should host the model on PyGrid.
+- Optionally, run the notebook `02-ExecutePlan.ipynb`. This will train the model on the python worker of PySyft.
 - The android app connects to your PC's localhost via router (easier approach)
 - Get the IP address of your computer by running `ip address show | grep "inet " | grep -v 127.0.0.1` if using Linux/Mac. For windows there are different steps. Alternatively, if you want to run the demo app in the emulator, use `10.0.2.2` as the IP address.
 - Use this IP address and the port (default:5000) in your login screen to supply the PyGrid server url, e.g., 10.0.2.2:5000
