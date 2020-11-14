@@ -4,6 +4,7 @@ import android.util.Log
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.openmined.syft.domain.SyftConfiguration
@@ -23,6 +24,7 @@ private const val TAG = "Syft"
 /**
  * This is the main syft worker handling creation and deletion of jobs. This class is also responsible for monitoring device resources via DeviceMonitor
  */
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 class Syft internal constructor(
     private val syftConfig: SyftConfiguration,
