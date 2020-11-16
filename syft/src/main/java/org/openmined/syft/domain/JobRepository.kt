@@ -28,6 +28,11 @@ internal class JobRepository(
     val status: DownloadStatus
         get() = trainingParamsStatus.get()
 
+    fun getLocalDataSource() = jobLocalDataSource
+
+    fun getModelsPath(config: SyftConfiguration) =
+            jobLocalDataSource.getModelsPath(config)
+
     fun getDiffScript(config: SyftConfiguration) =
             jobLocalDataSource.getDiffScript(config)
 
@@ -104,13 +109,13 @@ internal class JobRepository(
                     workerId,
                     config,
                     request,
-                    "${config.filesDir}/plans",
+                    jobLocalDataSource.getPlansPath(config),
                     plan
                 )
             )
         }
         protocols.forEach { (_, protocol) ->
-            protocol.protocolFileLocation = "${config.filesDir}/protocols"
+            protocol.protocolFileLocation = jobLocalDataSource.getProtocolsPath(config)
             downloadList.add(
                 processProtocols(
                     workerId,
@@ -136,7 +141,7 @@ internal class JobRepository(
                 .flatMap { modelInputStream ->
                     jobLocalDataSource.saveAsync(
                         modelInputStream,
-                        "${config.filesDir}/models",
+                        jobLocalDataSource.getModelsPath(config),
                         "$modelId.pb"
                     )
                 }.flatMap { modelFile ->

@@ -4,6 +4,7 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.stub
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import io.mockk.mockk
@@ -18,6 +19,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import org.openmined.syft.datamodels.JobDataModel
 import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
@@ -75,6 +77,10 @@ class JobRepositoryTest {
             get() = Schedulers.trampoline()
     }
 
+    private val localModelsPath = "path/hashid/models"
+    private val localPlansPath = "path/hashid/plans"
+    private val localProtocolsPath = "path/hashid/protocols"
+
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
@@ -84,6 +90,13 @@ class JobRepositoryTest {
 
         whenever(config.getDownloader()) doReturn httpAPI
         whenever(config.filesDir) doReturn File("/filesDir")
+
+        jobLocalDataSource.stub {
+            on { dataModel }.thenReturn(JobDataModel("test", "1.0"))
+            on { getPlansPath(config) }.thenReturn(localPlansPath)
+            on { getModelsPath(config) }.thenReturn(localModelsPath)
+            on { getProtocolsPath(config) }.thenReturn(localProtocolsPath)
+        }
 
         cut = JobRepository(
             jobLocalDataSource,
@@ -129,7 +142,7 @@ class JobRepositoryTest {
             jobRemoteDataSource.downloadModel(workerId, requestKey, modelId)
         ) doReturn Single.just(modelIS)
         whenever(
-            jobLocalDataSource.saveAsync(modelIS, "${config.filesDir}/models", "$modelId.pb")
+            jobLocalDataSource.saveAsync(modelIS, localModelsPath, "$modelId.pb")
         ) doReturn Single.just(modelPath)
 
         cut.downloadData(
@@ -145,7 +158,7 @@ class JobRepositoryTest {
         )
 
         verify(jobRemoteDataSource).downloadModel(workerId, requestKey, modelId)
-        verify(jobLocalDataSource).saveAsync(modelIS, "${config.filesDir}/models", "$modelId.pb")
+        verify(jobLocalDataSource).saveAsync(modelIS, localModelsPath, "$modelId.pb")
         verify(model).loadModelState(modelPath)
     }
 
@@ -174,7 +187,7 @@ class JobRepositoryTest {
             jobRemoteDataSource.downloadModel(workerId, requestKey, modelId)
         ) doReturn Single.just(modelIS)
         whenever(
-            jobLocalDataSource.saveAsync(modelIS, "${config.filesDir}/models", "$modelId.pb")
+            jobLocalDataSource.saveAsync(modelIS, localModelsPath, "$modelId.pb")
         ) doReturn Single.just(modelPath)
 
 
@@ -182,7 +195,7 @@ class JobRepositoryTest {
             jobRemoteDataSource.downloadProtocol(eq(workerId), eq(requestKey), any())
         ) doReturn Single.just(protocolIS)
         whenever(
-            jobLocalDataSource.saveAsync(protocolIS, "${config.filesDir}/protocols", "$protocolId.pb")
+            jobLocalDataSource.saveAsync(protocolIS, localProtocolsPath, "$protocolId.pb")
         ) doReturn Single.just(protocolPath)
 
         cut.downloadData(
@@ -199,11 +212,11 @@ class JobRepositoryTest {
 
         verify(jobRemoteDataSource).downloadModel(workerId, requestKey, modelId)
         verify(jobRemoteDataSource).downloadProtocol(workerId, requestKey, protocolId)
-        verify(jobLocalDataSource).saveAsync(modelIS, "${config.filesDir}/models", "$modelId.pb")
+        verify(jobLocalDataSource).saveAsync(modelIS, localModelsPath, "$modelId.pb")
         verify(model).loadModelState(modelPath)
         verify(jobLocalDataSource).saveAsync(
             protocolIS,
-            "${config.filesDir}/protocols",
+            localProtocolsPath,
             "$protocolId.pb"
         )
     }
@@ -235,7 +248,7 @@ class JobRepositoryTest {
             jobRemoteDataSource.downloadModel(workerId, requestKey, modelId)
         ) doReturn Single.just(modelIS)
         whenever(
-            jobLocalDataSource.saveAsync(modelIS, "${config.filesDir}/models", "$modelId.pb")
+            jobLocalDataSource.saveAsync(modelIS, localModelsPath, "$modelId.pb")
         ) doReturn Single.just(modelPath)
 
         whenever(
@@ -246,7 +259,7 @@ class JobRepositoryTest {
             )
         ) doReturn Single.just(planIS)
         whenever(
-            jobLocalDataSource.saveAsync(planIS, "${config.filesDir}/plans", "$planId.pb")
+            jobLocalDataSource.saveAsync(planIS, localPlansPath, "$planId.pb")
         ) doReturn Single.just(planPath)
 
         whenever(
@@ -271,9 +284,9 @@ class JobRepositoryTest {
 
         verify(jobRemoteDataSource).downloadModel(workerId, requestKey, modelId)
         verify(jobRemoteDataSource).downloadPlan(workerId, requestKey, planId, PLAN_OP_TYPE)
-        verify(jobLocalDataSource).saveAsync(planIS, "${config.filesDir}/plans", "$planId.pb")
+        verify(jobLocalDataSource).saveAsync(planIS, localPlansPath, "$planId.pb")
         verify(jobLocalDataSource).saveTorchScript(
-            "${config.filesDir}/plans",
+            localPlansPath,
             planPath,
             "torchscript_${plan.planId}.pt"
         )

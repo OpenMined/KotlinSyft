@@ -3,6 +3,7 @@ package org.openmined.syft.datasource
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import io.reactivex.Single
+import org.openmined.syft.datamodels.JobDataModel
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syftproto.execution.v1.PlanOuterClass
 import java.io.File
@@ -11,7 +12,7 @@ import java.io.InputStream
 internal const val DIFF_SCRIPT_NAME = "diff_script.pt"
 private const val TAG = "JobLocalDataSource"
 
-internal class JobLocalDataSource {
+internal class JobLocalDataSource(val dataModel: JobDataModel) {
 
     @ExperimentalUnsignedTypes
     fun getDiffScript(config: SyftConfiguration) =
@@ -48,8 +49,7 @@ internal class JobLocalDataSource {
             }
         }
     }
-
-
+    
     /**
      * Persist the given inputStream in the specified destination asynchronously
      *
@@ -114,4 +114,14 @@ internal class JobLocalDataSource {
         }
         return file.absolutePath
     }
+
+    @ExperimentalUnsignedTypes
+    fun getModelsPath(config: SyftConfiguration) = "${config.filesDir}/${dataModel.id}/models"
+
+    @ExperimentalUnsignedTypes
+    fun getPlansPath(config: SyftConfiguration) = "${config.filesDir}/${dataModel.id}/plans"
+
+    @ExperimentalUnsignedTypes
+    fun getProtocolsPath(config: SyftConfiguration) = "${config.filesDir}/${dataModel.id}/protocols"
+
 }

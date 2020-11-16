@@ -8,6 +8,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.Syft
+import org.openmined.syft.datamodels.JobDataModel
 import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
@@ -65,7 +66,7 @@ class SyftJob internal constructor(
                 worker,
                 config,
                 JobRepository(
-                    JobLocalDataSource(),
+                    JobLocalDataSource(JobDataModel(modelName, version)),
                     JobRemoteDataSource(config.getDownloader())
                 )
             )
@@ -228,7 +229,7 @@ class SyftJob internal constructor(
             DIFF_SCRIPT_NAME
         )
         val oldState =
-                SyftState.loadSyftState("${config.filesDir}/models/${model.pyGridModelId}.pb")
+                SyftState.loadSyftState("${jobRepository.getModelsPath(config)}/${model.pyGridModelId}.pb")
         return model.createDiff(oldState, modulePath)
     }
 

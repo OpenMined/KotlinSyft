@@ -27,6 +27,7 @@ import org.mockito.ArgumentCaptor
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.openmined.syft.Syft
+import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.domain.DownloadStatus
 import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.SyftConfiguration
@@ -162,6 +163,11 @@ class SyftJobTest {
                 eq(false)
             )
         ).doReturn("test module path")
+
+        val jobLocalDataSource = mock<JobLocalDataSource> {
+            on { dataModel }.thenReturn(mockk())
+        }
+        whenever(jobRepository.getLocalDataSource()).thenReturn(jobLocalDataSource)
 
         val jobTest = SyftJob(modelName, modelVersion, worker, config, jobRepository)
 

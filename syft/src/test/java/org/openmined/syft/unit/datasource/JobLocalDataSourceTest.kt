@@ -5,14 +5,13 @@ import android.content.res.AssetManager
 import com.google.protobuf.ByteString
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.whenever
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.spyk
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.openmined.syft.datamodels.JobDataModel
 import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.domain.SyftConfiguration
@@ -26,19 +25,33 @@ class JobLocalDataSourceTest {
     @JvmField
     var tempFolder = TemporaryFolder()
 
+    private val jobDataModel = JobDataModel("test", "1.0")
+
+    private lateinit var cut: JobLocalDataSource
+
+    @ExperimentalUnsignedTypes
+    private val config: SyftConfiguration = mockk()
+
+    @ExperimentalUnsignedTypes
+    @Before
+    fun setUp() {
+        every { config.filesDir } answers { File("/filesDir") }
+        cut = JobLocalDataSource(jobDataModel)
+    }
+
     @ExperimentalUnsignedTypes
     @Test
     fun `Given config getDiffScript returns correct asset stream`() {
         val context = mockk<Context>()
+
         val inputStream = mockk<InputStream>()
         val assets = mockk<AssetManager>(){
             every { open("torchscripts/$DIFF_SCRIPT_NAME") } returns inputStream
         }
-        val config = mockk<SyftConfiguration>()
+
         every { config.context } answers { context }
         every { context.assets } answers { assets }
 
-        val cut = JobLocalDataSource()
         cut.getDiffScript(config)
 
         io.mockk.verify {
@@ -51,7 +64,6 @@ class JobLocalDataSourceTest {
         val parent = tempFolder.newFolder("filesDir","parent")
         val inputStream = "Hello".byteInputStream()
         val file = File(parent,"myModel.pb")
-        val cut = JobLocalDataSource()
         val result = cut.save(inputStream, parent.toString(),file.name, true)
         assert(result.endsWith("myModel.pb"))
         assert(file.readText() == "Hello")
@@ -63,7 +75,6 @@ class JobLocalDataSourceTest {
         val parent = File(filesDir,"parent")
         val inputStream = "Hello".byteInputStream()
         val file = File(parent,"myModel.pb")
-        val cut = JobLocalDataSource()
         val result = cut.save(inputStream, parent.toString(),file.name, true)
         assert(result.endsWith("myModel.pb"))
         assert(file.readText() == "Hello")
@@ -71,7 +82,6 @@ class JobLocalDataSourceTest {
 
     @Test
     fun `Given an input stream when save is invoked then absolute path is returned directly if file exists and overwrite is false`() {
-        val cut = JobLocalDataSource()
         val inputStream = "Hello".byteInputStream()
         val file = tempFolder.newFile("myModel.pb")
         val result = cut.save(inputStream, file, false)
@@ -81,7 +91,6 @@ class JobLocalDataSourceTest {
 
     @Test
     fun `Given an input stream when save is invoked then file is created and absolute path is returned`() {
-        val cut = JobLocalDataSource()
         val inputStream = "Hello".byteInputStream()
         val file = tempFolder.newFile("myModel.pb")
         val result = cut.save(inputStream, file,true)
@@ -91,7 +100,6 @@ class JobLocalDataSourceTest {
 
     @Test
     fun `Given an input stream when saveAsync is invoked then absolute path is returned directly if file exists and overwrite is false`() {
-        val cut = JobLocalDataSource()
         val inputStream = "Hello".byteInputStream()
         val file = tempFolder.newFile("myModel.pb")
         val result = cut.saveAsync(inputStream, file,false).test()
@@ -105,7 +113,6 @@ class JobLocalDataSourceTest {
 
     @Test
     fun `Given an input stream when saveAsync is invoked then file is created and absolute path is returned`() {
-        val cut = JobLocalDataSource()
         val inputStream = "Hello".byteInputStream()
         val file = tempFolder.newFile("myModel.pb")
         val result = cut.saveAsync(inputStream, file,true).test()
@@ -119,7 +126,6 @@ class JobLocalDataSourceTest {
 
     @Test
     fun `Given a Torchscript plan when saveTorchscript is invoked it is saved`() {
-        val cut = JobLocalDataSource()
         val file = tempFolder.newFile("torchScript.pt")
         val byteArray = "Something".toByteArray()
         val torchScriptByteString = mock<ByteString> {
@@ -134,5 +140,23 @@ class JobLocalDataSourceTest {
         assert(result.endsWith("torchScript.pt"))
         assert(file.readBytes().isNotEmpty())
 
+    }
+
+    @ExperimentalUnsignedTypes
+    @Test
+    fun `get models path should return models path for a specific job identified by JobId`() {
+        assert(cut.getModelsPath(config) == "${config.filesDir}/${jobDataModel.id}/models")
+    }
+
+    @ExperimentalUnsignedTypes
+    @Test
+    fun `get plans path should return plans path for a specific job identified by JobId`() {
+        assert(cut.getPlansPath(config) == "${config.filesDir}/${jobDataModel.id}/plans")
+    }
+
+    @ExperimentalUnsignedTypes
+    @Test
+    fun `get protocols path should return protocols path for a specific job identified by JobId`() {
+        assert(cut.getProtocolsPath(config) == "${config.filesDir}/${jobDataModel.id}/protocols")
     }
 }
