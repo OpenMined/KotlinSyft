@@ -58,6 +58,10 @@ class Syft internal constructor(
                 ).also { INSTANCE = it }
             }
         }
+
+        fun getCurrentInstance() = INSTANCE?.let {
+            INSTANCE
+        } ?: throw java.lang.IllegalStateException("Syft Worker was not initiliased. Use getInstance(syftConfiguration, authToken)")
     }
 
     //todo single job for now but eventually worker should support multiple jobs
