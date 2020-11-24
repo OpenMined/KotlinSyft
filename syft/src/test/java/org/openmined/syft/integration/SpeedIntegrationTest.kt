@@ -5,6 +5,7 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.spy
 import com.nhaarman.mockitokotlin2.verify
+import io.mockk.coVerify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
@@ -55,7 +56,7 @@ class SpeedIntegrationTest : AbstractSyftWorkerTest() {
         runBlocking {
             job.start(jobStatusSubscriber)
         }
-        verify(jobStatusSubscriber).onRejected(any())
+        coVerify { jobStatusSubscriber.onRejected(any()) }
         syftWorker.dispose()
         verify(jobStatusSubscriber).onComplete()
     }

@@ -51,7 +51,7 @@ class SyftJob internal constructor(
     version: String? = null,
     private val worker: Syft,
     private val config: SyftConfiguration,
-    private val jobRepository: JobRepository
+    private val jobRepository: JobRepository,
 ) {
 
     companion object {
@@ -69,7 +69,7 @@ class SyftJob internal constructor(
             modelName: String,
             version: String? = null,
             worker: Syft,
-            config: SyftConfiguration
+            config: SyftConfiguration,
         ): SyftJob {
             return SyftJob(
                 modelName,
@@ -100,6 +100,7 @@ class SyftJob internal constructor(
     private var requestKey = ""
 
     private val jobScope = CoroutineScope(Dispatchers.IO)
+
     // TODO This is only used internally. It can be replaced by direct calls to the subscriber
     private val _jobState = MutableStateFlow<JobStatusMessage>(JobStatusMessage.JobInit)
 
@@ -152,7 +153,7 @@ class SyftJob internal constructor(
      * @sample org.openmined.syft.Syft.newJob
      */
     private fun subscribe(
-        subscriber: JobStatusSubscriber
+        subscriber: JobStatusSubscriber,
     ) {
         _jobState.onEach { jobStatus ->
             Log.d(TAG, "Received $jobStatus")
@@ -208,7 +209,7 @@ class SyftJob internal constructor(
      */
     internal suspend fun downloadData(
         workerId: String,
-        responseData: CycleResponseData.CycleAccept
+        responseData: CycleResponseData.CycleAccept,
     ) {
         if (cycleStatus.get() != CycleStatus.ACCEPTED) {
             publishError(JobErrorThrowable.CycleNotAccepted("Cycle not accepted. Download cannot start"))
@@ -271,7 +272,7 @@ class SyftJob internal constructor(
         ) return
 
         if (!workerId.isNullOrEmpty() && requestKey.isNotEmpty()) {
-            config.getSignallingClient()
+            val reportResponse = config.getSignallingClient()
                     .report(
                         ReportRequest(
                             workerId,
@@ -282,15 +283,13 @@ class SyftJob internal constructor(
                             )
                         )
                     )
-            _jobState.value = JobStatusMessage.Complete
+            if (reportResponse != null)
+                publishError(JobErrorThrowable.NetworkResponseFailure(reportResponse.error))
+            if (reportResponse.status != null) {
+                Log.d(TAG, "report status ${reportResponse.status}")
+                _jobState.value = JobStatusMessage.Complete
+            }
         }
-        // TODO Error management
-//                            if (reportResponse.error != null)
-//                                publishError(JobErrorThrowable.NetworkResponseFailure(reportResponse.error))
-//                            if (reportResponse.status != null) {
-//                                Log.d(TAG, "report status ${reportResponse.status}")
-//                                jobStatusProcessor.onComplete()
-//                            }
     }
 
     /**
