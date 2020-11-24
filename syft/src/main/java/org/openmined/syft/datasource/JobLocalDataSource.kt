@@ -3,7 +3,7 @@ package org.openmined.syft.datasource
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import io.reactivex.Single
-import org.openmined.syft.datamodels.JobDataModel
+import org.openmined.syft.execution.JobId
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syftproto.execution.v1.PlanOuterClass
 import java.io.File
@@ -12,7 +12,7 @@ import java.io.InputStream
 internal const val DIFF_SCRIPT_NAME = "diff_script.pt"
 private const val TAG = "JobLocalDataSource"
 
-internal class JobLocalDataSource(val dataModel: JobDataModel) {
+internal class JobLocalDataSource(val jobId: JobId) {
 
     @ExperimentalUnsignedTypes
     fun getDiffScript(config: SyftConfiguration) =
@@ -116,12 +116,12 @@ internal class JobLocalDataSource(val dataModel: JobDataModel) {
     }
 
     @ExperimentalUnsignedTypes
-    fun getModelsPath(config: SyftConfiguration) = "${config.filesDir}/${dataModel.id}/models"
+    fun getModelsPath(config: SyftConfiguration) = "${config.filesDir}/${jobId.id}/models"
 
     @ExperimentalUnsignedTypes
-    fun getPlansPath(config: SyftConfiguration) = "${config.filesDir}/${dataModel.id}/plans"
+    fun getPlansPath(config: SyftConfiguration) = "${config.filesDir}/${jobId.id}/plans"
 
     @ExperimentalUnsignedTypes
-    fun getProtocolsPath(config: SyftConfiguration) = "${config.filesDir}/${dataModel.id}/protocols"
+    fun getProtocolsPath(config: SyftConfiguration) = "${config.filesDir}/${jobId.id}/protocols"
 
 }

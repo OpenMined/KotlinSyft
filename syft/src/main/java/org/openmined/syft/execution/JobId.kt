@@ -1,4 +1,4 @@
-package org.openmined.syft.datamodels
+package org.openmined.syft.execution
 
 import java.security.MessageDigest
 
@@ -7,7 +7,7 @@ import java.security.MessageDigest
  * @property modelName The name of the model used in the job while querying PyGrid
  * @property version The model version in PyGrid
  */
-class JobDataModel(
+data class JobId(
     val modelName: String,
     val version: String? = null
 ) {
@@ -18,7 +18,7 @@ class JobDataModel(
     val id: String get() = hashId()
 
     /**
-     * Check if two [JobDataModel] are same. Matches both model names and version if [version] is not null for param and current jobId.
+     * Check if two [JobId] are same. Matches both model names and version if [version] is not null for param and current jobId.
      * @param modelName the modelName of the jobId which has to be compared with the current object
      * @param version the version of the jobID which ahs to be compared with the current jobId
      * @return true if JobId match
@@ -30,7 +30,9 @@ class JobDataModel(
             else
                 (this.modelName == modelName) && (this.version == version)
 
-
+    /**
+    * Generate a unique hash ID based job name and version
+    * */
     private fun hashId(): String {
         val input = "$modelName:$version"
         val bytes = MessageDigest

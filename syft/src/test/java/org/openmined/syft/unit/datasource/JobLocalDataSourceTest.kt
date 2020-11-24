@@ -11,7 +11,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.openmined.syft.datamodels.JobDataModel
+import org.openmined.syft.execution.JobId
 import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.domain.SyftConfiguration
@@ -25,7 +25,8 @@ class JobLocalDataSourceTest {
     @JvmField
     var tempFolder = TemporaryFolder()
 
-    private val jobDataModel = JobDataModel("test", "1.0")
+    private val jobDataModel =
+            JobId("test", "1.0")
 
     private lateinit var cut: JobLocalDataSource
 

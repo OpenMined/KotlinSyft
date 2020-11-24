@@ -8,7 +8,6 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.Syft
-import org.openmined.syft.datamodels.JobDataModel
 import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
@@ -66,14 +65,19 @@ class SyftJob internal constructor(
                 worker,
                 config,
                 JobRepository(
-                    JobLocalDataSource(JobDataModel(modelName, version)),
+                    JobLocalDataSource(
+                        JobId(
+                            modelName,
+                            version
+                        )
+                    ),
                     JobRemoteDataSource(config.getDownloader())
                 )
             )
         }
     }
 
-    val jobId = JobID(modelName, version)
+    val jobId = JobId(modelName, version)
     internal var cycleStatus = AtomicReference(CycleStatus.APPLY)
     internal val requiresSpeedTest = AtomicBoolean(true)
     private val jobStatusProcessor = PublishProcessor.create<JobStatusMessage>()
@@ -329,26 +333,6 @@ class SyftJob internal constructor(
             Log.d(TAG, "job $jobId disposed")
         } else
             Log.d(TAG, "job $jobId already disposed")
-    }
-
-    /**
-     * A uniquer identifier class for the job
-     * @property modelName The name of the model used in the job while querying PyGrid
-     * @property version The model version in PyGrid
-     */
-    data class JobID(val modelName: String, val version: String? = null) {
-        /**
-         * Check if two [JobID] are same. Matches both model names and version if [version] is not null for param and current jobId.
-         * @param modelName the modelName of the jobId which has to be compared with the current object
-         * @param version the version of the jobID which ahs to be compared with the current jobId
-         * @return true if JobId match
-         * @return false otherwise
-         */
-        fun matchWithResponse(modelName: String, version: String? = null) =
-                if (version.isNullOrEmpty() || this.version.isNullOrEmpty())
-                    this.modelName == modelName
-                else
-                    (this.modelName == modelName) && (this.version == version)
     }
 
     internal enum class CycleStatus {

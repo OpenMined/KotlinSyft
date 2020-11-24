@@ -165,7 +165,7 @@ class SyftJobTest {
         ).doReturn("test module path")
 
         val jobLocalDataSource = mock<JobLocalDataSource> {
-            on { dataModel }.thenReturn(mockk())
+            on { jobId }.thenReturn(mockk())
         }
         whenever(jobRepository.getLocalDataSource()).thenReturn(jobLocalDataSource)
 

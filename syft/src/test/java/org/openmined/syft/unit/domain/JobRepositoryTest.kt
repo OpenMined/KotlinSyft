@@ -19,7 +19,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
-import org.openmined.syft.datamodels.JobDataModel
+import org.openmined.syft.execution.JobId
 import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
@@ -92,7 +92,12 @@ class JobRepositoryTest {
         whenever(config.filesDir) doReturn File("/filesDir")
 
         jobLocalDataSource.stub {
-            on { dataModel }.thenReturn(JobDataModel("test", "1.0"))
+            on { jobId }.thenReturn(
+                JobId(
+                    "test",
+                    "1.0"
+                )
+            )
             on { getPlansPath(config) }.thenReturn(localPlansPath)
             on { getModelsPath(config) }.thenReturn(localModelsPath)
             on { getProtocolsPath(config) }.thenReturn(localProtocolsPath)
