@@ -3,7 +3,7 @@ package org.openmined.syft.unit.networking.clients
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.serialization.json.json
+import kotlinx.serialization.json.buildJsonObject
 import org.junit.Test
 import org.openmined.syft.networking.clients.NetworkMessage
 import org.openmined.syft.networking.clients.SyftWebSocket
@@ -25,7 +25,7 @@ internal class WebSocketClientTest {
     @Test
     fun `verify calling send function should sending message through the socket connection`() {
         webSocket.start()
-        val message = json {
+        val message = buildJsonObject {
             "data" to "data"
         }
         assert(webSocket.send(message))

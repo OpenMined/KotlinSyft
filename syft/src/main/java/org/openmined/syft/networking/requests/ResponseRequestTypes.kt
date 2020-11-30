@@ -1,6 +1,8 @@
 package org.openmined.syft.networking.requests
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import org.openmined.syft.networking.datamodels.NetworkModels
 import org.openmined.syft.networking.datamodels.syft.AUTH_TYPE
@@ -33,11 +35,12 @@ internal sealed class REQUESTS(override val value: String) : ResponseMessageType
     }
 
     object AUTHENTICATION : REQUESTS(AUTH_TYPE) {
+        @ExperimentalSerializationApi
         override fun parseJson(jsonString: String): NetworkModels =
-                jsonParser.parse(AuthenticationResponse.serializer(), jsonString)
+                Json.decodeFromString(AuthenticationResponse.serializer(), jsonString)
 
         override fun serialize(obj: NetworkModels) =
-                jsonParser.toJson(
+                Json.encodeToJsonElement(
                     AuthenticationRequest.serializer(),
                     obj as AuthenticationRequest
                 )
@@ -45,26 +48,26 @@ internal sealed class REQUESTS(override val value: String) : ResponseMessageType
 
     object CYCLE_REQUEST : REQUESTS(CYCLE_TYPE) {
         override fun parseJson(jsonString: String): NetworkModels =
-                jsonParser.parse(CycleResponseData.serializer(), jsonString)
+                Json.decodeFromString(CycleResponseData.serializer(), jsonString)
 
         override fun serialize(obj: NetworkModels) =
-                jsonParser.toJson(CycleRequest.serializer(), obj as CycleRequest)
+                Json.encodeToJsonElement(CycleRequest.serializer(), obj as CycleRequest)
     }
 
     object REPORT : REQUESTS(REPORT_TYPE) {
         override fun parseJson(jsonString: String): NetworkModels =
-                jsonParser.parse(ReportResponse.serializer(), jsonString)
+                Json.decodeFromString(ReportResponse.serializer(), jsonString)
 
         override fun serialize(obj: NetworkModels) =
-                jsonParser.toJson(ReportRequest.serializer(), obj as ReportRequest)
+                Json.encodeToJsonElement(ReportRequest.serializer(), obj as ReportRequest)
     }
 
     object WEBRTC_INTERNAL : REQUESTS(WEBRTC_INTERNAL_TYPE) {
         override fun parseJson(jsonString: String): NetworkModels =
-                jsonParser.parse(InternalMessageResponse.serializer(), jsonString)
+                Json.decodeFromString(InternalMessageResponse.serializer(), jsonString)
 
         override fun serialize(obj: NetworkModels): JsonElement =
-                jsonParser.toJson(
+                Json.encodeToJsonElement(
                     InternalMessageRequest.serializer(),
                     obj as InternalMessageRequest
                 )
@@ -72,10 +75,10 @@ internal sealed class REQUESTS(override val value: String) : ResponseMessageType
 
     object WEBRTC_PEER : REQUESTS(NEW_PEER_TYPE) {
         override fun parseJson(jsonString: String): NetworkModels =
-                jsonParser.parse(NewPeer.serializer(), jsonString)
+                Json.decodeFromString(NewPeer.serializer(), jsonString)
 
         override fun serialize(obj: NetworkModels): JsonElement =
-                jsonParser.toJson(
+                Json.encodeToJsonElement(
                     InternalMessageRequest.serializer(),
                     obj as InternalMessageRequest
                 )

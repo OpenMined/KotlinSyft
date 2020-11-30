@@ -6,8 +6,6 @@ import com.nhaarman.mockitokotlin2.refEq
 import com.nhaarman.mockitokotlin2.stub
 import io.reactivex.Single
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
-import kotlinx.serialization.json.json
 import org.openmined.syft.networking.clients.DATA
 import org.openmined.syft.networking.clients.SocketClient
 import org.openmined.syft.networking.clients.TYPE
@@ -28,7 +26,6 @@ internal class SocketClientMock(
     private val cycleSuccess: Boolean
 ) {
     //Choosing stable kotlin serialization over default
-    private val Json = Json(JsonConfiguration.Stable)
     private val mockedClient = mock<SocketClient>()
 //
 //    private val authenticationResponse = json {
@@ -171,6 +168,6 @@ internal class SocketClientMock(
     fun getMockedClient() = mockedClient
 
     private fun deserializeSocket(socketMessage: String): SocketResponse {
-        return Json.parse(SocketResponse.serializer(), socketMessage)
+        return Json.decodeFromString(SocketResponse.serializer(), socketMessage)
     }
 }

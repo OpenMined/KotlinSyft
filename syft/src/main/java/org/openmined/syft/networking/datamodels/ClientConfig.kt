@@ -1,20 +1,18 @@
 package org.openmined.syft.networking.datamodels
 
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.SerialClassDescImpl
-import kotlinx.serialization.json.JsonInput
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonOutput
-import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.json
-import org.pytorch.IValue
+import kotlinx.serialization.json.buildJsonObject
 
 private const val NAME = "name"
 private const val VERSION = "version"
@@ -47,32 +45,32 @@ data class ClientConfig(
     val planArgs: Map<String, String>
 )
 
+@ExperimentalSerializationApi
 @Suppress("UNCHECKED_CAST")
 @Serializer(forClass = ClientConfig::class)
 internal class ClientConfigSerializer : KSerializer<ClientConfig> {
     private val propertiesList = listOf(NAME, VERSION, MAX_UPDATES)
 
-    override val descriptor: SerialDescriptor
-        get() = SerialClassDescImpl("SocketSerializer")
+    override val descriptor: SerialDescriptor = ClientConfig.serializer().descriptor
 
     override fun deserialize(decoder: Decoder): ClientConfig {
-        val input = decoder as? JsonInput
+        val input = decoder as? JsonDecoder
                     ?: throw SerializationException("This class can be loaded only by Json")
-        val response = input.decodeJson() as? JsonObject
+        val response = input.decodeJsonElement() as? JsonObject
                        ?: throw SerializationException("Expected JsonObject")
         val properties = getClientProperties(response)
         val map = mutableMapOf<String, String>()
-        response.content.filterNot { it.key in propertiesList }.forEach { (key, value) ->
+        response.entries.filterNot { it.key in propertiesList }.forEach { (key, value) ->
             map[key] = value.toString()
         }
         return ClientConfig(properties, map)
     }
 
     override fun serialize(encoder: Encoder, obj: ClientConfig) {
-        val output = encoder as? JsonOutput
+        val output = encoder as? JsonEncoder
                      ?: throw SerializationException("This class can be saved only by Json")
 
-        output.encodeJson(json {
+        output.encodeJsonElement(buildJsonObject {
             NAME to obj.properties.modelName
             VERSION to obj.properties.modelVersion
             MAX_UPDATES to obj.properties.maxUpdates
@@ -88,7 +86,7 @@ internal class ClientConfigSerializer : KSerializer<ClientConfig> {
         if (modelName.isEmpty() || modelVersion.isEmpty())
             throw SerializationException("incomplete client properties keys")
 
-        val maxUpdates = response["max_updates"]?.intOrNull
+        val maxUpdates = response["max_updates"]?.toString()?.toIntOrNull()
                          ?: throw SerializationException("key max_updates not present")
 
         return ClientProperties(modelName, modelVersion, maxUpdates)

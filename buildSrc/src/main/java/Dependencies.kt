@@ -9,14 +9,14 @@ object Versions {
     const val targetSdk = 29
 
     const val gradle = "4.0.1"
-    const val kotlin = "1.3.61"
+    const val kotlin = "1.4.20"
     const val buildTools = "29.0.2"
 
     // Android libraries
     const val appCompat = "1.1.0-alpha04"
     const val constraintLayout = "1.1.3"
     const val coreKtx = "1.2.0"
-    const val kotlinSerialization = "0.14.0"
+    const val kotlinSerialization = "1.0.1"
     const val material="1.1.0"
     const val workManagerVersion = "2.3.4"
     const val lifecycleVersion = "2.2.0"
@@ -29,7 +29,7 @@ object Versions {
     const val protobuf = "3.11.4"
     const val syftProto = "0.5.0"
     const val retrofit = "2.7.1"
-    const val kotlinConverter = "0.4.0"
+    const val kotlinConverter = "0.8.0"
     const val pytorchAndroid = "1.4.0"
     const val mpAndroidChart = "v3.1.0"
     const val coroutines = "1.4.0"
@@ -69,7 +69,7 @@ object ProjectDependencies {
 object CommonDependencies {
     const val appCompat = "androidx.appcompat:appcompat:${Versions.appCompat}"
     const val coreKtx = "androidx.core:core-ktx:${Versions.coreKtx}"
-    const val kotlinSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-runtime:${Versions.kotlinSerialization}"
+    const val kotlinSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:${Versions.kotlinSerialization}"
     const val kotlinSerializationFactory = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:${Versions.kotlinConverter}"
     const val rxJava = "io.reactivex.rxjava2:rxjava:${Versions.rxJava}"
     const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"

@@ -1,20 +1,20 @@
 package org.openmined.syft.networking.datamodels.syft
 
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.SerialClassDescImpl
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
-import kotlinx.serialization.json.JsonInput
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonOutput
-import kotlinx.serialization.json.json
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.jsonPrimitive
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.NetworkModels
 
@@ -37,13 +37,13 @@ internal sealed class CycleResponseData : NetworkModels() {
         val clientConfig: ClientConfig,
         val protocols: HashMap<String, String>,
         @SerialName("model_id")
-        val modelId: String
+        val modelId: String,
     ) : CycleResponseData()
 
     @SerialName(CYCLE_REJECT)
     @Serializable
     data class CycleReject(
-        val timeout: String = ""
+        val timeout: String = "",
     ) : CycleResponseData()
 }
 
@@ -58,49 +58,49 @@ internal data class CycleRequest(
     @SerialName("download")
     val downloadSpeed: Float,
     @SerialName("upload")
-    val uploadSpeed: Float
+    val uploadSpeed: Float,
 ) : NetworkModels()
 
 
+@ExperimentalSerializationApi
 @Serializer(forClass = CycleResponseData::class)
 internal class CycleResponseSerializer : KSerializer<CycleResponseData> {
-    private val json = Json(JsonConfiguration.Stable)
-    override val descriptor: SerialDescriptor
-        get() = SerialClassDescImpl("AuthResponseSerializer")
+    override val descriptor: SerialDescriptor = CycleResponseData.serializer().descriptor
 
     override fun deserialize(decoder: Decoder): CycleResponseData {
-        val input = decoder as? JsonInput
-                    ?: throw SerializationException("This class can be loaded only by Json")
-        val response = input.decodeJson() as? JsonObject
+        require(decoder is JsonDecoder) { throw SerializationException("This class can be loaded only by Json") }
+
+        val response = decoder.decodeJsonElement() as? JsonObject
                        ?: throw SerializationException("Expected JsonObject")
-        val data = json {
+
+        val data = buildJsonArray {
             response.forEach { key, value ->
                 if (key != "status")
                     key to value
             }
         }
-        return if (response.getPrimitive("status").content == CYCLE_ACCEPT)
-            json.parse(
+        return if (response["status"]?.jsonPrimitive?.content == CYCLE_ACCEPT)
+            Json.decodeFromString(
                 CycleResponseData.CycleAccept.serializer(),
                 data.toString()
             )
         else
-            json.parse(CycleResponseData.CycleReject.serializer(), data.toString())
+            Json.decodeFromString(CycleResponseData.CycleReject.serializer(), data.toString())
     }
 
     override fun serialize(encoder: Encoder, obj: CycleResponseData) {
-        val output = encoder as? JsonOutput
-                     ?: throw SerializationException("This class can be saved only by Json")
+        require(encoder is JsonEncoder) { throw SerializationException("This class can only be saved by Json encoder") }
+
         when (obj) {
-            is CycleResponseData.CycleAccept -> output.encodeJson(
-                json.toJson(
+            is CycleResponseData.CycleAccept -> encoder.encodeJsonElement(
+                Json.encodeToJsonElement(
                     CycleResponseData.CycleAccept.serializer(),
                     obj
                 )
             )
             is CycleResponseData.CycleReject ->
-                output.encodeJson(
-                    json.toJson(
+                encoder.encodeJsonElement(
+                    Json.encodeToJsonElement(
                         CycleResponseData.CycleReject.serializer(),
                         obj
                     )

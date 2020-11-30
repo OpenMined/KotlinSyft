@@ -31,7 +31,7 @@ class TrainingTask(
     private val taskScope = CoroutineScope(Dispatchers.Default)
 
     suspend fun runTask(logger: MnistLogger) {
-        val mnistJob = syftWorker.newJob("mnist", "1.0.2")
+        val mnistJob = syftWorker.newJob("mnist", "1.0.3")
         val statusPublisher = PublishProcessor.create<Result>()
 
         logger.postLog("MNIST job started \n\nChecking for download and upload speeds")

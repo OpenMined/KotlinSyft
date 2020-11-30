@@ -1,15 +1,13 @@
 package org.openmined.syft.networking.clients
 
 import android.util.Log
-import io.reactivex.disposables.Disposable
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
-import kotlinx.serialization.json.json
+import kotlinx.serialization.json.buildJsonObject
 import org.openmined.syft.networking.datamodels.NetworkModels
 import org.openmined.syft.networking.datamodels.SocketResponse
 import org.openmined.syft.networking.datamodels.syft.AuthenticationRequest
@@ -46,9 +44,6 @@ internal class SocketClient(
 
     constructor(baseUrl: String, timeout: UInt) :
             this(SyftWebSocket(NetworkingProtocol.WSS, baseUrl, timeout), timeout)
-
-    //Choosing stable kotlin serialization over default
-    private val Json = Json(JsonConfiguration.Stable)
 
     // Check to manage resource usage
     @Volatile
@@ -183,13 +178,13 @@ internal class SocketClient(
      * Parse incoming message
      * */
     private fun deserializeSocket(socketMessage: String): SocketResponse {
-        return Json.parse(SocketResponse.serializer(), socketMessage)
+        return Json.decodeFromString(SocketResponse.serializer(), socketMessage)
     }
 
     /**
      * Serialize message to be sent to PyGrid
      * */
-    private fun serializeNetworkModel(types: MessageTypes, data: NetworkModels) = json {
+    private fun serializeNetworkModel(types: MessageTypes, data: NetworkModels) = buildJsonObject {
         TYPE to types.value
         if (types is ResponseMessageTypes)
             DATA to types.serialize(data)
