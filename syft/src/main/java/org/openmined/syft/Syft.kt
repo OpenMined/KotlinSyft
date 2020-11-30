@@ -29,7 +29,7 @@ private const val TAG = "Syft"
 class Syft internal constructor(
     private val syftConfig: SyftConfiguration,
     private val deviceMonitor: DeviceMonitor,
-    private val authToken: String?,
+    private val authToken: String?
 ) {
     companion object {
         @Volatile
@@ -45,7 +45,7 @@ class Syft internal constructor(
          */
         fun getInstance(
             syftConfiguration: SyftConfiguration,
-            authToken: String? = null,
+            authToken: String? = null
         ): Syft {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE?.let {
@@ -84,7 +84,7 @@ class Syft internal constructor(
      */
     fun newJob(
         model: String,
-        version: String? = null,
+        version: String? = null
     ): SyftJob {
         val job = SyftJob.create(
             model,
@@ -149,7 +149,7 @@ class Syft internal constructor(
         job: SyftJob,
         ping: Int?,
         downloadSpeed: Float?,
-        uploadSpeed: Float?,
+        uploadSpeed: Float?
     ): CycleResponseData {
 
         return when (val check = checkConditions(ping, downloadSpeed, uploadSpeed)) {
@@ -171,7 +171,7 @@ class Syft internal constructor(
     private fun checkConditions(
         ping: Int?,
         downloadSpeed: Float?,
-        uploadSpeed: Float?,
+        uploadSpeed: Float?
     ): Either<String, Boolean> {
         return when {
             ping == null ->

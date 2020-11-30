@@ -51,7 +51,7 @@ class SyftJob internal constructor(
     version: String? = null,
     private val worker: Syft,
     private val config: SyftConfiguration,
-    private val jobRepository: JobRepository,
+    private val jobRepository: JobRepository
 ) {
 
     companion object {
@@ -69,7 +69,7 @@ class SyftJob internal constructor(
             modelName: String,
             version: String? = null,
             worker: Syft,
-            config: SyftConfiguration,
+            config: SyftConfiguration
         ): SyftJob {
             return SyftJob(
                 modelName,
@@ -153,7 +153,7 @@ class SyftJob internal constructor(
      * @sample org.openmined.syft.Syft.newJob
      */
     private fun subscribe(
-        subscriber: JobStatusSubscriber,
+        subscriber: JobStatusSubscriber
     ) {
         _jobState.onEach { jobStatus ->
             Log.d(TAG, "Received $jobStatus")
@@ -209,7 +209,7 @@ class SyftJob internal constructor(
      */
     internal suspend fun downloadData(
         workerId: String,
-        responseData: CycleResponseData.CycleAccept,
+        responseData: CycleResponseData.CycleAccept
     ) {
         if (cycleStatus.get() != CycleStatus.ACCEPTED) {
             publishError(JobErrorThrowable.CycleNotAccepted("Cycle not accepted. Download cannot start"))

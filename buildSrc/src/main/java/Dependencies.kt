@@ -9,7 +9,7 @@ object Versions {
     const val targetSdk = 29
 
     const val gradle = "4.0.1"
-    const val kotlin = "1.4.20"
+    const val kotlin = "1.3.61"
     const val buildTools = "29.0.2"
 
     // Android libraries
