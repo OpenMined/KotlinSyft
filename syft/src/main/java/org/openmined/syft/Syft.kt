@@ -105,28 +105,46 @@ class Syft internal constructor(
         if (job.throwErrorIfBatteryInvalid() || job.throwErrorIfNetworkInvalid())
             return
 
-        workerId?.let { id ->
-            try {
-                val networkStatus = deviceMonitor.getNetworkStatus(id, job.requiresSpeedTest.get())
-                val cycleResponse = requestCycle(
-                    id,
-                    job,
-                    networkStatus.ping,
-                    networkStatus.downloadSpeed,
-                    networkStatus.uploadSpeed
-                )
-                when (cycleResponse) {
-                    is CycleResponseData.CycleAccept -> scope.launch {
-                        handleCycleAccept(
-                            cycleResponse
-                        )
-                    }
-                    is CycleResponseData.CycleReject -> handleCycleReject(cycleResponse)
+        when (val response = executeAuthentication(job)) {
+            is AuthenticationResponse.AuthenticationSuccess -> {
+                if (workerId == null) {
+                    setSyftWorkerId(response.workerId)
                 }
-            } catch (e: Exception) {
-                job.publishError(JobErrorThrowable.ExternalException(e.message, e.cause))
+                //todo eventually requires_speed test will be migrated to it's own endpoint
+                job.requiresSpeedTest.set(response.requiresSpeedTest)
             }
-        } ?: executeAuthentication(job)
+            is AuthenticationResponse.AuthenticationError -> {
+                job.publishError(
+                    JobErrorThrowable.AuthenticationFailure(
+                        response.errorMessage
+                    )
+                )
+                Log.d(TAG, response.errorMessage)
+                return
+            }
+            is AuthenticationResponse.AlreadyAuthenticated -> {}
+            is AuthenticationResponse.UnknownError -> {
+                job.publishError(JobErrorThrowable.ExternalException(response.exception.message, response.exception.cause))
+            }
+        }
+
+        try {
+            // TODO Fix this workerId!!
+            val networkStatus = deviceMonitor.getNetworkStatus(workerId!!, job.requiresSpeedTest.get())
+            val cycleResponse = requestCycle(
+                workerId!!,
+                job,
+                networkStatus.ping,
+                networkStatus.downloadSpeed,
+                networkStatus.uploadSpeed
+            )
+            when (cycleResponse) {
+                is CycleResponseData.CycleAccept -> handleCycleAccept(cycleResponse)
+                is CycleResponseData.CycleReject -> handleCycleReject(cycleResponse)
+            }
+        } catch (e: Exception) {
+            job.publishError(JobErrorThrowable.ExternalException(e.message, e.cause))
+        }
     }
 
     /**
@@ -204,33 +222,20 @@ class Syft internal constructor(
 
     }
 
-    private suspend fun executeAuthentication(job: SyftJob) {
-        try {
-            val authRequest = AuthenticationRequest(
-                authToken,
-                job.jobId.modelName,
-                job.jobId.version
-            )
-            when (val response = syftConfig.getSignallingClient().authenticate(authRequest)) {
-                is AuthenticationResponse.AuthenticationSuccess -> {
-                    if (workerId == null) {
-                        setSyftWorkerId(response.workerId)
-                    }
-                    //todo eventually requires_speed test will be migrated to it's own endpoint
-                    job.requiresSpeedTest.set(response.requiresSpeedTest)
-                    executeCycleRequest(job)
-                }
-                is AuthenticationResponse.AuthenticationError -> {
-                    job.publishError(
-                        JobErrorThrowable.AuthenticationFailure(
-                            response.errorMessage
-                        )
-                    )
-                    Log.d(TAG, response.errorMessage)
-                }
+    private suspend fun executeAuthentication(job: SyftJob): AuthenticationResponse {
+        return if (workerId != null) {
+            AuthenticationResponse.AlreadyAuthenticated
+        } else {
+            try {
+                val authRequest = AuthenticationRequest(
+                    authToken,
+                    job.jobId.modelName,
+                    job.jobId.version
+                )
+                syftConfig.getSignallingClient().authenticate(authRequest)
+            } catch (e: Exception) {
+                AuthenticationResponse.UnknownError(e)
             }
-        } catch (e: Exception) {
-            job.publishError(JobErrorThrowable.ExternalException(e.message, e.cause))
         }
     }
 
