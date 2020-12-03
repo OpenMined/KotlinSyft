@@ -195,16 +195,16 @@ source venv/bin/activate
 make venv
 ```
 
-- From PyGrid folder, start Jupyter Notebook
+- From PySyft folder, start Jupyter Notebook
 
 ```bash
 jupyter notebook
 ```
 
-- Open a browser and navigate to [localhost:8888](http://localhost:8888/). You should be able to see the PyGrid files.
-- In the Jupyter Notebook, navigate to `examples/model-centric`
-- Run the notebook `01-Create-plan.ipynb`. It should host the model on PyGrid.
-- Optionally, run the notebook `02-ExecutePlan.ipynb`. This will train the model on the python worker of PySyft.
+- Open a browser and navigate to [localhost:8888](http://localhost:8888/). You should be able to see the PySyft files.
+- In the Jupyter Notebook, navigate to `examples/tutorials/model-centric-fl`
+- Run the notebook `Part 01 - Create Plan.ipynb`. It should host the model on PyGrid.
+- Optionally, run the notebook `Part 02 - Execute Plan.ipynb`. This will train the model on the python worker of PySyft.
 - The android app connects to your PC's localhost via router (easier approach)
 - Get the IP address of your computer by running `ip address show | grep "inet " | grep -v 127.0.0.1` if using Linux/Mac. For windows there are different steps. Alternatively, if you want to run the demo app in the emulator, use `10.0.2.2` as the IP address.
 - Use this IP address and the port (default:5000) in your login screen to supply the PyGrid server url, e.g., 10.0.2.2:5000
