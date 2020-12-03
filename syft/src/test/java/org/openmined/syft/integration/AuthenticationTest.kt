@@ -134,13 +134,13 @@ class AuthenticationTest : AbstractSyftWorkerTest() {
         val jobStatusSubscriber = spy<JobStatusSubscriber>()
         runBlocking {
             job.start(jobStatusSubscriber)
+            argumentCaptor<Throwable>().apply {
+                verify(jobStatusSubscriber).onError(capture())
+                assert(firstValue is JobErrorThrowable.AuthenticationFailure)
+            }
+            syftWorker.dispose()
+            verify(jobStatusSubscriber, never()).onComplete()
         }
-        argumentCaptor<Throwable>().apply {
-            verify(jobStatusSubscriber).onError(capture())
-            assert(firstValue is JobErrorThrowable.AuthenticationFailure)
-        }
-        syftWorker.dispose()
-        verify(jobStatusSubscriber, never()).onComplete()
     }
 
     @Test
