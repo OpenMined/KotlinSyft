@@ -1,23 +1,15 @@
 package org.openmined.syft.execution
 
-import android.util.Base64
 import android.util.Log
 import androidx.annotation.VisibleForTesting
-import io.reactivex.Completable
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
-import io.reactivex.processors.PublishProcessor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import org.openmined.syft.Syft
 import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
 import org.openmined.syft.datasource.JobLocalDataSource
@@ -26,11 +18,8 @@ import org.openmined.syft.domain.DownloadStatus
 import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
-import org.openmined.syft.networking.datamodels.syft.ReportRequest
-import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import org.openmined.syft.proto.SyftModel
 import org.openmined.syft.proto.SyftState
-import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -87,7 +76,6 @@ class SyftJob internal constructor(
     val jobId = JobID(modelName, version)
     internal var cycleStatus = AtomicReference(CycleStatus.APPLY)
     internal val requiresSpeedTest = AtomicBoolean(true)
-    private val jobStatusProcessor = PublishProcessor.create<JobStatusMessage>()
     private val isDisposed = AtomicBoolean(false)
 
     private val plans = ConcurrentHashMap<String, Plan>()
@@ -168,6 +156,9 @@ class SyftJob internal constructor(
                 is JobStatusMessage.Complete -> {
                     subscriber.onComplete()
                 }
+                is JobStatusMessage.Error -> {
+                    subscriber.onError(jobStatus.throwable)
+                }
                 else -> {
                     // TODO Other job states to be handled
                 }
@@ -199,7 +190,7 @@ class SyftJob internal constructor(
      */
     internal fun cycleRejected(responseData: CycleResponseData.CycleReject) {
         cycleStatus.set(CycleStatus.REJECT)
-        jobStatusProcessor.offer(JobStatusMessage.JobCycleRejected(responseData.timeout))
+        _jobState.value = JobStatusMessage.JobCycleRejected(responseData.timeout)
     }
 
     /**
@@ -324,7 +315,7 @@ class SyftJob internal constructor(
      * Notify all the listeners about the error and dispose the job
      */
     internal fun publishError(throwable: JobErrorThrowable) {
-        jobStatusProcessor.onError(throwable)
+        _jobState.value = JobStatusMessage.Error(throwable)
         networkDisposable.clear()
         isDisposed.set(true)
     }
@@ -348,7 +339,6 @@ class SyftJob internal constructor(
      */
     fun dispose() {
         if (!isDisposed()) {
-            jobStatusProcessor.onComplete()
             networkDisposable.clear()
             isDisposed.set(true)
             Log.d(TAG, "job $jobId disposed")

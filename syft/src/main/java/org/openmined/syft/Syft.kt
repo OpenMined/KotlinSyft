@@ -1,7 +1,6 @@
 package org.openmined.syft
 
 import android.util.Log
-import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -61,13 +60,11 @@ class Syft internal constructor(
 
         fun getCurrentInstance() = INSTANCE?.let {
             INSTANCE
-        }
-                                   ?: throw java.lang.IllegalStateException("Syft Worker was not initiliased. Use getInstance(syftConfiguration, authToken)")
+        } ?: throw java.lang.IllegalStateException("Syft Worker was not initiliased. Use getInstance(syftConfiguration, authToken)")
     }
 
     //todo single job for now but eventually worker should support multiple jobs
     private var workerJob: SyftJob? = null
-    private val compositeDisposable = CompositeDisposable()
     private val isDisposed = AtomicBoolean(false)
 
     // https://github.com/Kotlin/kotlinx.coroutines/issues/1003
@@ -154,7 +151,6 @@ class Syft internal constructor(
     fun dispose() {
         Log.d(TAG, "disposing syft worker")
         deviceMonitor.dispose()
-        compositeDisposable.clear()
         workerJob?.dispose()
         INSTANCE = null
     }

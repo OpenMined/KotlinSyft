@@ -17,4 +17,6 @@ sealed class JobStatusMessage {
     ) : JobStatusMessage()
 
     object Complete : JobStatusMessage()
+
+    class Error(val throwable: JobErrorThrowable) : JobStatusMessage()
 }
