@@ -12,8 +12,7 @@ import java.util.Random
 class RandomSampler(private val dataset: Dataset) :
     Sampler {
 
-    override fun iter(): Sequence<Int> =
-            (0 until  dataset.length()).shuffled(Random()).asSequence()
+    override fun iter() = (0 until  dataset.length()).shuffled(Random()).toList()
 
     override fun length(): Int = dataset.length()
 

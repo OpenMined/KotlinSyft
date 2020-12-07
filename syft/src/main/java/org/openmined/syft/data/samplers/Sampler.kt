@@ -8,7 +8,7 @@ package org.openmined.syft.data.samplers
  */
 interface Sampler {
 
-    fun iter(): Sequence<*>
+    fun iter(): List<Int>
 
     fun length(): Int
 }

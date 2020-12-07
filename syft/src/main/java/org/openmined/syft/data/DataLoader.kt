@@ -1,9 +1,11 @@
 package org.openmined.syft.data
 
+import org.openmined.syft.data.fetchers.MapDatasetFetcher
 import org.openmined.syft.data.samplers.BatchSampler
 import org.openmined.syft.data.samplers.RandomSampler
 import org.openmined.syft.data.samplers.Sampler
 import org.openmined.syft.data.samplers.SequentialSampler
+import org.pytorch.IValue
 
 /**
  * Data loader. Combines a dataset and a sampler, and provides an iterable over
@@ -21,7 +23,7 @@ class DataLoader(var dataset: Dataset,
                  var batchSize: Int = 1,
                  var shuffle: Boolean = false,
                  var dropLast: Boolean = false
-) {
+) : Iterable<Pair<IValue, IValue>> {
 
     private var sampler: Sampler = if (shuffle) {
         RandomSampler(dataset)
@@ -35,4 +37,29 @@ class DataLoader(var dataset: Dataset,
         dropLast
     )
 
+    fun indexSampler() = batchSampler
+
+    override fun iterator(): Iterator<Pair<IValue, IValue>> = BaseDataLoaderIterator(this)
 }
+
+open class BaseDataLoaderIterator(private val dataLoader: DataLoader) : Iterator<Pair<IValue, IValue>> {
+
+    val indexSampler = dataLoader.indexSampler()
+
+    val datasetFetcher = MapDatasetFetcher(dataLoader.dataset, dataLoader.dropLast)
+
+    private var currentIndex = 0
+
+    override fun next(): Pair<IValue, IValue> {
+        currentIndex += indexSampler.iter().size
+        return datasetFetcher.fetch(indexSampler.iter())
+    }
+
+    override fun hasNext(): Boolean {
+        return currentIndex < indexSampler.length()
+    }
+}
+
+
+
+

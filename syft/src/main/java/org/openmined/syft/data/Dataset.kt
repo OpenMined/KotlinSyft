@@ -1,5 +1,6 @@
 package org.openmined.syft.data
 
+
 interface Dataset {
     /**
      * An abstract class representing a :class:`Dataset`.
@@ -17,6 +18,6 @@ interface Dataset {
     /**
      * This method is called to fetch a data sample for a given key.
      */
-    fun getItem(index: Float) : Pair<*, *>
+    fun getItem(index: Int) : Pair<FloatArray, FloatArray>
 
 }

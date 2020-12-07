@@ -16,9 +16,9 @@ class BatchSampler(
     private val dropLast: Boolean = false
 ) : Sampler {
 
-    override fun iter(): Sequence<Int> {
+    override fun iter(): List<Int> {
         //TODO: implement batch
-        return sequenceOf(1)
+        return listOf()
     }
 
     override fun length(): Int {
