@@ -6,7 +6,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.work.WorkInfo
 import io.reactivex.disposables.CompositeDisposable
-import org.openmined.syft.demo.federated.domain.MNISTDataRepository
+import org.openmined.syft.data.DataLoader
 import org.openmined.syft.demo.federated.domain.TrainingTask
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.service.EPOCH
@@ -65,11 +65,11 @@ class MnistActivityViewModel(
         logTextInternal.postValue("${logTextInternal.value ?: ""}\n\n$message")
     }
 
-    fun launchForegroundTrainer(config: SyftConfiguration, dataRepository: MNISTDataRepository) {
+    fun launchForegroundTrainer(config: SyftConfiguration, dataLoader: DataLoader) {
         trainingTask = TrainingTask(
             config,
             authToken,
-            dataRepository
+            dataLoader
         )
         compositeDisposable.add(trainingTask!!.runTask(this).subscribe())
     }

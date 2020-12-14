@@ -1,19 +1,22 @@
 package org.openmined.syft.demo.federated.datasource
 
 import android.content.res.Resources
+import org.openmined.syft.data.Dataset
+import org.openmined.syft.data.KTensor
 import org.openmined.syft.demo.R
-import org.openmined.syft.demo.federated.domain.Batch
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 private const val FEATURESIZE = 784
 
-class LocalMNISTDataDataSource constructor(
-    private val resources: Resources
-) {
+class MINSTDataset(private val resources: Resources) : Dataset {
+
     private var trainDataReader = returnDataReader()
     private var labelDataReader = returnLabelReader()
     private val oneHotMap = HashMap<Int, List<Float>>()
+
+    private val trainInput = arrayListOf<List<Float>>()
+    private val labels = arrayListOf<List<Float>>()
 
     init {
         (0..9).forEach { i ->
@@ -24,22 +27,23 @@ class LocalMNISTDataDataSource constructor(
                     0.0f
             }
         }
+
+        readSample(trainInput, labels)
     }
 
-    fun loadDataBatch(batchSize: Int): Pair<Batch, Batch> {
-        val trainInput = arrayListOf<List<Float>>()
-        val labels = arrayListOf<List<Float>>()
-        for (idx in 0..batchSize)
-            readSample(trainInput, labels)
+    override fun length(): Int = trainInput.size
 
-        val trainingData = Batch(
-            trainInput.flatten().toFloatArray(),
-            longArrayOf(trainInput.size.toLong(), FEATURESIZE.toLong())
+    override fun getItem(index: Int): Pair<KTensor, KTensor> {
+        val trainingData = KTensor(
+            trainInput[index].toFloatArray(),
+            longArrayOf(1, FEATURESIZE.toLong())
         )
-        val trainingLabel = Batch(
-            labels.flatten().toFloatArray(),
-            longArrayOf(labels.size.toLong(), 10)
+
+        val trainingLabel = KTensor(
+            labels[index].toFloatArray(),
+            longArrayOf(1, 10)
         )
+
         return Pair(trainingData, trainingLabel)
     }
 
@@ -88,4 +92,5 @@ class LocalMNISTDataDataSource constructor(
             resources.openRawResource(R.raw.labels)
         )
     )
+
 }

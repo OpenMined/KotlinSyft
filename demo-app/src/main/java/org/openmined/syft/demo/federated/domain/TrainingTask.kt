@@ -4,6 +4,7 @@ import androidx.work.ListenableWorker.Result
 import io.reactivex.Single
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.Syft
+import org.openmined.syft.data.DataLoader
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.ui.ContentState
 import org.openmined.syft.domain.SyftConfiguration
@@ -21,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
 class TrainingTask(
     private val configuration: SyftConfiguration,
     private val authToken: String,
-    private val mnistDataRepository: MNISTDataRepository
+    private val dataLoader: DataLoader
 ) {
     private var syftWorker: Syft? = null
 
@@ -89,26 +90,28 @@ class TrainingTask(
                         longArrayOf(1)
                     )
                 )
-                val batchData =
-                        mnistDataRepository.loadDataBatch(batchSize)
+
                 val modelParams = model.paramArray ?: return
                 val paramIValue = IValue.listFrom(*modelParams)
-                val output = plan.execute(
-                    batchData.first,
-                    batchData.second,
-                    batchIValue,
-                    lr, paramIValue
-                )?.toTuple()
-                output?.let { outputResult ->
-                    val paramSize = model.stateTensorSize!!
-                    val beginIndex = outputResult.size - paramSize
-                    val updatedParams =
-                            outputResult.slice(beginIndex until outputResult.size)
-                    model.updateModel(updatedParams)
-                    result = outputResult[0].toTensor().dataAsFloatArray.last()
+
+                for (batchData in dataLoader) {
+                    val output = plan.execute(
+                        batchData.first,
+                        batchData.second,
+                        batchIValue,
+                        lr, paramIValue
+                    )?.toTuple()
+                    output?.let { outputResult ->
+                        val paramSize = model.stateTensorSize!!
+                        val beginIndex = outputResult.size - paramSize
+                        val updatedParams =
+                                outputResult.slice(beginIndex until outputResult.size)
+                        model.updateModel(updatedParams)
+                        result = outputResult[0].toTensor().dataAsFloatArray.last()
+                    }
+                    logger.postState(ContentState.Training)
+                    logger.postData(result)
                 }
-                logger.postState(ContentState.Training)
-                logger.postData(result)
             }
             logger.postLog("Training done!\n reporting diff")
             val diff = mnistJob.createDiff()
