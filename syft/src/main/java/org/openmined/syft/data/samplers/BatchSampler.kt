@@ -16,8 +16,19 @@ class BatchSampler(
     private val dropLast: Boolean = false
 ) : Sampler {
 
-    override fun iter(): List<Int> {
-        //TODO: implement batch
+    private val indices = sampler.indices()
+    private var currentIndex = 0
+
+    override fun indices(): List<Int> {
+        val batch = arrayListOf<Int>()
+        for (index in currentIndex until indices.size) {
+            batch.add(indices[index])
+            currentIndex += 1
+            if (batch.size == batchSize) return batch
+        }
+
+        if (batch.size > 0 && !dropLast) return batch
+
         return listOf()
     }
 

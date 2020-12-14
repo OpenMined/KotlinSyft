@@ -18,6 +18,6 @@ interface Dataset {
     /**
      * This method is called to fetch a data sample for a given key.
      */
-    fun getItem(index: Int) : Pair<FloatArray, FloatArray>
+    fun getItem(index: Int) : Pair<KTensor, KTensor>
 
 }

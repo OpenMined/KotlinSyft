@@ -42,21 +42,23 @@ class DataLoader(var dataset: Dataset,
     override fun iterator(): Iterator<Pair<IValue, IValue>> = BaseDataLoaderIterator(this)
 }
 
-open class BaseDataLoaderIterator(private val dataLoader: DataLoader) : Iterator<Pair<IValue, IValue>> {
+open class BaseDataLoaderIterator(dataLoader: DataLoader) : Iterator<Pair<IValue, IValue>> {
 
-    val indexSampler = dataLoader.indexSampler()
+    private val indexSampler = dataLoader.indexSampler()
 
-    val datasetFetcher = MapDatasetFetcher(dataLoader.dataset, dataLoader.dropLast)
+    private val datasetFetcher = MapDatasetFetcher(dataLoader.dataset, dataLoader.dropLast)
+
+    private val datasetLength = datasetFetcher.dataset.length()
 
     private var currentIndex = 0
 
     override fun next(): Pair<IValue, IValue> {
-        currentIndex += indexSampler.iter().size
-        return datasetFetcher.fetch(indexSampler.iter())
+        currentIndex += indexSampler.length()
+        return datasetFetcher.fetch(indexSampler.indices())
     }
 
     override fun hasNext(): Boolean {
-        return currentIndex < indexSampler.length()
+        return currentIndex < datasetLength
     }
 }
 
