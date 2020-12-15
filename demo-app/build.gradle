@@ -17,10 +17,10 @@ android {
         Properties authProperties = new Properties()
         authProperties.load(project.rootProject.file('demo-app/authentication.properties').newDataInputStream())
         buildConfigField 'String', 'SYFT_AUTH_TOKEN', authProperties.getProperty('syft.authToken')
-        Properties localProperties = new Properties()
-        localProperties.load(project.rootProject.file('demo-app/local.properties').newDataInputStream())
-        buildConfigField 'String', 'SYFT_MODEL_NAME', localProperties.getProperty('syft.model_name')
-        buildConfigField 'String', 'SYFT_MODEL_VERSION', localProperties.getProperty('syft.model_version')
+        Properties modelProperties = new Properties()
+        modelProperties.load(project.rootProject.file('demo-app/model.properties').newDataInputStream())
+        buildConfigField 'String', 'SYFT_MODEL_NAME', modelProperties.getProperty('syft.model_name')
+        buildConfigField 'String', 'SYFT_MODEL_VERSION', modelProperties.getProperty('syft.model_version')
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8

@@ -62,7 +62,7 @@ class SyftConfiguration internal constructor(
         private var socketClient = SocketClient(baseUrl, 20000u)
         private var httpClient = HttpClient.initialize(baseUrl)
         private var filesDir = context.filesDir
-        private var batteryCheckEnabled = true
+        private var batteryCheckEnabled = false
         private var maxConcurrentJobs: Int = 1
         private var messagingClient: NetworkingClients = NetworkingClients.SOCKET
         private var cacheTimeOut: Long = 100000
