@@ -5,6 +5,7 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.refEq
 import com.nhaarman.mockitokotlin2.stub
+import com.nhaarman.mockitokotlin2.whenever
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
@@ -20,6 +21,7 @@ import org.openmined.syft.networking.datamodels.syft.CycleRequest
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.networking.datamodels.syft.ReportResponse
 import org.openmined.syft.networking.requests.REQUESTS
+import org.openmined.syft.networking.requests.SocketAPI
 import org.robolectric.annotation.Implements
 
 @ExperimentalCoroutinesApi
@@ -31,9 +33,9 @@ internal class SocketClientMock(
 ) {
     //Choosing stable kotlin serialization over default
     private val Json = Json(JsonConfiguration.Stable)
-    private val mockedClient = mock<SocketClient>()
+    private val mockedClient = mock<SocketAPI>()
 
-    private val authenticationResponse = json {
+    internal val authenticationResponse = json {
         TYPE to REQUESTS.AUTHENTICATION.value
         if (authenticateSuccess)
             DATA to json {
@@ -122,44 +124,49 @@ internal class SocketClientMock(
             }
     }.toString()
 
-    init {
-        mockedClient.stub {
-            onBlocking  { it.authenticate(any()) } doReturn
-                    deserializeSocket(
-                        authenticationResponse
-                    ).data as AuthenticationResponse
+    fun getMockedClient() = mockedClient
 
-            onBlocking {
-                it.getCycle(
-                    refEq(
-                        cycleRequest1,
-                        "workerId",
-                        "ping",
-                        "downloadSpeed",
-                        "uploadSpeed"
-                    )
+    suspend fun initMockBehaviour() {
+        whenever(mockedClient.authenticate(any())).thenReturn(deserializeSocket(
+            authenticationResponse
+        ).data as AuthenticationResponse)
+
+        whenever(mockedClient.getCycle(
+            refEq(
+                cycleRequest1,
+                "workerId",
+                "ping",
+                "downloadSpeed",
+                "uploadSpeed"
+            )
+        )
+        ).thenReturn(deserializeSocket(socketResponseTest1).data as CycleResponseData)
+
+        whenever(
+            mockedClient.getCycle(
+                refEq(
+                    cycleRequest2,
+                    "workerId",
+                    "ping",
+                    "downloadSpeed",
+                    "uploadSpeed"
                 )
-            } doReturn deserializeSocket(socketResponseTest1).data as CycleResponseData
+            )
+        ).thenReturn(deserializeSocket(socketResponseTest2).data as CycleResponseData)
 
-            onBlocking {
-                it.getCycle(
-                    refEq(
-                        cycleRequest2,
-                        "workerId",
-                        "ping",
-                        "downloadSpeed",
-                        "uploadSpeed"
-                    )
-                )
-            } doReturn deserializeSocket(socketResponseTest2).data as CycleResponseData
+        whenever(mockedClient.getCycle(
+            refEq(
+                cycleRequest2,
+                "workerId",
+                "ping",
+                "downloadSpeed",
+                "uploadSpeed"
+            )
+        )).thenReturn(deserializeSocket(socketResponseTest2).data as CycleResponseData)
 
-            onBlocking { it.report(any()) } doReturn ReportResponse("success")
-
-//            on { it.dispose() } doReturn Unit
-        }
+        whenever(mockedClient.report(any())).thenReturn(ReportResponse("success"))
     }
 
-    fun getMockedClient() = mockedClient
 
     private fun deserializeSocket(socketMessage: String): SocketResponse {
         return Json.parse(SocketResponse.serializer(), socketMessage)
