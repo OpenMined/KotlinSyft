@@ -12,10 +12,7 @@ class SpecResolverTest {
             PlanInputSpec(InputParamType.Target),
             PlanInputSpec(InputParamType.BatchSize),
             PlanInputSpec(InputParamType.Value, name = "lr"),
-            PlanInputSpec(InputParamType.ModelParameter, name = "W1", index = 0),
-            PlanInputSpec(InputParamType.ModelParameter, name = "b1", index = 1),
-            PlanInputSpec(InputParamType.ModelParameter, name = "W2", index = 2),
-            PlanInputSpec(InputParamType.ModelParameter, name = "b1", index = 3)
+            PlanInputSpec(InputParamType.ModelParameter)
         )
 
         val data = IValue.listFrom(1L, 2L)
@@ -31,10 +28,10 @@ class SpecResolverTest {
             InputParamType.BatchSize to listOf(batchSize),
             InputParamType.Value to listOf(lr),
             InputParamType.Target to listOf(target),
-            InputParamType.ModelParameter to listOf(w1, b1, w2, b2)
+            InputParamType.ModelParameter to listOf(w1)
         )
 
-        val expected = listOf(data, target, batchSize, lr, w1, b1, w2, b2)
+        val expected = listOf(data, target, batchSize, lr, w1)
 
         val result = SpecResolver.resolveInputSpec(input, vars)
 
