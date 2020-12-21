@@ -142,15 +142,6 @@ class SyftJob internal constructor(
             repeat(clientConfig.properties.maxUpdates) { step ->
 
                 emit(TrainingState.Epoch(step + 1))
-                // TODO This must be treated as a generic config value from clientConfig
-                val lr = IValue.from(
-                    Tensor.fromBlob(
-                        floatArrayOf(
-                            (clientConfig.planArgs["lr"] ?: error("lr doesn't exist")).toFloat()
-                        ),
-                        longArrayOf(1)
-                    )
-                )
                 val batchData = syftDataLoader.loadDataBatch(batchSize)
                 // TODO We should check requirements before arriving to this point
 //                    emit(TrainingState.Error(IllegalStateException("No params in the model")))
