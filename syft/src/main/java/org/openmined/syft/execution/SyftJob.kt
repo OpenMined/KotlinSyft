@@ -14,6 +14,7 @@ import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
 import org.openmined.syft.domain.DownloadStatus
+import org.openmined.syft.domain.InputParamType
 import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.domain.SyftDataLoader
@@ -132,6 +133,7 @@ class SyftJob internal constructor(
         var result = -0.0f
         plans["training_plan"]?.let { plan ->
 
+            // TODO What do we do with this? Should all clients be forced to use "batch_size"?
             val batchSize = (clientConfig.planArgs["batch_size"]
                              ?: error("batch_size doesn't exist")).toInt()
             val batchIValue = IValue.from(
@@ -155,13 +157,31 @@ class SyftJob internal constructor(
                 val modelParams = model.paramArray ?: emptyArray()
                 val paramIValue = IValue.listFrom(*modelParams)
 
-                val output = plan.execute(
-                    batchData.first,
-                    batchData.second,
-                    batchIValue,
-                    lr,
-                    paramIValue
-                )?.toTuple()
+                val planArgs: List<IValue> =
+                        trainingParameters.inputParams.fold(mutableListOf()) { args, inputSpec ->
+                            when (inputSpec.type) {
+                                InputParamType.Data -> { args.apply { add(batchData.first) } }
+                                InputParamType.Target -> { args.apply { add(batchData.second) } }
+                                InputParamType.ModelParameter -> { args.apply { add(paramIValue) } }
+                                InputParamType.Value -> {
+                                    args.apply {
+                                        val value = clientConfig.planArgs[inputSpec.name]
+                                        value?.let {
+                                            val tensor = IValue.from(
+                                                Tensor.fromBlob(
+                                                    floatArrayOf(value.toFloat()),
+                                                    longArrayOf(1)
+                                                )
+                                            )
+                                            add(tensor)
+                                        } ?: args
+                                    }
+                                }
+                                else -> { args }
+                            }
+                        }
+
+                val output = plan.execute(*planArgs.toTypedArray())?.toTuple()
 
                 output?.let { outputResult ->
                     val paramSize = model.stateTensorSize!!

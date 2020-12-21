@@ -136,7 +136,7 @@ class TrainingTask(
             val planInputSpec = listOf(
                 PlanInputSpec(InputParamType.Data),
                 PlanInputSpec(InputParamType.Target),
-                PlanInputSpec(InputParamType.BatchSize),
+                PlanInputSpec(InputParamType.Value, name = "batch_size"),
                 PlanInputSpec(InputParamType.Value, name = "lr"),
                 PlanInputSpec(InputParamType.ModelParameter)
 //                PlanInputSpec(InputParamType.ModelParameter, name = "b1", index = 1),
