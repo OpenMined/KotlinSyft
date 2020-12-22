@@ -2,7 +2,7 @@ package org.openmined.syft.domain
 
 import org.pytorch.IValue
 
-data class TrainingParameters(val inputParams: List<PlanInputSpec>)
+data class TrainingParameters(val inputParams: List<PlanInputSpec>, val outputParams: List<PlanOutputSpec>)
 
 data class PlanInputSpec(
     val type: InputParamType,
@@ -17,6 +17,11 @@ enum class InputParamType {
     ModelParameter,
     Value
 }
+
+data class PlanOutputSpec(
+    val type: OutputParamType,
+    val name: String? = null
+)
 
 enum class OutputParamType {
     Loss,

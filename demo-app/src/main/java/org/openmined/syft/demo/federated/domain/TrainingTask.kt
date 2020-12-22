@@ -11,7 +11,9 @@ import org.openmined.syft.Syft
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.ui.ContentState
 import org.openmined.syft.domain.InputParamType
+import org.openmined.syft.domain.OutputParamType
 import org.openmined.syft.domain.PlanInputSpec
+import org.openmined.syft.domain.PlanOutputSpec
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.domain.TrainingParameters
 import org.openmined.syft.execution.JobStatusMessage
@@ -35,6 +37,7 @@ class TrainingTask(
 
         val statusPublisher = PublishProcessor.create<Result>()
 
+        logger.postLog("Processing $modelName $modelVersion")
         logger.postLog("MNIST job started \n\nChecking for download and upload speeds")
         logger.postState(ContentState.Loading)
 
@@ -107,8 +110,11 @@ class TrainingTask(
             is TrainingState.Epoch -> {
                 logger.postEpoch(trainingState.epoch)
             }
-            is TrainingState.Data -> {
+            is TrainingState.Loss -> {
                 logger.postData(trainingState.result)
+            }
+            is TrainingState.Metric -> {
+                logger.postLog("${trainingState.name ?: ""} ${trainingState.result}")
             }
             is TrainingState.Error -> {
                 logger.postState(ContentState.Error)
@@ -124,14 +130,6 @@ class TrainingTask(
     }
 
     companion object MnistTrainingParameters {
-        //      outputs: [
-        //        new PlanOutputSpec(PlanOutputSpec.TYPE_LOSS),
-        //        new PlanOutputSpec(PlanOutputSpec.TYPE_METRIC, 'accuracy'),
-        //        new PlanOutputSpec(PlanOutputSpec.TYPE_MODEL_PARAM, 'W1', 0),
-        //        new PlanOutputSpec(PlanOutputSpec.TYPE_MODEL_PARAM, 'b1', 1),
-        //        new PlanOutputSpec(PlanOutputSpec.TYPE_MODEL_PARAM, 'W2', 2),
-        //        new PlanOutputSpec(PlanOutputSpec.TYPE_MODEL_PARAM, 'b2', 3),
-        //      ],
         fun generateTrainingParameters(): TrainingParameters {
             val planInputSpec = listOf(
                 PlanInputSpec(InputParamType.Data),
@@ -139,11 +137,14 @@ class TrainingTask(
                 PlanInputSpec(InputParamType.Value, name = "batch_size"),
                 PlanInputSpec(InputParamType.Value, name = "lr"),
                 PlanInputSpec(InputParamType.ModelParameter)
-//                PlanInputSpec(InputParamType.ModelParameter, name = "b1", index = 1),
-//                PlanInputSpec(InputParamType.ModelParameter, name = "W2", index = 2),
-//                PlanInputSpec(InputParamType.ModelParameter, name = "b1", index = 3)
             )
-            return TrainingParameters(planInputSpec)
+            val planOutputSpec = listOf(
+                PlanOutputSpec(OutputParamType.Loss),
+                PlanOutputSpec(OutputParamType.Metric, "Accuracy"),
+                PlanOutputSpec(OutputParamType.ModelParameter)
+
+            )
+            return TrainingParameters(planInputSpec, planOutputSpec)
         }
     }
 }

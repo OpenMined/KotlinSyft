@@ -7,7 +7,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import org.openmined.syft.Syft
 import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
@@ -16,6 +15,7 @@ import org.openmined.syft.datasource.JobRemoteDataSource
 import org.openmined.syft.domain.DownloadStatus
 import org.openmined.syft.domain.InputParamType
 import org.openmined.syft.domain.JobRepository
+import org.openmined.syft.domain.OutputParamType
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.domain.SyftDataLoader
 import org.openmined.syft.domain.TrainingParameters
@@ -130,7 +130,6 @@ class SyftJob internal constructor(
         trainingParameters: TrainingParameters
     ): Flow<TrainingState> = flow {
 
-        var result = -0.0f
         plans["training_plan"]?.let { plan ->
 
             // TODO What do we do with this? Should all clients be forced to use "batch_size"?
@@ -168,21 +167,25 @@ class SyftJob internal constructor(
                                         } ?: args
                                     }
                                 }
-                                else -> { args }
                             }
                         }
 
                 val output = plan.execute(*planArgs.toTypedArray())?.toTuple()
 
                 output?.let { outputResult ->
-                    val paramSize = model.stateTensorSize!!
-                    val beginIndex = outputResult.size - paramSize
-                    val updatedParams =
-                            outputResult.slice(beginIndex until outputResult.size)
-                    model.updateModel(updatedParams)
-                    result = outputResult[0].toTensor().dataAsFloatArray.last()
+                    trainingParameters.outputParams.mapIndexed { index, outputSpec ->
+                        when (outputSpec.type) {
+                            OutputParamType.Loss -> { emit(TrainingState.Loss(outputResult[index].toTensor().dataAsFloatArray.last())) }
+                            OutputParamType.Metric -> {
+                                emit(TrainingState.Metric(outputSpec.name, outputResult[index].toTensor().dataAsFloatArray.last()))
+                            }
+                            OutputParamType.ModelParameter -> {
+                                val updatedParams = outputResult.slice(index until index + model.stateTensorSize!!)
+                                model.updateModel(updatedParams)
+                            }
+                        }
+                    }
                 }
-                emit(TrainingState.Data(result))
             }
         }
 
