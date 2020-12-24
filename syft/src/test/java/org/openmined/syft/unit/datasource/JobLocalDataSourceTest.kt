@@ -25,9 +25,6 @@ class JobLocalDataSourceTest {
     @JvmField
     var tempFolder = TemporaryFolder()
 
-    private val jobDataModel =
-            JobId("test", "1.0")
-
     private lateinit var cut: JobLocalDataSource
 
     @ExperimentalUnsignedTypes
@@ -37,7 +34,7 @@ class JobLocalDataSourceTest {
     @Before
     fun setUp() {
         every { config.filesDir } answers { File("/filesDir") }
-        cut = JobLocalDataSource(jobDataModel)
+        cut = JobLocalDataSource()
     }
 
     @ExperimentalUnsignedTypes
@@ -146,18 +143,18 @@ class JobLocalDataSourceTest {
     @ExperimentalUnsignedTypes
     @Test
     fun `get models path should return models path for a specific job identified by JobId`() {
-        assert(cut.getModelsPath(config) == "${config.filesDir}/${jobDataModel.id}/models")
+        assert(cut.getModelsPath(config, "1") == "${config.filesDir}/1/models")
     }
 
     @ExperimentalUnsignedTypes
     @Test
     fun `get plans path should return plans path for a specific job identified by JobId`() {
-        assert(cut.getPlansPath(config) == "${config.filesDir}/${jobDataModel.id}/plans")
+        assert(cut.getPlansPath(config, "1") == "${config.filesDir}/1/plans")
     }
 
     @ExperimentalUnsignedTypes
     @Test
     fun `get protocols path should return protocols path for a specific job identified by JobId`() {
-        assert(cut.getProtocolsPath(config) == "${config.filesDir}/${jobDataModel.id}/protocols")
+        assert(cut.getProtocolsPath(config, "1") == "${config.filesDir}/1/protocols")
     }
 }

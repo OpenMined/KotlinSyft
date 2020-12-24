@@ -35,8 +35,8 @@ private const val TAG = "SyftJob"
  */
 @ExperimentalUnsignedTypes
 class SyftJob internal constructor(
-    modelName: String,
-    version: String? = null,
+    val modelName: String,
+    val version: String? = null,
     private val worker: Syft,
     private val config: SyftConfiguration,
     private val jobRepository: JobRepository
@@ -65,19 +65,15 @@ class SyftJob internal constructor(
                 worker,
                 config,
                 JobRepository(
-                    JobLocalDataSource(
-                        JobId(
-                            modelName,
-                            version
-                        )
-                    ),
-                    JobRemoteDataSource(config.getDownloader())
+                    JobId(modelName, version),
+                    JobLocalDataSource(),
+                    JobRemoteDataSource(config.getDownloader()),
+                    config
                 )
             )
         }
     }
 
-    val jobId = JobId(modelName, version)
     internal var cycleStatus = AtomicReference(CycleStatus.APPLY)
     internal val requiresSpeedTest = AtomicBoolean(true)
     private val jobStatusProcessor = PublishProcessor.create<JobStatusMessage>()
@@ -210,7 +206,6 @@ class SyftJob internal constructor(
         if (jobRepository.status == DownloadStatus.NOT_STARTED) {
             jobRepository.downloadData(
                 workerId,
-                config,
                 responseData.requestKey,
                 networkDisposable,
                 jobStatusProcessor,
@@ -228,12 +223,12 @@ class SyftJob internal constructor(
      */
     fun createDiff(): SyftState {
         val modulePath = jobRepository.persistToLocalStorage(
-            jobRepository.getDiffScript(config),
+            jobRepository.getDiffScript(),
             config.filesDir.toString(),
             DIFF_SCRIPT_NAME
         )
         val oldState =
-                SyftState.loadSyftState("${jobRepository.getModelsPath(config)}/${model.pyGridModelId}.pb")
+                SyftState.loadSyftState("${jobRepository.getModelsPath()}/${model.pyGridModelId}.pb")
         return model.createDiff(oldState, modulePath)
     }
 
@@ -330,9 +325,9 @@ class SyftJob internal constructor(
             jobStatusProcessor.onComplete()
             networkDisposable.clear()
             isDisposed.set(true)
-            Log.d(TAG, "job $jobId disposed")
+            Log.d(TAG, "job disposed")
         } else
-            Log.d(TAG, "job $jobId already disposed")
+            Log.d(TAG, "job already disposed")
     }
 
     internal enum class CycleStatus {

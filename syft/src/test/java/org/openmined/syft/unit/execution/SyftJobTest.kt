@@ -136,7 +136,6 @@ class SyftJobTest {
 
         verify(jobRepository).downloadData(
             workerId = eq("workerId"),
-            config = any(),
             requestKey = anyOrNull(),
             networkDisposable = any(),
             jobStatusProcessor = any(),
@@ -154,7 +153,7 @@ class SyftJobTest {
         val config = mockk<SyftConfiguration>() {
             every { filesDir } returns File("test")
         }
-        whenever(jobRepository.getDiffScript(config)).doReturn(mockk())
+        whenever(jobRepository.getDiffScript()).doReturn(mockk())
         whenever(
             jobRepository.persistToLocalStorage(
                 any(),
@@ -163,11 +162,6 @@ class SyftJobTest {
                 eq(false)
             )
         ).doReturn("test module path")
-
-        val jobLocalDataSource = mock<JobLocalDataSource> {
-            on { jobId }.thenReturn(mockk())
-        }
-        whenever(jobRepository.getLocalDataSource()).thenReturn(jobLocalDataSource)
 
         val jobTest = SyftJob(modelName, modelVersion, worker, config, jobRepository)
 

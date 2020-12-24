@@ -12,7 +12,7 @@ import java.io.InputStream
 internal const val DIFF_SCRIPT_NAME = "diff_script.pt"
 private const val TAG = "JobLocalDataSource"
 
-internal class JobLocalDataSource(val jobId: JobId) {
+internal class JobLocalDataSource {
 
     @ExperimentalUnsignedTypes
     fun getDiffScript(config: SyftConfiguration) =
@@ -116,12 +116,12 @@ internal class JobLocalDataSource(val jobId: JobId) {
     }
 
     @ExperimentalUnsignedTypes
-    fun getModelsPath(config: SyftConfiguration) = "${config.filesDir}/${jobId.id}/models"
+    fun getModelsPath(config: SyftConfiguration, jobId: String) = "${config.filesDir}/$jobId/models"
 
     @ExperimentalUnsignedTypes
-    fun getPlansPath(config: SyftConfiguration) = "${config.filesDir}/${jobId.id}/plans"
+    fun getPlansPath(config: SyftConfiguration, jobId: String) = "${config.filesDir}/$jobId/plans"
 
     @ExperimentalUnsignedTypes
-    fun getProtocolsPath(config: SyftConfiguration) = "${config.filesDir}/${jobId.id}/protocols"
+    fun getProtocolsPath(config: SyftConfiguration, jobId: String) = "${config.filesDir}/$jobId/protocols"
 
 }

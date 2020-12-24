@@ -81,6 +81,8 @@ class JobRepositoryTest {
     private val localPlansPath = "path/hashid/plans"
     private val localProtocolsPath = "path/hashid/protocols"
 
+    private val jobId = JobId("test", "1.0")
+
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
@@ -92,20 +94,16 @@ class JobRepositoryTest {
         whenever(config.filesDir) doReturn File("/filesDir")
 
         jobLocalDataSource.stub {
-            on { jobId }.thenReturn(
-                JobId(
-                    "test",
-                    "1.0"
-                )
-            )
-            on { getPlansPath(config) }.thenReturn(localPlansPath)
-            on { getModelsPath(config) }.thenReturn(localModelsPath)
-            on { getProtocolsPath(config) }.thenReturn(localProtocolsPath)
+            on { getPlansPath(config, jobId.id) }.thenReturn(localPlansPath)
+            on { getModelsPath(config, jobId.id) }.thenReturn(localModelsPath)
+            on { getProtocolsPath(config, jobId.id) }.thenReturn(localProtocolsPath)
         }
 
         cut = JobRepository(
+            jobId,
             jobLocalDataSource,
-            jobRemoteDataSource
+            jobRemoteDataSource,
+            config
         )
     }
 
@@ -125,7 +123,7 @@ class JobRepositoryTest {
 
     @Test
     fun `JobRepository forwards the call to getDiffScript by calling jobLocalDataSource`(){
-        cut.getDiffScript(config)
+        cut.getDiffScript()
         verify(jobLocalDataSource).getDiffScript(config)
     }
 
@@ -152,7 +150,6 @@ class JobRepositoryTest {
 
         cut.downloadData(
             workerId,
-            config,
             requestKey,
             networkDisposable,
             jobStatusProcessor,
@@ -205,7 +202,6 @@ class JobRepositoryTest {
 
         cut.downloadData(
             workerId,
-            config,
             requestKey,
             networkDisposable,
             jobStatusProcessor,
@@ -277,7 +273,6 @@ class JobRepositoryTest {
 
         cut.downloadData(
             workerId = workerId,
-            config = config,
             requestKey = requestKey,
             networkDisposable = networkDisposable,
             jobStatusProcessor = jobStatusProcessor,
@@ -309,7 +304,6 @@ class JobRepositoryTest {
 
         cut.downloadData(
             workerId,
-            config,
             requestKey,
             networkDisposable,
             jobStatusProcessor,

@@ -170,8 +170,8 @@ class Syft internal constructor(
             is Either.Right -> syftConfig.getSignallingClient().getCycle(
                 CycleRequest(
                     id,
-                    job.jobId.modelName,
-                    job.jobId.version,
+                    job.modelName,
+                    job.version,
                     ping ?: -1,
                     downloadSpeed ?: 0.0f,
                     uploadSpeed ?: 0.0f
@@ -219,8 +219,8 @@ class Syft internal constructor(
             syftConfig.getSignallingClient().authenticate(
                 AuthenticationRequest(
                     authToken,
-                    job.jobId.modelName,
-                    job.jobId.version
+                    job.modelName,
+                    job.version
                 )
             )
                     .compose(syftConfig.networkingSchedulers.applySingleSchedulers())

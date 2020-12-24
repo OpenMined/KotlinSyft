@@ -6,6 +6,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
+import org.openmined.syft.execution.JobId
 import org.openmined.syft.execution.JobStatusMessage
 import org.openmined.syft.execution.Plan
 import org.openmined.syft.execution.Protocol
@@ -20,20 +21,26 @@ private const val TAG = "JobDownloader"
 
 @ExperimentalUnsignedTypes
 internal class JobRepository(
+    private val jobId: JobId,
     private val jobLocalDataSource: JobLocalDataSource,
-    private val jobRemoteDataSource: JobRemoteDataSource
+    private val jobRemoteDataSource: JobRemoteDataSource,
+    private val config: SyftConfiguration
 ) {
 
     private val trainingParamsStatus = AtomicReference(DownloadStatus.NOT_STARTED)
     val status: DownloadStatus
         get() = trainingParamsStatus.get()
 
-    fun getLocalDataSource() = jobLocalDataSource
+    fun getModelsPath() =
+            jobLocalDataSource.getModelsPath(config, jobId.id)
 
-    fun getModelsPath(config: SyftConfiguration) =
-            jobLocalDataSource.getModelsPath(config)
+    fun getPlansPath() =
+            jobLocalDataSource.getPlansPath(config, jobId.id)
 
-    fun getDiffScript(config: SyftConfiguration) =
+    fun getProtocolsPath() =
+            jobLocalDataSource.getProtocolsPath(config, jobId.id)
+
+    fun getDiffScript() =
             jobLocalDataSource.getDiffScript(config)
 
     fun persistToLocalStorage(
@@ -47,7 +54,6 @@ internal class JobRepository(
 
     fun downloadData(
         workerId: String,
-        config: SyftConfiguration,
         requestKey: String,
         networkDisposable: CompositeDisposable,
         jobStatusProcessor: PublishProcessor<JobStatusMessage>,
@@ -109,13 +115,13 @@ internal class JobRepository(
                     workerId,
                     config,
                     request,
-                    jobLocalDataSource.getPlansPath(config),
+                    jobLocalDataSource.getPlansPath(config, jobId.id),
                     plan
                 )
             )
         }
         protocols.forEach { (_, protocol) ->
-            protocol.protocolFileLocation = jobLocalDataSource.getProtocolsPath(config)
+            protocol.protocolFileLocation = jobLocalDataSource.getProtocolsPath(config, jobId.id)
             downloadList.add(
                 processProtocols(
                     workerId,
@@ -141,7 +147,7 @@ internal class JobRepository(
                 .flatMap { modelInputStream ->
                     jobLocalDataSource.saveAsync(
                         modelInputStream,
-                        jobLocalDataSource.getModelsPath(config),
+                        jobLocalDataSource.getModelsPath(config, jobId.id),
                         "$modelId.pb"
                     )
                 }.flatMap { modelFile ->
