@@ -154,15 +154,19 @@ class SyftJob internal constructor(
                                 InputParamType.Target -> { args.apply { add(batchData.second) } }
                                 InputParamType.ModelParameter -> { args.apply { add(paramIValue) } }
                                 InputParamType.Value -> {
+                                    val tensor = if (inputSpec.value != null) {
+                                        inputSpec.value
+                                    } else {
+                                        val clientConfigValue = clientConfig.planArgs[inputSpec.name]
+                                        clientConfigValue?.let {
+                                            IValue.from(Tensor.fromBlob(
+                                                floatArrayOf(clientConfigValue.toFloat()),
+                                                longArrayOf(1)
+                                            ))
+                                        } ?: null
+                                    }
                                     args.apply {
-                                        val value = clientConfig.planArgs[inputSpec.name]
-                                        value?.let {
-                                            val tensor = IValue.from(
-                                                Tensor.fromBlob(
-                                                    floatArrayOf(value.toFloat()),
-                                                    longArrayOf(1)
-                                                )
-                                            )
+                                        tensor?.let {
                                             add(tensor)
                                         } ?: args
                                     }
