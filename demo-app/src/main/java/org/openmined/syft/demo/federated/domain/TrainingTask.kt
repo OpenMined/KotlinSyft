@@ -1,10 +1,12 @@
 package org.openmined.syft.demo.federated.domain
 
+import android.util.Log
 import androidx.work.ListenableWorker.Result
 import io.reactivex.Single
 import io.reactivex.processors.PublishProcessor
 import org.openmined.syft.Syft
 import org.openmined.syft.data.DataLoader
+import org.openmined.syft.data.Dataset
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.ui.ContentState
 import org.openmined.syft.domain.SyftConfiguration
@@ -91,6 +93,7 @@ class TrainingTask(
                     )
                 )
 
+                dataLoader.batchSize = batchSize
                 val modelParams = model.paramArray ?: return
                 val paramIValue = IValue.listFrom(*modelParams)
 

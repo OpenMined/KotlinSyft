@@ -8,8 +8,9 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 
 private const val FEATURESIZE = 784
+private const val DATASET_LENGTH = 3000
 
-class MINSTDataset(private val resources: Resources) : Dataset {
+class MNISTDataset(private val resources: Resources) : Dataset {
 
     private var trainDataReader = returnDataReader()
     private var labelDataReader = returnLabelReader()
@@ -28,7 +29,7 @@ class MINSTDataset(private val resources: Resources) : Dataset {
             }
         }
 
-        readSample(trainInput, labels)
+        readAllData()
     }
 
     override fun length(): Int = trainInput.size
@@ -45,6 +46,11 @@ class MINSTDataset(private val resources: Resources) : Dataset {
         )
 
         return Pair(trainingData, trainingLabel)
+    }
+
+    private fun readAllData() {
+        for (i in 0 until DATASET_LENGTH)
+            readSample(trainInput, labels)
     }
 
     private fun readSample(

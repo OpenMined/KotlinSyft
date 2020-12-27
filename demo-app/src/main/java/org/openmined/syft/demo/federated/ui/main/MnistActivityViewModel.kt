@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.work.WorkInfo
 import io.reactivex.disposables.CompositeDisposable
 import org.openmined.syft.data.DataLoader
+import org.openmined.syft.data.Dataset
 import org.openmined.syft.demo.federated.domain.TrainingTask
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.service.EPOCH
