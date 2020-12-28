@@ -23,6 +23,11 @@ Client properties specific to the job description
 ##### [org.openmined.syft.domain.DownloadStatus](../org.openmined.syft.domain/-download-status/index.md)
 
 
+|
+
+##### [org.openmined.syft.domain.InputParamType](../org.openmined.syft.domain/-input-param-type/index.md)
+
+
 | (extensions in package org.openmined.syft.proto)
 
 ##### [org.pytorch.IValue](../org.openmined.syft.proto/org.pytorch.-i-value/index.md)
@@ -35,9 +40,19 @@ Client properties specific to the job description
 
 |
 
+##### [org.openmined.syft.execution.JobStatusMessage](../org.openmined.syft.execution/-job-status-message/index.md)
+
+
+|
+
 ##### [org.openmined.syft.execution.JobStatusSubscriber](../org.openmined.syft.execution/-job-status-subscriber/index.md)
 
-This is passed as argument to [SyftJob.start](../org.openmined.syft.execution/-syft-job/start.md) giving the overridden callbacks for different phases of the job cycle.
+This is passed as argument to [SyftJob.request](../org.openmined.syft.execution/-syft-job/request.md) giving the overridden callbacks for different phases of the job cycle.
+
+
+|
+
+##### [org.openmined.syft.domain.OutputParamType](../org.openmined.syft.domain/-output-param-type/index.md)
 
 
 |
@@ -53,6 +68,21 @@ The Plan Class contains functions to load a PyTorch model from a TorchScript and
 to run training through the forward function of the PyTorch Module.
 A PyTorch Module is simply a container that takes in tensors as input and returns
 tensor after doing some computation.
+
+
+|
+
+##### [org.openmined.syft.domain.PlanInputSpec](../org.openmined.syft.domain/-plan-input-spec/index.md)
+
+
+|
+
+##### [org.openmined.syft.domain.PlanOutputSpec](../org.openmined.syft.domain/-plan-output-spec/index.md)
+
+
+|
+
+##### [org.openmined.syft.domain.ProcessData](../org.openmined.syft.domain/-process-data/index.md)
 
 
 |
@@ -84,7 +114,17 @@ This is the main syft worker handling creation and deletion of jobs. This class 
 
 |
 
+##### [org.openmined.syft.domain.SyftDataLoader](../org.openmined.syft.domain/-syft-data-loader/index.md)
+
+
+|
+
 ##### [org.openmined.syft.execution.SyftJob](../org.openmined.syft.execution/-syft-job/index.md)
+
+
+|
+
+##### [org.openmined.syft.domain.SyftLogger](../org.openmined.syft.domain/-syft-logger/index.md)
 
 
 |
@@ -116,5 +156,15 @@ We update these model weights after every plan.execute
 | (extensions in package org.openmined.syft.proto)
 
 ##### [org.openmined.syftproto.types.torch.v1.Tensor.TorchTensor](../org.openmined.syft.proto/org.openmined.syftproto.types.torch.v1.-tensor.-torch-tensor/index.md)
+
+
+|
+
+##### [org.openmined.syft.domain.TrainingParameters](../org.openmined.syft.domain/-training-parameters/index.md)
+
+
+|
+
+##### [org.openmined.syft.execution.TrainingState](../org.openmined.syft.execution/-training-state/index.md)
 
 
