@@ -5,12 +5,15 @@ import android.net.NetworkCapabilities
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.openmined.syft.networking.clients.HttpClient
 import org.openmined.syft.networking.clients.SocketClient
 import org.openmined.syft.networking.requests.CommunicationAPI
+import org.openmined.syft.networking.requests.SocketAPI
 import org.openmined.syft.threading.ProcessSchedulers
 import java.io.File
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 class SyftConfiguration internal constructor(
     val context: Context,
@@ -23,10 +26,11 @@ class SyftConfiguration internal constructor(
     val transportMedium: Int,
     val cacheTimeOut: Long,
     val maxConcurrentJobs: Int,
-    private val socketClient: SocketClient,
+    private val socketClient: SocketAPI,
     private val httpClient: HttpClient,
     private val messagingClient: NetworkingClients
 ) {
+    @ExperimentalCoroutinesApi
     companion object {
         fun builder(context: Context, baseUrl: String) = SyftConfigBuilder(context, baseUrl)
     }
@@ -38,8 +42,9 @@ class SyftConfiguration internal constructor(
         NetworkingClients.SOCKET -> socketClient
     }
 
-    internal fun getWebRTCSignallingClient(): SocketClient = socketClient
+    internal fun getWebRTCSignallingClient(): SocketAPI = socketClient
 
+    @ExperimentalCoroutinesApi
     class SyftConfigBuilder(private val context: Context, baseUrl: String) {
 
         private var networkingSchedulers: ProcessSchedulers =object : ProcessSchedulers {
@@ -55,10 +60,10 @@ class SyftConfiguration internal constructor(
             override val calleeThreadScheduler: Scheduler
                 get() = Schedulers.single()
         }
-        private var socketClient = SocketClient(baseUrl, 20000u, networkingSchedulers)
+        private var socketClient = SocketClient(baseUrl, 20000u)
         private var httpClient = HttpClient.initialize(baseUrl)
         private var filesDir = context.filesDir
-        private var batteryCheckEnabled = true
+        private var batteryCheckEnabled = false
         private var maxConcurrentJobs: Int = 1
         private var messagingClient: NetworkingClients = NetworkingClients.SOCKET
         private var cacheTimeOut: Long = 100000

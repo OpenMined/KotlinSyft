@@ -1,6 +1,5 @@
 package org.openmined.syft.datasource
 
-import io.reactivex.Single
 import org.openmined.syft.networking.requests.HttpAPI
 import java.io.InputStream
 
@@ -12,33 +11,27 @@ internal class JobRemoteDataSource(private val httpApi: HttpAPI) {
      * @param requestKey
      * @param modelId
      */
-    fun downloadModel(workerId: String, requestKey: String, modelId: String): Single<InputStream> {
+    suspend fun downloadModel(workerId: String, requestKey: String, modelId: String): InputStream? {
         return httpApi.downloadModel(workerId, requestKey, modelId)
-                .map {
-                    it.body()?.byteStream()
-                }
+                .body()?.byteStream()
     }
 
-    fun downloadProtocol(
+    suspend fun downloadProtocol(
         workerId: String,
         requestKey: String,
         protocolId: String
-    ): Single<InputStream> {
+    ): InputStream? {
         return httpApi.downloadProtocol(workerId, requestKey, protocolId)
-                .map {
-                    it.body()?.byteStream()
-                }
+                .body()?.byteStream()
     }
 
-    fun downloadPlan(
+    suspend fun downloadPlan(
         workerId: String,
         requestKey: String,
         planId: String,
         opType: String
-    ): Single<InputStream> {
+    ): InputStream? {
         return httpApi.downloadPlan(workerId, requestKey, planId, opType)
-                .map {
-                    it.body()?.byteStream()
-                }
+                .body()?.byteStream()
     }
 }
