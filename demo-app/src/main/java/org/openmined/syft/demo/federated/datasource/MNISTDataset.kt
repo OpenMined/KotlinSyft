@@ -8,7 +8,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 
 private const val FEATURESIZE = 784
-private const val DATASET_LENGTH = 3000
+private const val DATASET_LENGTH = 1000
 
 class MNISTDataset(private val resources: Resources) : Dataset {
 

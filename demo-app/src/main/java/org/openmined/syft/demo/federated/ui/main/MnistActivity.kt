@@ -13,7 +13,6 @@ import com.github.mikephil.charting.data.LineDataSet
 import kotlinx.android.synthetic.main.activity_mnist.chart
 import kotlinx.android.synthetic.main.activity_mnist.progressBar
 import kotlinx.android.synthetic.main.activity_mnist.toolbar
-import org.openmined.syft.data.DataLoader
 import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityMnistBinding
 import org.openmined.syft.demo.federated.datasource.MNISTDataset
@@ -76,8 +75,7 @@ class MnistActivity : AppCompatActivity() {
                 .setCacheTimeout(0L)
                 .build()
         val mnistDataset = MNISTDataset(resources)
-        val dataLoader = DataLoader(mnistDataset, 64)
-        viewModel.launchForegroundTrainer(config, dataLoader)
+        viewModel.launchForegroundTrainer(config, mnistDataset)
     }
 
     override fun onBackPressed() {

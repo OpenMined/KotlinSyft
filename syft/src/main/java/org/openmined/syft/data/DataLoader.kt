@@ -53,8 +53,9 @@ open class BaseDataLoaderIterator(dataLoader: DataLoader) : Iterator<Pair<IValue
     private var currentIndex = 0
 
     override fun next(): Pair<IValue, IValue> {
-        currentIndex += indexSampler.length()
-        return datasetFetcher.fetch(indexSampler.indices())
+        val indices = indexSampler.indices()
+        currentIndex += indices.size
+        return datasetFetcher.fetch(indices)
     }
 
     override fun hasNext(): Boolean {

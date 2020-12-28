@@ -66,11 +66,11 @@ class MnistActivityViewModel(
         logTextInternal.postValue("${logTextInternal.value ?: ""}\n\n$message")
     }
 
-    fun launchForegroundTrainer(config: SyftConfiguration, dataLoader: DataLoader) {
+    fun launchForegroundTrainer(config: SyftConfiguration, dataset: Dataset) {
         trainingTask = TrainingTask(
             config,
             authToken,
-            dataLoader
+            dataset
         )
         compositeDisposable.add(trainingTask!!.runTask(this).subscribe())
     }

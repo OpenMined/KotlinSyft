@@ -1,6 +1,5 @@
 package org.openmined.syft.demo.federated.domain
 
-import android.util.Log
 import androidx.work.ListenableWorker.Result
 import io.reactivex.Single
 import io.reactivex.processors.PublishProcessor
@@ -24,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap
 class TrainingTask(
     private val configuration: SyftConfiguration,
     private val authToken: String,
-    private val dataLoader: DataLoader
+    private val dataset: Dataset
 ) {
     private var syftWorker: Syft? = null
 
@@ -93,7 +92,7 @@ class TrainingTask(
                     )
                 )
 
-                dataLoader.batchSize = batchSize
+                val dataLoader = DataLoader(dataset, batchSize)
                 val modelParams = model.paramArray ?: return
                 val paramIValue = IValue.listFrom(*modelParams)
 
