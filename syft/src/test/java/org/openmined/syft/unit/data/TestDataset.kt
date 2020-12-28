@@ -4,7 +4,7 @@ import org.openmined.syft.data.Dataset
 import org.openmined.syft.data.KTensor
 
 
-class DatasetTest : Dataset {
+class TestDataset : Dataset {
 
     private val data = arrayListOf(
         floatArrayOf(1f ,1f),

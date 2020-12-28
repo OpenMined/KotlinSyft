@@ -1,6 +1,6 @@
 package org.openmined.syft.data
 
-import org.openmined.syft.data.fetchers.MapDatasetFetcher
+import org.openmined.syft.data.fetchers.BaseDatasetFetcher
 import org.openmined.syft.data.samplers.BatchSampler
 import org.openmined.syft.data.samplers.RandomSampler
 import org.openmined.syft.data.samplers.Sampler
@@ -46,7 +46,7 @@ open class BaseDataLoaderIterator(dataLoader: DataLoader) : Iterator<Pair<IValue
 
     private val indexSampler = dataLoader.indexSampler()
 
-    private val datasetFetcher = MapDatasetFetcher(dataLoader.dataset, dataLoader.dropLast)
+    private val datasetFetcher = BaseDatasetFetcher(dataLoader.dataset)
 
     private val datasetLength = datasetFetcher.dataset.length()
 

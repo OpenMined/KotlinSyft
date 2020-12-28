@@ -3,6 +3,11 @@ package org.openmined.syft.data
 import org.pytorch.IValue
 import org.pytorch.Tensor
 
+/**
+ * Wrapper of data and shape
+ * @property flattenedArray the actual data
+ * @property shape data shape
+ * */
 data class KTensor(val flattenedArray: FloatArray, val shape: LongArray) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

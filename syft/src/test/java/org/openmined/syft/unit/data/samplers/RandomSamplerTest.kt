@@ -2,12 +2,12 @@ package org.openmined.syft.unit.data.samplers
 
 import org.junit.Test
 import org.openmined.syft.data.samplers.RandomSampler
-import org.openmined.syft.unit.data.DatasetTest
+import org.openmined.syft.unit.data.TestDataset
 
 @ExperimentalUnsignedTypes
 class RandomSamplerTest {
 
-    private val datasetTest = DatasetTest()
+    private val datasetTest = TestDataset()
 
     private val sampler = RandomSampler(datasetTest)
 

@@ -3,12 +3,12 @@ package org.openmined.syft.unit.data.samplers
 import org.junit.Assert
 import org.junit.Test
 import org.openmined.syft.data.samplers.SequentialSampler
-import org.openmined.syft.unit.data.DatasetTest
+import org.openmined.syft.unit.data.TestDataset
 
 @ExperimentalUnsignedTypes
 class SquentialSamplerTest {
 
-    private val datasetTest = DatasetTest()
+    private val datasetTest = TestDataset()
 
     private val sampler = SequentialSampler(datasetTest)
 
