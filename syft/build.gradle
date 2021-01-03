@@ -136,6 +136,7 @@ dependencies {
     implementation CommonDependencies.kotlinSerializationFactory
     implementation SyftlibDependencies.retrofitAdapter
     implementation SyftlibDependencies.retrofit
+    implementation CommonDependencies.coroutines
 
     implementation SyftlibDependencies.syftProto
     implementation SyftlibDependencies.protobuf
@@ -154,4 +155,8 @@ dependencies {
     testImplementation CommonDependencies.mockitoCore
     testImplementation CommonDependencies.mockitoKotlin
     testImplementation CommonDependencies.mockk
+    testImplementation CommonDependencies.coroutines
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.4.1'
+    testImplementation "androidx.arch.core:core-testing:2.1.0"
+    testImplementation 'app.cash.turbine:turbine:0.2.1'
 }

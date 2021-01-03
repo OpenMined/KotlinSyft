@@ -36,16 +36,18 @@ internal class JobLocalDataSource {
 
     @VisibleForTesting
     internal fun save(input: InputStream, file: File, overwrite: Boolean): String {
-        if (file.exists() and !overwrite)
-            return file.absolutePath
-        file.apply {
-            input.use { inputStream ->
-                this.outputStream().use { outputFile ->
-                    inputStream.copyTo(outputFile)
+        return if (file.exists() and !overwrite)
+            file.absolutePath
+        else {
+            file.apply {
+                input.use { inputStream ->
+                    this.outputStream().use { outputFile ->
+                        inputStream.copyTo(outputFile)
+                    }
+                    Log.d(TAG, "file written at ${this.absolutePath}")
                 }
-                Log.d(TAG, "file written at ${this.absolutePath}")
-                return (this.absolutePath)
             }
+            file.absolutePath
         }
     }
 
@@ -55,12 +57,12 @@ internal class JobLocalDataSource {
      *
      * @return The absolute path where the file has been saved if successful.
      */
-    fun saveAsync(
+    suspend fun saveAsync(
         input: InputStream,
         parentDir: String,
         fileName: String,
         overwrite: Boolean = true
-    ): Single<String> {
+    ): String {
         if (!File(parentDir).mkdirs())
             Log.d(TAG, "directory already exists")
 
@@ -72,19 +74,18 @@ internal class JobLocalDataSource {
         input: InputStream,
         file: File,
         overwrite: Boolean
-    ): Single<String> {
-        if (file.exists() and !overwrite)
-            return Single.just(file.absolutePath)
-        file.apply {
-            return Single.create { emitter ->
+    ): String {
+        return if (file.exists() and !overwrite)
+            file.absolutePath
+        else {
+            file.apply {
                 input.use { inputStream ->
                     this.outputStream().use { outputFile ->
                         inputStream.copyTo(outputFile)
                     }
                     Log.d(TAG, "file written at ${this.absolutePath}")
-                    emitter.onSuccess(this.absolutePath)
                 }
-            }
+            }.absolutePath
         }
     }
 

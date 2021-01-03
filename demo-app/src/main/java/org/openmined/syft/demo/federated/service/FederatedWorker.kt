@@ -17,16 +17,20 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import org.openmined.syft.demo.federated.datasource.MNISTDataset
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import org.openmined.syft.demo.federated.domain.TrainingTask
 import org.openmined.syft.demo.federated.logging.MnistLogger
+import org.openmined.syft.demo.federated.ui.ContentState
 import org.openmined.syft.demo.federated.ui.main.AUTH_TOKEN
 import org.openmined.syft.demo.federated.ui.main.BASE_URL
-import org.openmined.syft.demo.federated.ui.ContentState
-import org.openmined.syft.demo.federated.ui.ProcessData
+import org.openmined.syft.demo.federated.ui.main.MODEL_NAME
+import org.openmined.syft.demo.federated.ui.main.MODEL_VERSION
 import org.openmined.syft.demo.federated.ui.work.WorkInfoActivity
+import org.openmined.syft.domain.ProcessData
 import org.openmined.syft.domain.SyftConfiguration
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 const val LOSS_LIST = "loss"
 const val STATUS = "status"
@@ -35,6 +39,7 @@ const val LOG = "log"
 const val NOTIFICATION_ID = 1
 private const val CHANNEL_ID = "worker"
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class FederatedWorker(
@@ -45,24 +50,29 @@ class FederatedWorker(
     override suspend fun doWork(): Result {
         val authToken = inputData.getString(AUTH_TOKEN) ?: return Result.failure()
         val baseUrl = inputData.getString(BASE_URL) ?: return Result.failure()
+        val modelName = inputData.getString(MODEL_NAME) ?: return Result.failure()
+        val modelVersion = inputData.getString(MODEL_VERSION) ?: return Result.failure()
 
-        val config = SyftConfiguration.builder(serviceContext, baseUrl)
-                .enableBackgroundServiceExecution()
-                .setCacheTimeout(0L)
-                .build()
         val mnistDataset = MNISTDataset(serviceContext.resources)
-        setForegroundAsync(createForegroundInfo(0))
-        return awaitTask(
-            TrainingTask(
-                config,
-                authToken,
-                mnistDataset
-            )
-        )
-    }
 
-    private suspend fun awaitTask(task: TrainingTask) = suspendCoroutine<Result> { continuation ->
-        task.runTask(WorkLogger()).subscribe { result: Result -> continuation.resume(result) }
+        return coroutineScope {
+
+            val config = SyftConfiguration.builder(serviceContext, baseUrl)
+                    .enableBackgroundServiceExecution()
+                    .setCacheTimeout(0L)
+                    .build()
+            setForegroundAsync(createForegroundInfo(0))
+            withContext(Dispatchers.Default) {
+                TrainingTask(
+                    config,
+                    authToken,
+                    mnistDataset,
+                    modelName,
+                    modelVersion
+                ).runTask(WorkLogger())
+            }
+            Result.success()
+        }
     }
 
     private fun createForegroundInfo(progress: Int): ForegroundInfo {
@@ -78,7 +88,8 @@ class FederatedWorker(
             createChannel()
         }
 
-        val notification = NotificationCompat.Builder(applicationContext,
+        val notification = NotificationCompat.Builder(
+            applicationContext,
             CHANNEL_ID
         )
                 .setContentTitle("Federated Trainer")
@@ -128,6 +139,10 @@ class FederatedWorker(
 
         override fun postState(status: ContentState) {
             publish(STATUS to status.toString())
+        }
+
+        override fun postState(status: String) {
+            publish(STATUS to status)
         }
 
         override fun postData(result: Float) {

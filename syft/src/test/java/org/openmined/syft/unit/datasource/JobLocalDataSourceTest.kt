@@ -94,12 +94,9 @@ class JobLocalDataSourceTest {
         val cut = JobLocalDataSource()
         val inputStream = "Hello".byteInputStream()
         val file = tempFolder.newFile("myModel.pb")
-        val result = cut.saveAsync(inputStream, file,false).test()
+        val result = cut.saveAsync(inputStream, file,false)
 
-        result.assertNoErrors()
-                .assertComplete()
-        val value = result.values()[0]
-        assert(value.endsWith("myModel.pb"))
+        assert(result.endsWith("myModel.pb"))
         assert(file.readBytes().isEmpty())
     }
 
@@ -108,12 +105,9 @@ class JobLocalDataSourceTest {
         val cut = JobLocalDataSource()
         val inputStream = "Hello".byteInputStream()
         val file = tempFolder.newFile("myModel.pb")
-        val result = cut.saveAsync(inputStream, file,true).test()
+        val result = cut.saveAsync(inputStream, file,true)
 
-        result.assertNoErrors()
-                .assertComplete()
-        val value = result.values()[0]
-        assert(value.endsWith("myModel.pb"))
+        assert(result.endsWith("myModel.pb"))
         assert(file.readText() == "Hello")
     }
 

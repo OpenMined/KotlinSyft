@@ -13,18 +13,23 @@ import com.github.mikephil.charting.data.LineDataSet
 import kotlinx.android.synthetic.main.activity_mnist.chart
 import kotlinx.android.synthetic.main.activity_mnist.progressBar
 import kotlinx.android.synthetic.main.activity_mnist.toolbar
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.openmined.syft.demo.BuildConfig
 import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityMnistBinding
 import org.openmined.syft.demo.federated.datasource.MNISTDataset
 import org.openmined.syft.demo.federated.service.WorkerRepository
 import org.openmined.syft.demo.federated.ui.ContentState
-import org.openmined.syft.demo.federated.ui.ProcessData
+import org.openmined.syft.domain.ProcessData
 import org.openmined.syft.domain.SyftConfiguration
 
 const val AUTH_TOKEN = "authToken"
 const val BASE_URL = "baseUrl"
+const val MODEL_NAME = "modelName"
+const val MODEL_VERSION = "modelVersion"
 private const val TAG = "MnistActivity"
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class MnistActivity : AppCompatActivity() {
@@ -73,9 +78,11 @@ class MnistActivity : AppCompatActivity() {
         val config = SyftConfiguration.builder(this, viewModel.baseUrl)
                 .setMessagingClient(SyftConfiguration.NetworkingClients.HTTP)
                 .setCacheTimeout(0L)
+                .disableBatteryCheck()
                 .build()
+
         val mnistDataset = MNISTDataset(resources)
-        viewModel.launchForegroundTrainer(config, mnistDataset)
+        viewModel.launchForegroundTrainer(config, mnistDataset, BuildConfig.SYFT_MODEL_NAME, BuildConfig.SYFT_MODEL_VERSION)
     }
 
     override fun onBackPressed() {
@@ -102,6 +109,9 @@ class MnistActivity : AppCompatActivity() {
                 progressBar.visibility = ProgressBar.VISIBLE
                 binding.chartHolder.visibility = View.GONE
             }
+            else -> {
+                progressBar.visibility = ProgressBar.GONE
+            }
         }
     }
 
@@ -126,7 +136,7 @@ class MnistActivity : AppCompatActivity() {
             MnistViewModelFactory(
                 baseUrl,
                 authToken,
-                WorkerRepository(this)
+                WorkerRepository(this, BuildConfig.SYFT_MODEL_NAME, BuildConfig.SYFT_MODEL_VERSION)
             )
         ).get(MnistActivityViewModel::class.java)
     }

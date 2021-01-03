@@ -4,10 +4,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.work.WorkInfo
 import io.reactivex.disposables.CompositeDisposable
-import org.openmined.syft.data.DataLoader
+
 import org.openmined.syft.data.Dataset
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import org.openmined.syft.demo.federated.domain.TrainingTask
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.service.EPOCH
@@ -16,9 +20,10 @@ import org.openmined.syft.demo.federated.service.LOSS_LIST
 import org.openmined.syft.demo.federated.service.STATUS
 import org.openmined.syft.demo.federated.service.WorkerRepository
 import org.openmined.syft.demo.federated.ui.ContentState
-import org.openmined.syft.demo.federated.ui.ProcessData
+import org.openmined.syft.domain.ProcessData
 import org.openmined.syft.domain.SyftConfiguration
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class MnistActivityViewModel(
@@ -50,6 +55,10 @@ class MnistActivityViewModel(
         processStateInternal.postValue(status)
     }
 
+    override fun postState(status: String) {
+        processStateInternal.postValue(ContentState.getObjectFromString(status))
+    }
+
     override fun postData(result: Float) {
         processDataInternal.postValue(
             ProcessData(
@@ -66,13 +75,22 @@ class MnistActivityViewModel(
         logTextInternal.postValue("${logTextInternal.value ?: ""}\n\n$message")
     }
 
-    fun launchForegroundTrainer(config: SyftConfiguration, dataset: Dataset) {
-        trainingTask = TrainingTask(
-            config,
-            authToken,
-            dataset
-        )
-        compositeDisposable.add(trainingTask!!.runTask(this).subscribe())
+    fun launchForegroundTrainer(
+        config: SyftConfiguration,
+        dataset: Dataset,
+        modelName: String,
+        modelVersion: String
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            trainingTask = TrainingTask(
+                config,
+                authToken,
+                dataset,
+                modelName,
+                modelVersion
+            )
+            trainingTask!!.runTask(this@MnistActivityViewModel)
+        }
     }
 
     fun disposeTraining() {
@@ -93,6 +111,7 @@ class MnistActivityViewModel(
 
     fun cancelAllJobs() {
         workerRepository.cancelAllWork()
+        trainingTask?.disposeTraining()
     }
 
     fun getWorkInfoObserver() = Observer { workInfo: WorkInfo? ->
@@ -115,4 +134,8 @@ class MnistActivityViewModel(
         }
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        cancelAllJobs()
+    }
 }

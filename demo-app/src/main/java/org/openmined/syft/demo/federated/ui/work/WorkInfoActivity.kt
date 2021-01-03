@@ -13,14 +13,17 @@ import com.github.mikephil.charting.data.LineDataSet
 import kotlinx.android.synthetic.main.activity_mnist.chart
 import kotlinx.android.synthetic.main.activity_mnist.progressBar
 import kotlinx.android.synthetic.main.activity_mnist.toolbar
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.openmined.syft.demo.BuildConfig
 import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityWorkInfoBinding
 import org.openmined.syft.demo.federated.service.WorkerRepository
 import org.openmined.syft.demo.federated.ui.ContentState
-import org.openmined.syft.demo.federated.ui.ProcessData
+import org.openmined.syft.domain.ProcessData
 
 private const val TAG = "WorkInfoActivity"
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
 class WorkInfoActivity : AppCompatActivity() {
@@ -91,7 +94,7 @@ class WorkInfoActivity : AppCompatActivity() {
         return ViewModelProvider(
             this,
             WorkInfoViewModelFactory(
-                WorkerRepository(this)
+                WorkerRepository(this, BuildConfig.SYFT_MODEL_NAME, BuildConfig.SYFT_MODEL_VERSION)
             )
         ).get(WorkInfoViewModel::class.java)
     }

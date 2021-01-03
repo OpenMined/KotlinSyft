@@ -14,9 +14,13 @@ android {
         versionName Versions.appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        Properties properties = new Properties()
-        properties.load(project.rootProject.file('demo-app/authentication.properties').newDataInputStream())
-        buildConfigField 'String', 'SYFT_AUTH_TOKEN', properties.getProperty('syft.authToken')
+        Properties authProperties = new Properties()
+        authProperties.load(project.rootProject.file('demo-app/authentication.properties').newDataInputStream())
+        buildConfigField 'String', 'SYFT_AUTH_TOKEN', authProperties.getProperty('syft.authToken')
+        Properties modelProperties = new Properties()
+        modelProperties.load(project.rootProject.file('demo-app/model.properties').newDataInputStream())
+        buildConfigField 'String', 'SYFT_MODEL_NAME', modelProperties.getProperty('syft.model_name')
+        buildConfigField 'String', 'SYFT_MODEL_VERSION', modelProperties.getProperty('syft.model_version')
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -27,9 +31,10 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
 
-    dataBinding {
-        enabled true
+    buildFeatures {
+        dataBinding true
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -50,6 +55,7 @@ dependencies {
     implementation CommonDependencies.kotlinSerialization
     implementation CommonDependencies.rxJava
     implementation CommonDependencies.rxAndroid
+    implementation CommonDependencies.coroutines
 
     implementation DemoAppDependencies.mpAndroidChart
     implementation DemoAppDependencies.materialAndroid
@@ -57,9 +63,9 @@ dependencies {
     implementation DemoAppDependencies.workKtx
     implementation DemoAppDependencies.workGCM
     implementation DemoAppDependencies.workRX
-    implementation DemoAppDependencies.coroutines
-    implementation DemoAppDependencies.lifecycle
+    implementation DemoAppDependencies.lifecycleLiveData
     implementation DemoAppDependencies.lifeCycleProcess
+    implementation DemoAppDependencies.lifecycleViewModel
 
     // TODO During the first stages of the project, include the library here. Later on we should use the library from the repository
     implementation project(path: ':syft')

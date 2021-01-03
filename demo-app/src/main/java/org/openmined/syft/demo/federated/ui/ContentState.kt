@@ -6,7 +6,7 @@ sealed class ContentState {
             return when (type) {
                 "training" -> Training
                 "loading" -> Loading
-                else -> null
+                else -> Error
             }
         }
     }
@@ -22,6 +22,7 @@ sealed class ContentState {
             return "loading"
         }
     }
+
+    object Error : ContentState()
 }
 
-data class ProcessData(internal val data: List<Float>)
