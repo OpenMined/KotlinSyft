@@ -94,9 +94,9 @@ class JobRepositoryTest {
         whenever(config.filesDir) doReturn File("/filesDir")
 
         jobLocalDataSource.stub {
-            on { getPlansPath(config, jobId.id) }.thenReturn(localPlansPath)
-            on { getModelsPath(config, jobId.id) }.thenReturn(localModelsPath)
-            on { getProtocolsPath(config, jobId.id) }.thenReturn(localProtocolsPath)
+            on { getPlansPath(jobId.id) }.thenReturn(localPlansPath)
+            on { getModelsPath(jobId.id) }.thenReturn(localModelsPath)
+            on { getProtocolsPath(jobId.id) }.thenReturn(localProtocolsPath)
         }
 
         cut = JobRepository(
@@ -124,7 +124,7 @@ class JobRepositoryTest {
     @Test
     fun `JobRepository forwards the call to getDiffScript by calling jobLocalDataSource`(){
         cut.getDiffScript()
-        verify(jobLocalDataSource).getDiffScript(config)
+        verify(jobLocalDataSource).getDiffScript()
     }
 
     @Test

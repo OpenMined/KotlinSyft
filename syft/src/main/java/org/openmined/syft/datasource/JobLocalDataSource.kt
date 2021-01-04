@@ -12,10 +12,10 @@ import java.io.InputStream
 internal const val DIFF_SCRIPT_NAME = "diff_script.pt"
 private const val TAG = "JobLocalDataSource"
 
-internal class JobLocalDataSource {
+@ExperimentalUnsignedTypes
+internal class JobLocalDataSource(private val config: SyftConfiguration) {
 
-    @ExperimentalUnsignedTypes
-    fun getDiffScript(config: SyftConfiguration) =
+    fun getDiffScript() =
             config.context.assets.open("torchscripts/$DIFF_SCRIPT_NAME")
 
     /**
@@ -116,12 +116,12 @@ internal class JobLocalDataSource {
     }
 
     @ExperimentalUnsignedTypes
-    fun getModelsPath(config: SyftConfiguration, jobId: String) = "${config.filesDir}/$jobId/models"
+    fun getModelsPath(jobId: String) = "${config.filesDir}/$jobId/models"
 
     @ExperimentalUnsignedTypes
-    fun getPlansPath(config: SyftConfiguration, jobId: String) = "${config.filesDir}/$jobId/plans"
+    fun getPlansPath(jobId: String) = "${config.filesDir}/$jobId/plans"
 
     @ExperimentalUnsignedTypes
-    fun getProtocolsPath(config: SyftConfiguration, jobId: String) = "${config.filesDir}/$jobId/protocols"
+    fun getProtocolsPath(jobId: String) = "${config.filesDir}/$jobId/protocols"
 
 }

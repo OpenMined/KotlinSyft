@@ -66,7 +66,7 @@ class SyftJob internal constructor(
                 config,
                 JobRepository(
                     JobId(modelName, version),
-                    JobLocalDataSource(),
+                    JobLocalDataSource(config),
                     JobRemoteDataSource(config.getDownloader()),
                     config
                 )

@@ -31,17 +31,13 @@ internal class JobRepository(
     val status: DownloadStatus
         get() = trainingParamsStatus.get()
 
-    fun getModelsPath() =
-            jobLocalDataSource.getModelsPath(config, jobId.id)
+    fun getModelsPath() = jobLocalDataSource.getModelsPath(jobId.id)
 
-    fun getPlansPath() =
-            jobLocalDataSource.getPlansPath(config, jobId.id)
+    fun getPlansPath() = jobLocalDataSource.getPlansPath(jobId.id)
 
-    fun getProtocolsPath() =
-            jobLocalDataSource.getProtocolsPath(config, jobId.id)
+    fun getProtocolsPath() = jobLocalDataSource.getProtocolsPath(jobId.id)
 
-    fun getDiffScript() =
-            jobLocalDataSource.getDiffScript(config)
+    fun getDiffScript() = jobLocalDataSource.getDiffScript()
 
     fun persistToLocalStorage(
         input: InputStream,
@@ -69,7 +65,6 @@ internal class JobRepository(
             Single.zip(
                 getDownloadables(
                     workerId,
-                    config,
                     requestKey,
                     model,
                     plans,
@@ -102,7 +97,6 @@ internal class JobRepository(
 
     private fun getDownloadables(
         workerId: String,
-        config: SyftConfiguration,
         request: String,
         model: SyftModel,
         plans: ConcurrentHashMap<String, Plan>,
@@ -115,13 +109,13 @@ internal class JobRepository(
                     workerId,
                     config,
                     request,
-                    jobLocalDataSource.getPlansPath(config, jobId.id),
+                    jobLocalDataSource.getPlansPath(jobId.id),
                     plan
                 )
             )
         }
         protocols.forEach { (_, protocol) ->
-            protocol.protocolFileLocation = jobLocalDataSource.getProtocolsPath(config, jobId.id)
+            protocol.protocolFileLocation = jobLocalDataSource.getProtocolsPath(jobId.id)
             downloadList.add(
                 processProtocols(
                     workerId,
@@ -147,7 +141,7 @@ internal class JobRepository(
                 .flatMap { modelInputStream ->
                     jobLocalDataSource.saveAsync(
                         modelInputStream,
-                        jobLocalDataSource.getModelsPath(config, jobId.id),
+                        jobLocalDataSource.getModelsPath(jobId.id),
                         "$modelId.pb"
                     )
                 }.flatMap { modelFile ->

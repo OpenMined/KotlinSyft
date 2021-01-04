@@ -34,7 +34,7 @@ class JobLocalDataSourceTest {
     @Before
     fun setUp() {
         every { config.filesDir } answers { File("/filesDir") }
-        cut = JobLocalDataSource()
+        cut = JobLocalDataSource(config)
     }
 
     @ExperimentalUnsignedTypes
@@ -50,7 +50,7 @@ class JobLocalDataSourceTest {
         every { config.context } answers { context }
         every { context.assets } answers { assets }
 
-        cut.getDiffScript(config)
+        cut.getDiffScript()
 
         io.mockk.verify {
             assets.open("torchscripts/$DIFF_SCRIPT_NAME")
@@ -143,18 +143,18 @@ class JobLocalDataSourceTest {
     @ExperimentalUnsignedTypes
     @Test
     fun `get models path should return models path for a specific job identified by JobId`() {
-        assert(cut.getModelsPath(config, "1") == "${config.filesDir}/1/models")
+        assert(cut.getModelsPath("1") == "${config.filesDir}/1/models")
     }
 
     @ExperimentalUnsignedTypes
     @Test
     fun `get plans path should return plans path for a specific job identified by JobId`() {
-        assert(cut.getPlansPath(config, "1") == "${config.filesDir}/1/plans")
+        assert(cut.getPlansPath("1") == "${config.filesDir}/1/plans")
     }
 
     @ExperimentalUnsignedTypes
     @Test
     fun `get protocols path should return protocols path for a specific job identified by JobId`() {
-        assert(cut.getProtocolsPath(config, "1") == "${config.filesDir}/1/protocols")
+        assert(cut.getProtocolsPath("1") == "${config.filesDir}/1/protocols")
     }
 }
