@@ -6,14 +6,14 @@ import org.junit.Test
 import org.openmined.syft.data.BaseDataLoaderIterator
 import org.openmined.syft.data.DataLoader
 import org.openmined.syft.data.Dataset
-import org.openmined.syft.data.KTensor
+import org.pytorch.Tensor
 
 @ExperimentalUnsignedTypes
 class DataLoaderTest {
 
     private val pair = Pair(
-        KTensor(floatArrayOf(1f, 1f), longArrayOf(1, 2)),
-        KTensor(floatArrayOf(1f), longArrayOf(1, 1))
+        Tensor.fromBlob(floatArrayOf(1f, 1f), longArrayOf(1, 2)),
+        Tensor.fromBlob(floatArrayOf(1f), longArrayOf(1, 1))
     )
 
     private val dataset = mock<Dataset> {

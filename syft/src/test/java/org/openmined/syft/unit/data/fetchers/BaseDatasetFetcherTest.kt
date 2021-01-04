@@ -6,15 +6,15 @@ import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import org.junit.Test
 import org.openmined.syft.data.Dataset
-import org.openmined.syft.data.KTensor
 import org.openmined.syft.data.fetchers.BaseDatasetFetcher
+import org.pytorch.Tensor
 
 @ExperimentalUnsignedTypes
 class BaseDatasetFetcherTest {
 
     private val pair = Pair(
-        KTensor(floatArrayOf(1f, 1f), longArrayOf(1, 2)),
-        KTensor(floatArrayOf(1f), longArrayOf(1, 1))
+        Tensor.fromBlob(floatArrayOf(1f, 1f), longArrayOf(1, 2)),
+        Tensor.fromBlob(floatArrayOf(1f), longArrayOf(1, 1))
     )
 
     private val dataset = mock<Dataset> {

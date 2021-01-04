@@ -1,5 +1,7 @@
 package org.openmined.syft.data
 
+import org.pytorch.Tensor
+
 
 interface Dataset {
     /**
@@ -18,6 +20,6 @@ interface Dataset {
     /**
      * This method is called to fetch a data sample for a given key.
      */
-    fun getItem(index: Int) : Pair<KTensor, KTensor>
+    fun getItem(index: Int) : Pair<Tensor, Tensor>
 
 }

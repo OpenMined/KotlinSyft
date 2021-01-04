@@ -1,7 +1,6 @@
 package org.openmined.syft.data.fetchers
 
 import org.openmined.syft.data.Dataset
-import org.openmined.syft.data.KTensor
 import org.pytorch.IValue
 import org.pytorch.Tensor
 
@@ -11,16 +10,16 @@ open class BaseDatasetFetcher(val dataset: Dataset) : Fetcher {
         val data = arrayListOf<List<Float>>()
         val labels = arrayListOf<List<Float>>()
 
-        var pair: Pair<KTensor, KTensor>? = null
+        var pair: Pair<Tensor, Tensor>? = null
         for (i in indices) {
             pair = dataset.getItem(i)
-            data.add(pair.first.flattenedArray.toList())
-            labels.add(pair.second.flattenedArray.toList())
+            data.add(pair.first.dataAsFloatArray.toList())
+            labels.add(pair.second.dataAsFloatArray.toList())
         }
 
         val batchSize = indices.size.toLong()
-        val xFeatureLength = pair!!.first.shape.last()
-        val yFeatureLength = pair!!.second.shape.last()
+        val xFeatureLength = pair!!.first.shape().last()
+        val yFeatureLength = pair!!.second.shape().last()
 
         return Pair(
             IValue.from(Tensor.fromBlob(data.flatten().toFloatArray(), longArrayOf(batchSize, xFeatureLength))),

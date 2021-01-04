@@ -2,8 +2,8 @@ package org.openmined.syft.demo.federated.datasource
 
 import android.content.res.Resources
 import org.openmined.syft.data.Dataset
-import org.openmined.syft.data.KTensor
 import org.openmined.syft.demo.R
+import org.pytorch.Tensor
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -34,13 +34,13 @@ class MNISTDataset(private val resources: Resources) : Dataset {
 
     override fun length(): Int = trainInput.size
 
-    override fun getItem(index: Int): Pair<KTensor, KTensor> {
-        val trainingData = KTensor(
+    override fun getItem(index: Int): Pair<Tensor, Tensor> {
+        val trainingData = Tensor.fromBlob(
             trainInput[index].toFloatArray(),
             longArrayOf(1, FEATURESIZE.toLong())
         )
 
-        val trainingLabel = KTensor(
+        val trainingLabel = Tensor.fromBlob(
             labels[index].toFloatArray(),
             longArrayOf(1, 10)
         )

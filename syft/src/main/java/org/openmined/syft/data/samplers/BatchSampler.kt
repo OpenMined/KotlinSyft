@@ -19,22 +19,24 @@ class BatchSampler(
     private val indices = sampler.indices()
     private var currentIndex = 0
 
-    override fun indices(): List<Int> {
-        val batch = arrayListOf<Int>()
-        for (index in currentIndex until indices.size) {
-            batch.add(indices[index])
-            currentIndex += 1
-            if (batch.size == batchSize) return batch
+    override fun indices() = when {
+        currentIndex + batchSize < indices.size -> {
+            val batch = indices.slice(currentIndex until currentIndex + batchSize)
+            currentIndex += batch.size
+            batch
         }
-
-        if (batch.size > 0 && !dropLast) return batch
-
-        return listOf()
+        else -> {
+            if (dropLast) {
+                emptyList()
+            } else {
+                val batch = indices.drop(currentIndex)
+                currentIndex = indices.size
+                batch
+            }
+        }
     }
 
-    override fun length(): Int {
-        if (dropLast) return floor(1.0 * sampler.length() / batchSize).toInt()
-        return ceil(1.0 * sampler.length() / batchSize).toInt()
-    }
+    override fun length(): Int = if (dropLast) floor(1.0 * sampler.length() / batchSize).toInt()
+        else ceil(1.0 * sampler.length() / batchSize).toInt()
 
 }

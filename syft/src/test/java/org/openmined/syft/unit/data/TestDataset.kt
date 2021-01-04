@@ -1,7 +1,7 @@
 package org.openmined.syft.unit.data
 
 import org.openmined.syft.data.Dataset
-import org.openmined.syft.data.KTensor
+import org.pytorch.Tensor
 
 
 class TestDataset : Dataset {
@@ -20,10 +20,10 @@ class TestDataset : Dataset {
         floatArrayOf(1f)
     )
 
-    override fun getItem(index: Int): Pair<KTensor, KTensor> {
+    override fun getItem(index: Int): Pair<Tensor, Tensor> {
         return Pair(
-            KTensor(data[index], longArrayOf(1, 2)),
-            KTensor(labels[index], longArrayOf(1, 1))
+            Tensor.fromBlob(data[index], longArrayOf(1, 2)),
+            Tensor.fromBlob(labels[index], longArrayOf(1, 1))
         )
     }
 

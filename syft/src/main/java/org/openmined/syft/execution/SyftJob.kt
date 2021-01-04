@@ -19,7 +19,6 @@ import org.openmined.syft.domain.InputParamType
 import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.OutputParamType
 import org.openmined.syft.domain.SyftConfiguration
-import org.openmined.syft.data.SyftDataLoader
 import org.openmined.syft.domain.TrainingParameters
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData

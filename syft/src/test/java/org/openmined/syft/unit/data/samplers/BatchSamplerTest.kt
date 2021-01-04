@@ -4,8 +4,8 @@ import com.nhaarman.mockitokotlin2.mock
 import org.junit.Test
 import org.openmined.syft.data.samplers.BatchSampler
 import org.openmined.syft.data.samplers.RandomSampler
-import java.lang.Math.ceil
 import java.util.Random
+import kotlin.math.ceil
 import kotlin.math.floor
 
 @ExperimentalUnsignedTypes
@@ -52,8 +52,9 @@ class BatchSamplerTest {
     }
 
     @Test
-    fun `length should return the quotient of dividing dataset legnth by batchSize`() {
-        assert(BatchSampler(seqSampler, batchSize).length() == ceil(1.0 * seqSampler.length()/batchSize).toInt())
+    fun `length should return the quotient of dividing dataset length by batchSize`() {
+        assert(BatchSampler(seqSampler, batchSize).length() == ceil(1.0 * seqSampler.length() / batchSize)
+                .toInt())
         assert(BatchSampler(seqSampler, batchSize, true).length() == floor(1.0 * seqSampler.length()/batchSize).toInt())
     }
 
