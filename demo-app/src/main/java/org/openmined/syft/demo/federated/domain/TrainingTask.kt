@@ -8,6 +8,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.withContext
 import org.openmined.syft.Syft
+import org.openmined.syft.data.DataLoader
 import org.openmined.syft.data.Dataset
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.ui.ContentState
@@ -27,7 +28,7 @@ import org.openmined.syft.execution.TrainingState
 class TrainingTask(
     configuration: SyftConfiguration,
     authToken: String,
-    private val dataset: Dataset,
+    private val dataLoader: DataLoader,
     private val modelName: String,
     private val modelVersion: String
 ) {
@@ -89,7 +90,7 @@ class TrainingTask(
 
         mnistJob.train(requestResult.plans,
             requestResult.clientConfig!!,
-            dataset,
+            dataLoader,
             generateTrainingParameters()
         ).collect {
             // collect happens in IO Dispatcher. Change context to process the training state.

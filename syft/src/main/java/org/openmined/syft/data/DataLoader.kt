@@ -20,16 +20,10 @@ import org.pytorch.IValue
  *                  will be smaller. (default: ``False``)
  */
 class DataLoader(var dataset: Dataset,
+                 var sampler: Sampler = SequentialSampler(dataset),
                  var batchSize: Int = 1,
-                 var shuffle: Boolean = false,
                  var dropLast: Boolean = false
 ) : Iterable<Pair<IValue, IValue>> {
-
-    private var sampler: Sampler = if (shuffle) {
-        RandomSampler(dataset)
-    } else {
-        SequentialSampler(dataset)
-    }
 
     private val batchSampler = BatchSampler(
         sampler,
@@ -39,10 +33,17 @@ class DataLoader(var dataset: Dataset,
 
     fun indexSampler() = batchSampler
 
-    override fun iterator(): Iterator<Pair<IValue, IValue>> = BaseDataLoaderIterator(this)
+    private val iterator = DataLoaderIterator(this)
+
+    override fun iterator(): Iterator<Pair<IValue, IValue>> = iterator
+
+    fun reset() {
+        indexSampler().reset()
+        iterator.reset()
+    }
 }
 
-open class BaseDataLoaderIterator(dataLoader: DataLoader) : Iterator<Pair<IValue, IValue>> {
+class DataLoaderIterator(dataLoader: DataLoader) : Iterator<Pair<IValue, IValue>> {
 
     private val indexSampler = dataLoader.indexSampler()
 
@@ -58,11 +59,9 @@ open class BaseDataLoaderIterator(dataLoader: DataLoader) : Iterator<Pair<IValue
         return datasetFetcher.fetch(indices)
     }
 
-    override fun hasNext(): Boolean {
-        return currentIndex < datasetLength
+    override fun hasNext(): Boolean = currentIndex < datasetLength
+
+    fun reset() {
+        currentIndex = 0
     }
 }
-
-
-
-

@@ -39,4 +39,7 @@ class BatchSampler(
     override fun length(): Int = if (dropLast) floor(1.0 * sampler.length() / batchSize).toInt()
         else ceil(1.0 * sampler.length() / batchSize).toInt()
 
+    fun reset() {
+        currentIndex = 0
+    }
 }

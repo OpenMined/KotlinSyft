@@ -12,6 +12,7 @@ import org.openmined.syft.data.Dataset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import org.openmined.syft.data.DataLoader
 import org.openmined.syft.demo.federated.domain.TrainingTask
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.service.EPOCH
@@ -77,7 +78,7 @@ class MnistActivityViewModel(
 
     fun launchForegroundTrainer(
         config: SyftConfiguration,
-        dataset: Dataset,
+        dataLoader: DataLoader,
         modelName: String,
         modelVersion: String
     ) {
@@ -85,7 +86,7 @@ class MnistActivityViewModel(
             trainingTask = TrainingTask(
                 config,
                 authToken,
-                dataset,
+                dataLoader,
                 modelName,
                 modelVersion
             )

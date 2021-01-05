@@ -58,4 +58,13 @@ class BatchSamplerTest {
         assert(BatchSampler(seqSampler, batchSize, true).length() == floor(1.0 * seqSampler.length()/batchSize).toInt())
     }
 
+    @Test
+    fun `reset should reset current index to 0 and return the first indices`() {
+        val sampler = BatchSampler(seqSampler, batchSize, true)
+        val indices = sampler.indices()
+        assert(indices == listOf(0, 1, 2))
+        sampler.reset()
+        assert(indices == listOf(0, 1, 2))
+    }
+
 }

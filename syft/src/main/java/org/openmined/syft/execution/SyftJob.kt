@@ -127,7 +127,7 @@ class SyftJob internal constructor(
     fun train(
         plans: ConcurrentHashMap<String, Plan>,
         clientConfig: ClientConfig,
-        dataset: Dataset,
+        dataLoader: DataLoader,
         trainingParameters: TrainingParameters
     ): Flow<TrainingState> = flow {
 
@@ -136,13 +136,16 @@ class SyftJob internal constructor(
             // TODO What do we do with this? Should all clients be forced to use "batch_size"?
             val batchSize = (clientConfig.planArgs["batch_size"]
                              ?: error("batch_size doesn't exist")).toInt()
+
+            dataLoader.batchSize = batchSize
+
             val batchIValue = IValue.from(
                 Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
             )
             repeat(clientConfig.properties.maxUpdates) { step ->
 
                 emit(TrainingState.Epoch(step + 1))
-                val dataLoader = DataLoader(dataset, batchSize)
+                dataLoader.reset()
                 // TODO We should check requirements before arriving to this point
 //                    emit(TrainingState.Error(IllegalStateException("No params in the model")))
                 val modelParams = model.paramArray ?: emptyArray()

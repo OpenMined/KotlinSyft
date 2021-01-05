@@ -3,10 +3,12 @@ package org.openmined.syft.unit.data
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.mock
 import org.junit.Test
-import org.openmined.syft.data.BaseDataLoaderIterator
+import org.openmined.syft.data.DataLoaderIterator
 import org.openmined.syft.data.DataLoader
 import org.openmined.syft.data.Dataset
+import org.openmined.syft.data.samplers.RandomSampler
 import org.pytorch.Tensor
+import java.util.Random
 
 @ExperimentalUnsignedTypes
 class DataLoaderTest {
@@ -21,15 +23,26 @@ class DataLoaderTest {
         on { length() }.thenReturn(10)
     }
 
+    private val indices = (0 until 10).toList()
+
     @Test
-    fun `indexSampler returns sequential indices when shuffle is false`() {
-        val dataLoader = DataLoader(dataset, batchSize = 3, shuffle = false)
+    fun `indexSampler returns sequential indices when receiving a sequential sampler`() {
+        val seqSampler = mock<RandomSampler> {
+            on { indices() }.thenReturn(indices)
+            on { length() }.thenReturn(indices.size)
+        }
+
+        val dataLoader = DataLoader(dataset, batchSize = 3, sampler = seqSampler)
         assert(dataLoader.indexSampler().indices() == listOf(0, 1, 2))
     }
 
     @Test
-    fun `indexSampler returns random indices when shuffle is true`() {
-        val dataLoader = DataLoader(dataset, batchSize = 3, shuffle = true)
+    fun `indexSampler returns random indices when receiving a random sampler`() {
+        val randomSampler = mock<RandomSampler> {
+            on { indices() }.thenReturn(indices.shuffled(Random()).toList())
+            on { length() }.thenReturn(indices.size)
+        }
+        val dataLoader = DataLoader(dataset, batchSize = 3, sampler = randomSampler)
 
         val indices = (0 until dataset.length())
         dataLoader.indexSampler().indices().forEach {
@@ -72,11 +85,24 @@ class DataLoaderTest {
     fun `BaseIterator consumes data correctly`() {
         val dataLoader = DataLoader(dataset, batchSize = 3)
 
-        val iterator = BaseDataLoaderIterator(dataLoader)
+        val iterator = DataLoaderIterator(dataLoader)
         assert(iterator.hasNext())
         for (i in 0 until dataLoader.indexSampler().length())
             iterator.next()
         assert(!iterator.hasNext())
     }
 
+    @Test
+    fun `reset should reset the dataloader to the first index`() {
+        val dataLoader = DataLoader(dataset, batchSize = 3)
+
+        val iterator = dataLoader.iterator()
+        assert(iterator.hasNext())
+        for (i in 0 until dataLoader.indexSampler().length())
+            iterator.next()
+        assert(!iterator.hasNext())
+
+        dataLoader.reset()
+        assert(iterator.hasNext())
+    }
 }
