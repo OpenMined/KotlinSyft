@@ -8,17 +8,24 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.openmined.syft.demo.federated.ui.main.AUTH_TOKEN
 import org.openmined.syft.demo.federated.ui.main.BASE_URL
+import org.openmined.syft.demo.federated.ui.main.MODEL_NAME
+import org.openmined.syft.demo.federated.ui.main.MODEL_VERSION
 import java.util.UUID
 
 private const val TAG = "WorkerRepository"
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 @ExperimentalStdlibApi
-class WorkerRepository(private val workManager: WorkManager) {
+class WorkerRepository(
+    private val workManager: WorkManager,
+    private val modelName: String,
+    private val modelVersion: String) {
 
-    constructor(activity: AppCompatActivity) : this(WorkManager.getInstance(activity))
+    constructor(activity: AppCompatActivity, modelName: String, modelVersion: String) : this(WorkManager.getInstance(activity), modelName, modelVersion)
 
     fun submitJob(
         authToken: String,
@@ -30,8 +37,15 @@ class WorkerRepository(private val workManager: WorkManager) {
                 .setRequiresCharging(true).setRequiresDeviceIdle(false)
                 .build()
 
+        val inputData = workDataOf(
+            AUTH_TOKEN to authToken,
+            BASE_URL to baseURL,
+            MODEL_NAME to modelName,
+            MODEL_VERSION to modelVersion
+        )
+
         val oneTimeRequest = OneTimeWorkRequestBuilder<FederatedWorker>()
-                .setInputData(workDataOf(AUTH_TOKEN to authToken, BASE_URL to baseURL))
+                .setInputData(inputData)
                 .setConstraints(constraints)
                 .addTag("trainer")
                 .build()

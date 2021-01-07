@@ -49,6 +49,9 @@ internal sealed class AuthenticationResponse : NetworkModels() {
         @SerialName("error")
         val errorMessage: String
     ) : AuthenticationResponse()
+
+    object AlreadyAuthenticated : AuthenticationResponse()
+    data class UnknownError(val exception: Exception) : AuthenticationResponse()
 }
 
 @Serializer(forClass = AuthenticationResponse::class)

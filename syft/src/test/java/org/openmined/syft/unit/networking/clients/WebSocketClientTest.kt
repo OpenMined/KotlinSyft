@@ -2,12 +2,15 @@ package org.openmined.syft.unit.networking.clients
 
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.serialization.json.json
 import org.junit.Test
+import org.openmined.syft.networking.clients.NetworkMessage
 import org.openmined.syft.networking.clients.SyftWebSocket
 import org.openmined.syft.networking.requests.NetworkingProtocol
 
 
+@ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 internal class WebSocketClientTest {
 
@@ -16,8 +19,7 @@ internal class WebSocketClientTest {
     @Test
     fun `verify calling start function should connect and initialized the web socket`() {
         val processor = webSocket.start()
-        processor.test().assertEmpty()
-        processor.test().assertNotComplete()
+        assert(processor.value == NetworkMessage.Started)
     }
 
     @Test

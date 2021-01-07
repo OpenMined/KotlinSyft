@@ -100,12 +100,9 @@ class JobLocalDataSourceTest {
     fun `Given an input stream when saveAsync is invoked then absolute path is returned directly if file exists and overwrite is false`() {
         val inputStream = "Hello".byteInputStream()
         val file = tempFolder.newFile("myModel.pb")
-        val result = cut.saveAsync(inputStream, file,false).test()
+        val result = cut.saveAsync(inputStream, file,false)
 
-        result.assertNoErrors()
-                .assertComplete()
-        val value = result.values()[0]
-        assert(value.endsWith("myModel.pb"))
+        assert(result.endsWith("myModel.pb"))
         assert(file.readBytes().isEmpty())
     }
 
@@ -113,12 +110,9 @@ class JobLocalDataSourceTest {
     fun `Given an input stream when saveAsync is invoked then file is created and absolute path is returned`() {
         val inputStream = "Hello".byteInputStream()
         val file = tempFolder.newFile("myModel.pb")
-        val result = cut.saveAsync(inputStream, file,true).test()
+        val result = cut.saveAsync(inputStream, file,true)
 
-        result.assertNoErrors()
-                .assertComplete()
-        val value = result.values()[0]
-        assert(value.endsWith("myModel.pb"))
+        assert(result.endsWith("myModel.pb"))
         assert(file.readText() == "Hello")
     }
 
