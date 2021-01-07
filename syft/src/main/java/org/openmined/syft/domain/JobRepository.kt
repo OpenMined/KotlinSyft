@@ -19,9 +19,24 @@ private const val TAG = "JobRepository"
 internal class JobRepository(
     private val jobId: JobId,
     private val jobLocalDataSource: JobLocalDataSource,
-    private val jobRemoteDataSource: JobRemoteDataSource,
-    private val config: SyftConfiguration
+    private val jobRemoteDataSource: JobRemoteDataSource
 ) {
+
+    companion object {
+
+        fun create(
+            config: SyftConfiguration,
+            modelName: String,
+            version: String? = null
+        ): JobRepository {
+            return JobRepository(
+                JobId(modelName, version),
+                JobLocalDataSource(config),
+                JobRemoteDataSource(config.getDownloader())
+            )
+        }
+
+    }
 
     private val trainingParamsStatus = AtomicReference(DownloadStatus.NOT_STARTED)
     val status: DownloadStatus
@@ -53,7 +68,7 @@ internal class JobRepository(
             processPlans(
                 workerId,
                 requestKey,
-                "${config.filesDir}/plans",
+                getPlansPath(),
                 plan
             )
         }
@@ -65,7 +80,7 @@ internal class JobRepository(
         protocols: ConcurrentHashMap<String, Protocol>
     ): List<String?> {
         return protocols.values.map { protocol ->
-            protocol.protocolFileLocation = "${config.filesDir}/protocols"
+            protocol.protocolFileLocation = getProtocolsPath()
             processProtocols(
                 workerId,
                 requestKey,
@@ -77,7 +92,6 @@ internal class JobRepository(
 
     internal suspend fun retrieveModel(
         workerId: String,
-        config: SyftConfiguration,
         requestKey: String,
         model: SyftModel
     ): String? {
@@ -86,7 +100,7 @@ internal class JobRepository(
                 ?.let { modelInputStream ->
                     val modelFile = jobLocalDataSource.saveAsync(
                         modelInputStream,
-                        jobLocalDataSource.getModelsPath(jobId.id),
+                        getModelsPath(),
                         "$modelId.pb"
                     )
                     model.loadModelState(modelFile)

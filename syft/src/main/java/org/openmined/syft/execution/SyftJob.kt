@@ -36,7 +36,6 @@ private const val TAG = "SyftJob"
  * @param version : The version of the model with name modelName
  * @property worker : The syft worker handling this job
  * @property config : The configuration class for schedulers and clients
- * @property jobRepository : The repository dealing data downloading and file writing of job
  */
 @ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
@@ -44,8 +43,7 @@ class SyftJob internal constructor(
     val modelName: String,
     val version: String? = null,
     private val worker: Syft,
-    private val config: SyftConfiguration,
-    private val jobRepository: JobRepository
+    private val config: SyftConfiguration
 ) {
 
     companion object {
@@ -69,22 +67,22 @@ class SyftJob internal constructor(
                 modelName,
                 version,
                 worker,
-                config,
-                JobRepository(
-                    JobId(modelName, version),
-                    JobLocalDataSource(config),
-                    JobRemoteDataSource(config.getDownloader()),
-                    config
-                )
+                config
             )
         }
     }
 
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val jobRepository = JobRepository.create(config, modelName, version)
+
     internal var cycleStatus = AtomicReference(CycleStatus.APPLY)
+
     internal val requiresSpeedTest = AtomicBoolean(true)
+
     private val isDisposed = AtomicBoolean(false)
 
     private val plans = ConcurrentHashMap<String, Plan>()
+
     private val protocols = ConcurrentHashMap<String, Protocol>()
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -264,7 +262,7 @@ class SyftJob internal constructor(
                     )
                 }
                 val modelRetriever = jobScope.async {
-                    jobRepository.retrieveModel(workerId, config, responseData.requestKey, model)
+                    jobRepository.retrieveModel(workerId, responseData.requestKey, model)
                 }
 
                 Log.d(TAG, "Start downloading all data")
