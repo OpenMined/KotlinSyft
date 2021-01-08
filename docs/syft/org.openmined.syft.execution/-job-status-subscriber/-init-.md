@@ -4,7 +4,7 @@
 
 `JobStatusSubscriber()`
 
-This is passed as argument to [SyftJob.start](../-syft-job/start.md) giving the overridden callbacks for different phases of the job cycle.
+This is passed as argument to [SyftJob.request](../-syft-job/request.md) giving the overridden callbacks for different phases of the job cycle.
 
 ``` kotlin
 val jobStatusSubscriber = object : JobStatusSubscriber() {
