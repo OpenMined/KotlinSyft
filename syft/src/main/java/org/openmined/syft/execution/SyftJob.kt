@@ -37,16 +37,14 @@ private const val TAG = "SyftJob"
  * @param version : The version of the model with name modelName
  * @property worker : The syft worker handling this job
  * @property config : The configuration class for schedulers and clients
- * @property jobRepository : The repository dealing data downloading and file writing of job
  */
 @ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 class SyftJob internal constructor(
-    modelName: String,
-    version: String? = null,
+    val modelName: String,
+    val version: String? = null,
     private val worker: Syft,
-    private val config: SyftConfiguration,
-    private val jobRepository: JobRepository
+    private val config: SyftConfiguration
 ) {
 
     companion object {
@@ -70,21 +68,22 @@ class SyftJob internal constructor(
                 modelName,
                 version,
                 worker,
-                config,
-                JobRepository(
-                    JobLocalDataSource(),
-                    JobRemoteDataSource(config.getDownloader())
-                )
+                config
             )
         }
     }
 
-    val jobId = JobID(modelName, version)
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val jobRepository = JobRepository.create(config, modelName, version)
+
     internal var cycleStatus = AtomicReference(CycleStatus.APPLY)
+
     internal val requiresSpeedTest = AtomicBoolean(true)
+
     private val isDisposed = AtomicBoolean(false)
 
     private val plans = ConcurrentHashMap<String, Plan>()
+
     private val protocols = ConcurrentHashMap<String, Protocol>()
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -257,7 +256,6 @@ class SyftJob internal constructor(
                 val planRetriever = jobScope.async {
                     jobRepository.retrievePlanData(
                         workerId,
-                        config,
                         responseData.requestKey,
                         plans
                     )
@@ -265,13 +263,12 @@ class SyftJob internal constructor(
                 val protocolRetriever = jobScope.async {
                     jobRepository.retrieveProtocolData(
                         workerId,
-                        config,
                         responseData.requestKey,
                         protocols
                     )
                 }
                 val modelRetriever = jobScope.async {
-                    jobRepository.retrieveModel(workerId, config, responseData.requestKey, model)
+                    jobRepository.retrieveModel(workerId, responseData.requestKey, model)
                 }
 
                 Log.d(TAG, "Start downloading all data")
@@ -293,12 +290,12 @@ class SyftJob internal constructor(
      */
     private fun createDiff(): SyftState {
         val modulePath = jobRepository.persistToLocalStorage(
-            jobRepository.getDiffScript(config),
+            jobRepository.getDiffScript(),
             config.filesDir.toString(),
             DIFF_SCRIPT_NAME
         )
         val oldState =
-                SyftState.loadSyftState("${config.filesDir}/models/${model.pyGridModelId}.pb")
+                SyftState.loadSyftState("${jobRepository.getModelsPath()}/${model.pyGridModelId}.pb")
         return model.createDiff(oldState, modulePath)
     }
 
@@ -396,29 +393,9 @@ class SyftJob internal constructor(
     fun dispose() {
         if (!isDisposed()) {
             isDisposed.set(true)
-            Log.d(TAG, "job $jobId disposed")
+            Log.d(TAG, "job disposed")
         } else
-            Log.d(TAG, "job $jobId already disposed")
-    }
-
-    /**
-     * A uniquer identifier class for the job
-     * @property modelName The name of the model used in the job while querying PyGrid
-     * @property version The model version in PyGrid
-     */
-    data class JobID(val modelName: String, val version: String? = null) {
-        /**
-         * Check if two [JobID] are same. Matches both model names and version if [version] is not null for param and current jobId.
-         * @param modelName the modelName of the jobId which has to be compared with the current object
-         * @param version the version of the jobID which ahs to be compared with the current jobId
-         * @return true if JobId match
-         * @return false otherwise
-         */
-        fun matchWithResponse(modelName: String, version: String? = null) =
-                if (version.isNullOrEmpty() || this.version.isNullOrEmpty())
-                    this.modelName == modelName
-                else
-                    (this.modelName == modelName) && (this.version == version)
+            Log.d(TAG, "job already disposed")
     }
 
     internal enum class CycleStatus {
