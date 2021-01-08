@@ -1,13 +1,11 @@
 package org.openmined.syft.domain
 
-import io.reactivex.processors.PublishProcessor
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
-import org.openmined.syft.execution.JobStatusMessage
+import org.openmined.syft.execution.JobId
 import org.openmined.syft.execution.Plan
 import org.openmined.syft.execution.Protocol
-import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.proto.SyftModel
 import java.io.InputStream
 import java.util.concurrent.ConcurrentHashMap
@@ -19,16 +17,38 @@ private const val TAG = "JobRepository"
 @ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 internal class JobRepository(
+    private val jobId: JobId,
     private val jobLocalDataSource: JobLocalDataSource,
     private val jobRemoteDataSource: JobRemoteDataSource
 ) {
+
+    companion object {
+
+        fun create(
+            config: SyftConfiguration,
+            modelName: String,
+            version: String? = null
+        ): JobRepository {
+            return JobRepository(
+                JobId(modelName, version),
+                JobLocalDataSource(config),
+                JobRemoteDataSource(config.getDownloader())
+            )
+        }
+
+    }
 
     private val trainingParamsStatus = AtomicReference(DownloadStatus.NOT_STARTED)
     val status: DownloadStatus
         get() = trainingParamsStatus.get()
 
-    internal fun getDiffScript(config: SyftConfiguration) =
-            jobLocalDataSource.getDiffScript(config)
+    fun getModelsPath() = jobLocalDataSource.getModelsPath(jobId.id)
+
+    fun getPlansPath() = jobLocalDataSource.getPlansPath(jobId.id)
+
+    fun getProtocolsPath() = jobLocalDataSource.getProtocolsPath(jobId.id)
+
+    fun getDiffScript() = jobLocalDataSource.getDiffScript()
 
     internal fun persistToLocalStorage(
         input: InputStream,
@@ -41,7 +61,6 @@ internal class JobRepository(
 
     suspend fun retrievePlanData(
         workerId: String,
-        config: SyftConfiguration,
         requestKey: String,
         plans: ConcurrentHashMap<String, Plan>
     ): List<String> {
@@ -49,7 +68,7 @@ internal class JobRepository(
             processPlans(
                 workerId,
                 requestKey,
-                "${config.filesDir}/plans",
+                getPlansPath(),
                 plan
             )
         }
@@ -57,12 +76,11 @@ internal class JobRepository(
 
     suspend fun retrieveProtocolData(
         workerId: String,
-        config: SyftConfiguration,
         requestKey: String,
         protocols: ConcurrentHashMap<String, Protocol>
     ): List<String?> {
         return protocols.values.map { protocol ->
-            protocol.protocolFileLocation = "${config.filesDir}/protocols"
+            protocol.protocolFileLocation = getProtocolsPath()
             processProtocols(
                 workerId,
                 requestKey,
@@ -74,7 +92,6 @@ internal class JobRepository(
 
     internal suspend fun retrieveModel(
         workerId: String,
-        config: SyftConfiguration,
         requestKey: String,
         model: SyftModel
     ): String? {
@@ -83,7 +100,7 @@ internal class JobRepository(
                 ?.let { modelInputStream ->
                     val modelFile = jobLocalDataSource.saveAsync(
                         modelInputStream,
-                        "${config.filesDir}/models",
+                        getModelsPath(),
                         "$modelId.pb"
                     )
                     model.loadModelState(modelFile)

@@ -169,8 +169,8 @@ class Syft internal constructor(
             is Either.Right -> {
                 val cycleRequest = CycleRequest(
                     id,
-                    job.jobId.modelName,
-                    job.jobId.version,
+                    job.modelName,
+                    job.version,
                     ping ?: -1,
                     downloadSpeed ?: 0.0f,
                     uploadSpeed ?: 0.0f
@@ -230,8 +230,8 @@ class Syft internal constructor(
             try {
                 val authRequest = AuthenticationRequest(
                     authToken,
-                    job.jobId.modelName,
-                    job.jobId.version
+                    job.modelName,
+                    job.version
                 )
                 syftConfig.getSignallingClient().authenticate(authRequest)
             } catch (e: Exception) {

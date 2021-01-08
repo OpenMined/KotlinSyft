@@ -27,6 +27,7 @@ import org.mockito.ArgumentCaptor
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.openmined.syft.Syft
+import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.domain.DownloadStatus
 import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.SyftConfiguration
@@ -303,6 +304,7 @@ class SyftJobTest {
 //            )
 //        )
 //    }
+
 }
 
 private class TestException : Throwable() {
