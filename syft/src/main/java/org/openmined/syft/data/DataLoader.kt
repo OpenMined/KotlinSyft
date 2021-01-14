@@ -58,26 +58,23 @@ class DataLoaderIterator(dataLoader: DataLoader) : Iterator<List<IValue>> {
         val data = arrayListOf<List<Float>>()
         val labels = arrayListOf<List<Float>>()
 
-        val list = arrayListOf<IValue>()
+        val batch = arrayListOf<IValue>()
 
-        var batch: List<IValue> = emptyList()
+        var values: List<IValue> = emptyList()
         indices.forEach { index ->
-            batch = dataset.getItem(index)
-            data.add(batch[0].toTensor().dataAsFloatArray.toList())
-            labels.add(batch[1].toTensor().dataAsFloatArray.toList())
+            values = dataset.getItem(index)
+            data.add(values[0].toTensor().dataAsFloatArray.toList())
+            labels.add(values[1].toTensor().dataAsFloatArray.toList())
         }
 
-        val sizes = arrayListOf<Long>()
-        batch.forEach { sizes.add(it.toTensor().shape().last()) }
-
         val batchSize = indices.size.toLong()
-        val xFeatureLength = batch[0].toTensor().shape().last()
-        val yFeatureLength = batch[1].toTensor().shape().last()
+        val xFeatureLength = values[0].toTensor().shape().last()
+        val yFeatureLength = values[1].toTensor().shape().last()
 
-        list.add(IValue.from(Tensor.fromBlob(data.flatten().toFloatArray(), longArrayOf(batchSize, xFeatureLength))))
-        list.add(IValue.from(Tensor.fromBlob(labels.flatten().toFloatArray(), longArrayOf(batchSize, yFeatureLength))))
+        batch.add(IValue.from(Tensor.fromBlob(data.flatten().toFloatArray(), longArrayOf(batchSize, xFeatureLength))))
+        batch.add(IValue.from(Tensor.fromBlob(labels.flatten().toFloatArray(), longArrayOf(batchSize, yFeatureLength))))
 
-        return list
+        return batch
     }
 
     override fun hasNext(): Boolean = currentIndex < dataset.length()
