@@ -155,8 +155,8 @@ class SyftJob internal constructor(
                     val planArgs: List<IValue> =
                             trainingParameters.inputParams.fold(mutableListOf()) { args, inputSpec ->
                                 when (inputSpec.type) {
-                                    InputParamType.Data -> { args.apply { add(batchData.first) } }
-                                    InputParamType.Target -> { args.apply { add(batchData.second) } }
+                                    InputParamType.Data -> { args.apply { add(batchData[0]) } }
+                                    InputParamType.Target -> { args.apply { add(batchData[1]) } }
                                     InputParamType.ModelParameter -> { args.apply { add(paramIValue) } }
                                     InputParamType.Value -> {
                                         val tensor = if (inputSpec.value != null) {

@@ -14,7 +14,8 @@ class RandomSamplerTest {
     @Test
     fun `indices should return random indices from 0 until the dataset length`() {
         val indices = (0 until datasetTest.length())
-        sampler.indices().forEach {
+
+        sampler.indices.forEach {
             assert(it in indices)
         }
 
@@ -22,7 +23,7 @@ class RandomSamplerTest {
 
     @Test
     fun `length should return the same length as the dataset length`() {
-        assert(sampler.length() == datasetTest.length())
+        assert(sampler.length == datasetTest.length())
     }
 
 }

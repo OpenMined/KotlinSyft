@@ -12,8 +12,8 @@ import java.util.Random
 class RandomSampler(private val dataset: Dataset) :
     Sampler {
 
-    override fun indices() = (0 until dataset.length()).shuffled(Random()).toList()
+    override val indices = List(dataset.length()) { it }.shuffled()
 
-    override fun length(): Int = dataset.length()
+    override val length: Int = dataset.length()
 
 }

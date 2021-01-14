@@ -7,19 +7,20 @@ import org.openmined.syft.data.DataLoaderIterator
 import org.openmined.syft.data.DataLoader
 import org.openmined.syft.data.Dataset
 import org.openmined.syft.data.samplers.RandomSampler
+import org.pytorch.IValue
 import org.pytorch.Tensor
 import java.util.Random
 
 @ExperimentalUnsignedTypes
 class DataLoaderTest {
 
-    private val pair = Pair(
-        Tensor.fromBlob(floatArrayOf(1f, 1f), longArrayOf(1, 2)),
-        Tensor.fromBlob(floatArrayOf(1f), longArrayOf(1, 1))
+    private val list = listOf(
+        IValue.from(Tensor.fromBlob(floatArrayOf(1f, 1f), longArrayOf(1, 2))),
+        IValue.from(Tensor.fromBlob(floatArrayOf(1f), longArrayOf(1, 1)))
     )
 
     private val dataset = mock<Dataset> {
-        on { getItem(any()) }.thenReturn(pair)
+        on { getItem(any()) }.thenReturn(list)
         on { length() }.thenReturn(10)
     }
 
@@ -28,24 +29,24 @@ class DataLoaderTest {
     @Test
     fun `indexSampler returns sequential indices when receiving a sequential sampler`() {
         val seqSampler = mock<RandomSampler> {
-            on { indices() }.thenReturn(indices)
-            on { length() }.thenReturn(indices.size)
+            on { indices }.thenReturn(indices)
+            on { length }.thenReturn(indices.size)
         }
 
         val dataLoader = DataLoader(dataset, batchSize = 3, sampler = seqSampler)
-        assert(dataLoader.indexSampler().indices() == listOf(0, 1, 2))
+        assert(dataLoader.indexSampler.indices == listOf(0, 1, 2))
     }
 
     @Test
     fun `indexSampler returns random indices when receiving a random sampler`() {
         val randomSampler = mock<RandomSampler> {
-            on { indices() }.thenReturn(indices.shuffled(Random()).toList())
-            on { length() }.thenReturn(indices.size)
+            on { indices }.thenReturn(indices.shuffled(Random()).toList())
+            on { length }.thenReturn(indices.size)
         }
         val dataLoader = DataLoader(dataset, batchSize = 3, sampler = randomSampler)
 
         val indices = (0 until dataset.length())
-        dataLoader.indexSampler().indices().forEach {
+        dataLoader.indexSampler.indices.forEach {
             assert(it in indices)
         }
     }
@@ -54,20 +55,20 @@ class DataLoaderTest {
     fun `when dropLast is true indexSampler should drop batches not equal to batchSize`() {
         val dataLoader = DataLoader(dataset, batchSize = 3, dropLast = true)
 
-        assert(dataLoader.indexSampler().indices().size == 3)
-        assert(dataLoader.indexSampler().indices().size == 3)
-        assert(dataLoader.indexSampler().indices().size == 3)
-        assert(dataLoader.indexSampler().indices().isEmpty())
+        assert(dataLoader.indexSampler.indices.size == 3)
+        assert(dataLoader.indexSampler.indices.size == 3)
+        assert(dataLoader.indexSampler.indices.size == 3)
+        assert(dataLoader.indexSampler.indices.isEmpty())
     }
 
     @Test
     fun `when dropLast is false indexSampler should returns all data in batches`() {
         val dataLoader = DataLoader(dataset, batchSize = 3, dropLast = false)
 
-        assert(dataLoader.indexSampler().indices().size == 3)
-        assert(dataLoader.indexSampler().indices().size == 3)
-        assert(dataLoader.indexSampler().indices().size == 3)
-        assert(dataLoader.indexSampler().indices().size == 1)
+        assert(dataLoader.indexSampler.indices.size == 3)
+        assert(dataLoader.indexSampler.indices.size == 3)
+        assert(dataLoader.indexSampler.indices.size == 3)
+        assert(dataLoader.indexSampler.indices.size == 1)
     }
 
     @Test
@@ -76,7 +77,7 @@ class DataLoaderTest {
 
         val iterator = dataLoader.iterator()
         assert(iterator.hasNext())
-        for (i in 0 until dataLoader.indexSampler().length())
+        for (i in 0 until dataLoader.indexSampler.length)
             iterator.next()
         assert(!iterator.hasNext())
     }
@@ -87,7 +88,7 @@ class DataLoaderTest {
 
         val iterator = DataLoaderIterator(dataLoader)
         assert(iterator.hasNext())
-        for (i in 0 until dataLoader.indexSampler().length())
+        for (i in 0 until dataLoader.indexSampler.length)
             iterator.next()
         assert(!iterator.hasNext())
     }
@@ -98,7 +99,7 @@ class DataLoaderTest {
 
         val iterator = dataLoader.iterator()
         assert(iterator.hasNext())
-        for (i in 0 until dataLoader.indexSampler().length())
+        for (i in 0 until dataLoader.indexSampler.length)
             iterator.next()
         assert(!iterator.hasNext())
 

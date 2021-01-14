@@ -8,7 +8,7 @@ package org.openmined.syft.data.samplers
  */
 interface Sampler {
 
-    fun indices(): List<Int>
+    val indices: List<Int>
 
-    fun length(): Int
+    val length: Int
 }

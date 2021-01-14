@@ -6,7 +6,7 @@ import org.openmined.syft.data.samplers.SequentialSampler
 import org.openmined.syft.unit.data.TestDataset
 
 @ExperimentalUnsignedTypes
-class SquentialSamplerTest {
+class SequentialSamplerTest {
 
     private val datasetTest = TestDataset()
 
@@ -14,12 +14,12 @@ class SquentialSamplerTest {
 
     @Test
     fun `indices should return sequential indices from 0 until the dataset length`() {
-        Assert.assertEquals(sampler.indices(), (0 until datasetTest.length()).toList())
+        Assert.assertEquals(sampler.indices, (0 until datasetTest.length()).toList())
     }
 
     @Test
     fun `length should return the same length as the dataset length`() {
-        assert(sampler.length() == datasetTest.length())
+        assert(sampler.length == datasetTest.length())
     }
 
 }
