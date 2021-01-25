@@ -47,6 +47,7 @@ internal class JobRepository(
 
     fun getProtocolsPath() = jobLocalDataSource.getProtocolsPath(jobModel.id)
 
+
     fun getDiffScript() = jobLocalDataSource.getDiffScript()
 
     internal fun persistToLocalStorage(
