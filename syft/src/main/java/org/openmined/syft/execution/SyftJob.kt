@@ -9,11 +9,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.openmined.syft.Syft
-import org.openmined.syft.data.DataLoader
-import org.openmined.syft.data.Dataset
+import org.openmined.syft.data.loader.DataLoader
 import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
-import org.openmined.syft.datasource.JobLocalDataSource
-import org.openmined.syft.datasource.JobRemoteDataSource
 import org.openmined.syft.domain.DownloadStatus
 import org.openmined.syft.domain.InputParamType
 import org.openmined.syft.domain.JobRepository
@@ -33,18 +30,17 @@ import java.util.concurrent.atomic.AtomicReference
 private const val TAG = "SyftJob"
 
 /**
- * @param modelName : The model being trained or used in inference
- * @param version : The version of the model with name modelName
+ * @param jobModel : Hold data about this job (modelName, version, plans, protocols)
  * @property worker : The syft worker handling this job
  * @property config : The configuration class for schedulers and clients
  */
 @ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 class SyftJob internal constructor(
-    val modelName: String,
-    val version: String? = null,
+    val jobModel: JobModel,
     private val worker: Syft,
-    private val config: SyftConfiguration
+    private val config: SyftConfiguration,
+    private val jobRepository: JobRepository
 ) {
 
     companion object {
@@ -64,33 +60,28 @@ class SyftJob internal constructor(
             worker: Syft,
             config: SyftConfiguration
         ): SyftJob {
+
+            val requiresSpeedTest = AtomicBoolean(true)
+            val isDisposed = AtomicBoolean(false)
+            val plans = ConcurrentHashMap<String, Plan>()
+            val protocols = ConcurrentHashMap<String, Protocol>()
+
+            val jobModel = JobModel(modelName, version, plans, protocols, requiresSpeedTest, isDisposed)
+
             return SyftJob(
-                modelName,
-                version,
+                jobModel,
                 worker,
-                config
+                config,
+                JobRepository.create(config, jobModel)
             )
         }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal val jobRepository = JobRepository.create(config, modelName, version)
-
     internal var cycleStatus = AtomicReference(CycleStatus.APPLY)
-
-    internal val requiresSpeedTest = AtomicBoolean(true)
-
-    private val isDisposed = AtomicBoolean(false)
-
-    private val plans = ConcurrentHashMap<String, Plan>()
-
-    private val protocols = ConcurrentHashMap<String, Protocol>()
-
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal val model = SyftModel(modelName, version)
-
+    internal val model = SyftModel(jobModel.modelName, jobModel.version)
     private var requestKey = ""
-
     private val jobScope = CoroutineScope(Dispatchers.IO)
 
     /**
@@ -112,7 +103,7 @@ class SyftJob internal constructor(
                 Log.d(TAG, "job awaiting timer completion to resend the Cycle Request")
                 JobStatusMessage.JobCycleAwaiting
             }
-            isDisposed.get() -> {
+            jobModel.isDisposed.get() -> {
                 Log.e(TAG, "cannot start a disposed job")
                 JobStatusMessage.Error(JobErrorThrowable.RunningDisposedJob)
             }
@@ -135,8 +126,6 @@ class SyftJob internal constructor(
             // TODO What do we do with this? Should all clients be forced to use "batch_size"?
             val batchSize = (clientConfig.planArgs["batch_size"]
                              ?: error("batch_size doesn't exist")).toInt()
-
-            dataLoader.batchSize = batchSize
 
             val batchIValue = IValue.from(
                 Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
@@ -219,10 +208,10 @@ class SyftJob internal constructor(
     internal fun cycleAccepted(responseData: CycleResponseData.CycleAccept) {
         Log.d(TAG, "setting Request Key")
         responseData.plans.forEach { (planName, planId) ->
-            plans[planName] = Plan(this, planId, planName)
+            jobModel.plans[planName] = Plan(this, planId, planName)
         }
         responseData.protocols.forEach { (protocolName, protocolId) ->
-            protocols[protocolName] = Protocol(protocolId)
+            jobModel.protocols[protocolName] = Protocol(protocolId)
         }
         requestKey = responseData.requestKey
         model.pyGridModelId = responseData.modelId
@@ -257,14 +246,14 @@ class SyftJob internal constructor(
                     jobRepository.retrievePlanData(
                         workerId,
                         responseData.requestKey,
-                        plans
+                        jobModel.plans
                     )
                 }
                 val protocolRetriever = jobScope.async {
                     jobRepository.retrieveProtocolData(
                         workerId,
                         responseData.requestKey,
-                        protocols
+                        jobModel.protocols
                     )
                 }
                 val modelRetriever = jobScope.async {
@@ -276,7 +265,7 @@ class SyftJob internal constructor(
 
                 Log.d(TAG, "Data downloaded")
 
-                JobStatusMessage.JobReady(model, plans, responseData.clientConfig)
+                JobStatusMessage.JobReady(model, jobModel.plans, responseData.clientConfig)
             }
             else -> {
                 JobStatusMessage.UnexpectedDownloadStatus(jobRepository.status)
@@ -371,28 +360,28 @@ class SyftJob internal constructor(
      * Notify all the listeners about the error and dispose the job
      */
     internal fun publishError(throwable: JobErrorThrowable) {
-        isDisposed.set(true)
+        jobModel.isDisposed.set(true)
     }
 
     /**
      * Throw the error to be caught by error handlers
      */
     private fun throwError(throwable: JobErrorThrowable) {
-        isDisposed.set(true)
+        jobModel.isDisposed.set(true)
         throw throwable
     }
 
     /**
      * Identifies if the job is already disposed
      */
-    private fun isDisposed() = isDisposed.get()
+    private fun isDisposed() = jobModel.isDisposed.get()
 
     /**
      * Dispose the job. Once disposed, a job cannot be resumed again.
      */
     fun dispose() {
         if (!isDisposed()) {
-            isDisposed.set(true)
+            jobModel.isDisposed.set(true)
             Log.d(TAG, "job disposed")
         } else
             Log.d(TAG, "job already disposed")

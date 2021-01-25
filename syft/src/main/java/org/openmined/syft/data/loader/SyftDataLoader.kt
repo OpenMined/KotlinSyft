@@ -1,5 +1,6 @@
-package org.openmined.syft.data
+package org.openmined.syft.data.loader
 
+import org.openmined.syft.data.Dataset
 import org.openmined.syft.data.samplers.BatchSampler
 import org.openmined.syft.data.samplers.Sampler
 import org.openmined.syft.data.samplers.SequentialSampler
@@ -18,43 +19,22 @@ import org.pytorch.Tensor
  *                  the size of dataset is not divisible by the batch size, then the last batch
  *                  will be smaller. (default: ``False``)
  */
-class DataLoader(var dataset: Dataset,
-                 var sampler: Sampler = SequentialSampler(dataset),
-                 var batchSize: Int = 1,
-                 var dropLast: Boolean = false
-) : Iterable<List<IValue>> {
+class SyftDataLoader(
+    var dataset: Dataset,
+    var sampler: Sampler = SequentialSampler(dataset),
+    var batchSize: Int = 1,
+    var dropLast: Boolean = false
+) : AbstractDataLoader(
+    dataset, sampler, batchSize, dropLast
+) {
 
-    val indexSampler = BatchSampler(
-        sampler,
-        batchSize,
-        dropLast
-    )
 
-    private val iterator = DataLoaderIterator(this)
+    private val dataLoaderIterator =
+            DataLoaderIterator(this)
 
-    override fun iterator(): Iterator<List<IValue>> = iterator
+    override fun iterator(): Iterator<List<IValue>> = dataLoaderIterator
 
-    fun reset() {
-        indexSampler.reset()
-        iterator.reset()
-    }
-}
-
-class DataLoaderIterator(dataLoader: DataLoader) : Iterator<List<IValue>> {
-
-    private val indexSampler = dataLoader.indexSampler
-
-    private val dataset = dataLoader.dataset
-
-    private var currentIndex = 0
-
-    override fun next(): List<IValue> {
-        val indices = indexSampler.indices
-        currentIndex += indices.size
-        return fetch(indices)
-    }
-
-    private fun fetch(indices: List<Int>): List<IValue> {
+    override fun fetch(indices: List<Int>): List<IValue> {
         val data = arrayListOf<List<Float>>()
         val labels = arrayListOf<List<Float>>()
 
@@ -71,15 +51,47 @@ class DataLoaderIterator(dataLoader: DataLoader) : Iterator<List<IValue>> {
         val xFeatureLength = values[0].toTensor().shape().last()
         val yFeatureLength = values[1].toTensor().shape().last()
 
-        batch.add(IValue.from(Tensor.fromBlob(data.flatten().toFloatArray(), longArrayOf(batchSize, xFeatureLength))))
-        batch.add(IValue.from(Tensor.fromBlob(labels.flatten().toFloatArray(), longArrayOf(batchSize, yFeatureLength))))
+        batch.add(
+            IValue.from(
+                Tensor.fromBlob(
+                    data.flatten().toFloatArray(),
+                    longArrayOf(batchSize, xFeatureLength)
+                )
+            )
+        )
+        batch.add(
+            IValue.from(
+                Tensor.fromBlob(
+                    labels.flatten().toFloatArray(),
+                    longArrayOf(batchSize, yFeatureLength)
+                )
+            )
+        )
 
         return batch
     }
 
-    override fun hasNext(): Boolean = currentIndex < dataset.length()
 
-    fun reset() {
-        currentIndex = 0
+    override fun reset() {
+        indexSampler.reset()
+        dataLoaderIterator.reset()
     }
+
+}
+
+abstract class AbstractDataLoader(
+    dataset: Dataset,
+    sampler: Sampler = SequentialSampler(dataset),
+    batchSize: Int = 1,
+    dropLast: Boolean = false
+) : DataLoader {
+
+    val indexSampler = BatchSampler(
+        sampler,
+        batchSize,
+        dropLast
+    )
+
+    abstract fun fetch(indices: List<Int>): List<IValue>
+
 }

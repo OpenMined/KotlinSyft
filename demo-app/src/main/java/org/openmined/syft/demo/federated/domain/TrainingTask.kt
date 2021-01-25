@@ -8,8 +8,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.withContext
 import org.openmined.syft.Syft
-import org.openmined.syft.data.DataLoader
-import org.openmined.syft.data.Dataset
+import org.openmined.syft.data.loader.DataLoader
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.ui.ContentState
 import org.openmined.syft.domain.InputParamType

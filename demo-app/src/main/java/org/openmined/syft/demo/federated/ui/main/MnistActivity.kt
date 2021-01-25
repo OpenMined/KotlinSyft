@@ -14,7 +14,7 @@ import kotlinx.android.synthetic.main.activity_mnist.chart
 import kotlinx.android.synthetic.main.activity_mnist.progressBar
 import kotlinx.android.synthetic.main.activity_mnist.toolbar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import org.openmined.syft.data.DataLoader
+import org.openmined.syft.data.loader.SyftDataLoader
 import org.openmined.syft.demo.BuildConfig
 import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityMnistBinding
@@ -83,7 +83,10 @@ class MnistActivity : AppCompatActivity() {
                 .build()
 
         val mnistDataset = MNISTDataset(resources)
-        val dataLoader = DataLoader(mnistDataset, batchSize = 64)
+        val dataLoader = SyftDataLoader(
+            mnistDataset,
+            batchSize = 64
+        )
         viewModel.launchForegroundTrainer(config, dataLoader, BuildConfig.SYFT_MODEL_NAME, BuildConfig.SYFT_MODEL_VERSION)
     }
 

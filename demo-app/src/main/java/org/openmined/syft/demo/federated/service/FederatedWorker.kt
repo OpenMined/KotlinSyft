@@ -21,7 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
-import org.openmined.syft.data.DataLoader
+import org.openmined.syft.data.loader.SyftDataLoader
 import org.openmined.syft.demo.federated.domain.TrainingTask
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.ui.ContentState
@@ -55,7 +55,10 @@ class FederatedWorker(
         val modelVersion = inputData.getString(MODEL_VERSION) ?: return Result.failure()
 
         val mnistDataset = MNISTDataset(serviceContext.resources)
-        val dataLoader = DataLoader(mnistDataset, batchSize = 64)
+        val dataLoader = SyftDataLoader(
+            mnistDataset,
+            batchSize = 64
+        )
 
         return coroutineScope {
 
