@@ -65,8 +65,17 @@ class SyftJob internal constructor(
             val isDisposed = AtomicBoolean(false)
             val plans = ConcurrentHashMap<String, Plan>()
             val protocols = ConcurrentHashMap<String, Protocol>()
+            val cycleStatus = AtomicReference(CycleStatus.APPLY)
 
-            val jobModel = JobModel(modelName, version, plans, protocols, requiresSpeedTest, isDisposed)
+            val jobModel = JobModel(
+                modelName,
+                version,
+                plans,
+                protocols,
+                requiresSpeedTest,
+                isDisposed,
+                cycleStatus
+            )
 
             return SyftJob(
                 jobModel,
@@ -77,8 +86,6 @@ class SyftJob internal constructor(
         }
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal var cycleStatus = AtomicReference(CycleStatus.APPLY)
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val model = SyftModel(jobModel.modelName, jobModel.version)
     private var requestKey = ""
@@ -99,7 +106,7 @@ class SyftJob internal constructor(
      */
     suspend fun request(): JobStatusMessage {
         return when {
-            cycleStatus.get() == CycleStatus.REJECT -> {
+            jobModel.cycleStatus.get() == CycleStatus.REJECT -> {
                 Log.d(TAG, "job awaiting timer completion to resend the Cycle Request")
                 JobStatusMessage.JobCycleAwaiting
             }
@@ -215,7 +222,7 @@ class SyftJob internal constructor(
         }
         requestKey = responseData.requestKey
         model.pyGridModelId = responseData.modelId
-        cycleStatus.set(CycleStatus.ACCEPTED)
+        jobModel.cycleStatus.set(CycleStatus.ACCEPTED)
     }
 
     /**
@@ -223,7 +230,7 @@ class SyftJob internal constructor(
      * @param responseData The timeout returned by PyGrid after which the worker should retry
      */
     internal fun cycleRejected(responseData: CycleResponseData.CycleReject): JobStatusMessage {
-        cycleStatus.set(CycleStatus.REJECT)
+        jobModel.cycleStatus.set(CycleStatus.REJECT)
         return JobStatusMessage.JobCycleRejected(responseData.timeout)
     }
 
@@ -237,7 +244,7 @@ class SyftJob internal constructor(
         responseData: CycleResponseData.CycleAccept
     ): JobStatusMessage {
         return when {
-            cycleStatus.get() != CycleStatus.ACCEPTED -> {
+            jobModel.cycleStatus.get() != CycleStatus.ACCEPTED -> {
                 publishError(JobErrorThrowable.CycleNotAccepted("Cycle not accepted. Download cannot start"))
                 JobStatusMessage.Error(JobErrorThrowable.CycleNotAccepted("Cycle not accepted. Download cannot start"))
             }
@@ -385,9 +392,5 @@ class SyftJob internal constructor(
             Log.d(TAG, "job disposed")
         } else
             Log.d(TAG, "job already disposed")
-    }
-
-    internal enum class CycleStatus {
-        APPLY, REJECT, ACCEPTED
     }
 }

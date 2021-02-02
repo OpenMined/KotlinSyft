@@ -9,8 +9,8 @@ import org.openmined.syft.data.Dataset
 class SequentialSampler(private val dataset: Dataset) :
     Sampler {
 
-    override val indices = List(dataset.length()) { it }
+    override val indices = List(dataset.length) { it }
 
-    override val length: Int = dataset.length()
+    override val length: Int = dataset.length
 
 }

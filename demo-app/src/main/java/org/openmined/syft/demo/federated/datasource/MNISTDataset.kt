@@ -33,7 +33,7 @@ class MNISTDataset(private val resources: Resources) : Dataset {
         readAllData()
     }
 
-    override fun length(): Int = trainInput.size
+    override val length: Int = trainInput.size
 
     override fun getItem(index: Int): List<IValue> {
         val trainingData = IValue.from(

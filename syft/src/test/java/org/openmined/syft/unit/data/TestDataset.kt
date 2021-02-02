@@ -28,6 +28,6 @@ class TestDataset : Dataset {
         )
     }
 
-    override fun length(): Int = data.size
+    override val length: Int = data.size
 
 }

@@ -21,7 +21,7 @@ class SyftDataLoaderTest {
 
     private val dataset = mock<Dataset> {
         on { getItem(any()) }.thenReturn(list)
-        on { length() }.thenReturn(10)
+        on { length }.thenReturn(10)
     }
 
     private val indices = (0 until 10).toList()
@@ -53,7 +53,7 @@ class SyftDataLoaderTest {
             sampler = randomSampler
         )
 
-        val indices = (0 until dataset.length())
+        val indices = (0 until dataset.length)
         dataLoader.indexSampler.indices.forEach {
             assert(it in indices)
         }

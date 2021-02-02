@@ -15,11 +15,11 @@ interface Dataset {
     /**
      * This method is called to return the size of the dataset, needs to be overridden.
      */
-    fun length() : Int
+    val length: Int
 
     /**
      * This method is called to fetch a data sample for a given key.
      */
-    fun getItem(index: Int) : List<IValue>
+    fun getItem(index: Int): List<IValue>
 
 }

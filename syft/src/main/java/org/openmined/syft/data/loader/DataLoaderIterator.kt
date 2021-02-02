@@ -14,7 +14,7 @@ class DataLoaderIterator(private val dataLoader: SyftDataLoader) : Iterator<List
         return dataLoader.fetch(indices)
     }
 
-    override fun hasNext(): Boolean = currentIndex < dataLoader.dataset.length()
+    override fun hasNext(): Boolean = currentIndex < dataLoader.dataset.length
 
     fun reset() {
         currentIndex = 0

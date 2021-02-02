@@ -14,12 +14,12 @@ class SequentialSamplerTest {
 
     @Test
     fun `indices should return sequential indices from 0 until the dataset length`() {
-        Assert.assertEquals(sampler.indices, (0 until datasetTest.length()).toList())
+        Assert.assertEquals(sampler.indices, (0 until datasetTest.length).toList())
     }
 
     @Test
     fun `length should return the same length as the dataset length`() {
-        assert(sampler.length == datasetTest.length())
+        assert(sampler.length == datasetTest.length)
     }
 
 }

@@ -29,7 +29,7 @@ class SyftDataLoader(
 ) {
 
 
-    private val dataLoaderIterator =
+    protected val dataLoaderIterator =
             DataLoaderIterator(this)
 
     override fun iterator(): Iterator<List<IValue>> = dataLoaderIterator
