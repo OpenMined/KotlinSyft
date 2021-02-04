@@ -1,4 +1,4 @@
-package org.openmined.syft.unit.data
+package org.openmined.syft.unit.data.loader
 
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.mock

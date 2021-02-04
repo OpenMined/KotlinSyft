@@ -1,0 +1,12 @@
+$dokka.format:gfm
+$dokka.linkExtension:md
+$dokka.location:org.openmined.syft.proto$applyOperation(org.pytorch.IValue, kotlin.String, kotlin.Array((org.pytorch.IValue)))org.openmined.syft.proto/org.pytorch.-i-value/apply-operation.md
+$dokka.location:org.openmined.syft.proto$toSyftState(org.openmined.syftproto.execution.v1.StateOuterClass.State)org.openmined.syft.proto/org.openmined.syftproto.execution.v1.-state-outer-class.-state/to-syft-state.md
+$dokka.location:org.openmined.syft.proto$toSyftTensor(org.openmined.syftproto.types.torch.v1.Tensor.TorchTensor)org.openmined.syft.proto/org.openmined.syftproto.types.torch.v1.-tensor.-torch-tensor/to-syft-tensor.md
+$dokka.location:org.openmined.syft.proto$toSyftTensor(org.pytorch.Tensor)org.openmined.syft.proto/org.pytorch.-tensor/to-syft-tensor.md
+org.openmined.syft
+org.openmined.syft.domain
+org.openmined.syft.execution
+org.openmined.syft.networking.datamodels
+org.openmined.syft.proto
+org.openmined.syft.threading
