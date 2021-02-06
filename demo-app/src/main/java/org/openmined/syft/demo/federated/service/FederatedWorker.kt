@@ -16,12 +16,12 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import org.openmined.syft.demo.federated.datasource.MNISTDataset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
-import org.openmined.syft.demo.federated.datasource.LocalMNISTDataDataSource
-import org.openmined.syft.demo.federated.domain.MNISTDataRepository
+import org.openmined.syft.data.loader.SyftDataLoader
 import org.openmined.syft.demo.federated.domain.TrainingTask
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.ui.ContentState
@@ -54,20 +54,24 @@ class FederatedWorker(
         val modelName = inputData.getString(MODEL_NAME) ?: return Result.failure()
         val modelVersion = inputData.getString(MODEL_VERSION) ?: return Result.failure()
 
+        val mnistDataset = MNISTDataset(serviceContext.resources)
+        val dataLoader = SyftDataLoader(
+            mnistDataset,
+            batchSize = 64
+        )
+
         return coroutineScope {
 
             val config = SyftConfiguration.builder(serviceContext, baseUrl)
                     .enableBackgroundServiceExecution()
                     .setCacheTimeout(0L)
                     .build()
-            val localMNISTDataDataSource = LocalMNISTDataDataSource(serviceContext.resources)
-            val dataRepository = MNISTDataRepository(localMNISTDataDataSource)
             setForegroundAsync(createForegroundInfo(0))
             withContext(Dispatchers.Default) {
                 TrainingTask(
                     config,
                     authToken,
-                    dataRepository,
+                    dataLoader,
                     modelName,
                     modelVersion
                 ).runTask(WorkLogger())

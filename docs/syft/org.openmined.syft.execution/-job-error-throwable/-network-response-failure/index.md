@@ -8,10 +8,10 @@
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `NetworkResponseFailure(message: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = "server response error ")` |
+| [&lt;init&gt;](-init-.md) | `NetworkResponseFailure(message: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = "server response error ")` |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
-| [message](message.md) | `val message: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` |
+| [message](message.md) | `val message: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |

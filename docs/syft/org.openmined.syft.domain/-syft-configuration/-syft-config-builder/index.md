@@ -2,7 +2,7 @@
 
 # SyftConfigBuilder
 
-`@ExperimentalCoroutinesApi class SyftConfigBuilder`
+`class SyftConfigBuilder`
 
 ### Constructors
 

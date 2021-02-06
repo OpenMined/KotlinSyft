@@ -8,6 +8,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.withContext
 import org.openmined.syft.Syft
+import org.openmined.syft.data.loader.DataLoader
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.ui.ContentState
 import org.openmined.syft.domain.InputParamType
@@ -26,7 +27,7 @@ import org.openmined.syft.execution.TrainingState
 class TrainingTask(
     configuration: SyftConfiguration,
     authToken: String,
-    private val mnistDataRepository: MNISTDataRepository,
+    private val dataLoader: DataLoader,
     private val modelName: String,
     private val modelVersion: String
 ) {
@@ -59,6 +60,7 @@ class TrainingTask(
             }
 
             is JobStatusMessage.Error -> {
+                requestResult.throwable.printStackTrace()
                 logger.postLog("There was an error $requestResult.throwable")
                 statusPublisher.offer(Result.failure())
             }
@@ -87,7 +89,7 @@ class TrainingTask(
 
         mnistJob.train(requestResult.plans,
             requestResult.clientConfig!!,
-            mnistDataRepository,
+            dataLoader,
             generateTrainingParameters()
         ).collect {
             // collect happens in IO Dispatcher. Change context to process the training state.

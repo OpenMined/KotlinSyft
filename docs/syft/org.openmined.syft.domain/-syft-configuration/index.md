@@ -2,7 +2,7 @@
 
 # SyftConfiguration
 
-`@ExperimentalCoroutinesApi @ExperimentalUnsignedTypes class SyftConfiguration`
+`@ExperimentalUnsignedTypes class SyftConfiguration`
 
 ### Types
 

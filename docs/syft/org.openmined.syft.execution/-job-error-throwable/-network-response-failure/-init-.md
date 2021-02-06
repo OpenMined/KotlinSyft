@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`NetworkResponseFailure(message: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = "server response error ")`
+`NetworkResponseFailure(message: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = "server response error ")`

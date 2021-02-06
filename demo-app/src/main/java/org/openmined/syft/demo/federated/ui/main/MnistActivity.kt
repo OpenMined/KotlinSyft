@@ -1,7 +1,6 @@
 package org.openmined.syft.demo.federated.ui.main
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
@@ -15,11 +14,11 @@ import kotlinx.android.synthetic.main.activity_mnist.chart
 import kotlinx.android.synthetic.main.activity_mnist.progressBar
 import kotlinx.android.synthetic.main.activity_mnist.toolbar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.openmined.syft.data.loader.SyftDataLoader
 import org.openmined.syft.demo.BuildConfig
 import org.openmined.syft.demo.R
 import org.openmined.syft.demo.databinding.ActivityMnistBinding
-import org.openmined.syft.demo.federated.datasource.LocalMNISTDataDataSource
-import org.openmined.syft.demo.federated.domain.MNISTDataRepository
+import org.openmined.syft.demo.federated.datasource.MNISTDataset
 import org.openmined.syft.demo.federated.service.WorkerRepository
 import org.openmined.syft.demo.federated.ui.ContentState
 import org.openmined.syft.domain.ProcessData
@@ -82,9 +81,13 @@ class MnistActivity : AppCompatActivity() {
                 .setCacheTimeout(0L)
                 .disableBatteryCheck()
                 .build()
-        val localMNISTDataDataSource = LocalMNISTDataDataSource(resources)
-        val dataRepository = MNISTDataRepository(localMNISTDataDataSource)
-        viewModel.launchForegroundTrainer(config, dataRepository, BuildConfig.SYFT_MODEL_NAME, BuildConfig.SYFT_MODEL_VERSION)
+
+        val mnistDataset = MNISTDataset(resources)
+        val dataLoader = SyftDataLoader(
+            mnistDataset,
+            batchSize = 64
+        )
+        viewModel.launchForegroundTrainer(config, dataLoader, BuildConfig.SYFT_MODEL_NAME, BuildConfig.SYFT_MODEL_VERSION)
     }
 
     override fun onBackPressed() {

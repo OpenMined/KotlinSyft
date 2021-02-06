@@ -7,12 +7,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkInfo
 import io.reactivex.disposables.CompositeDisposable
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import org.openmined.syft.demo.federated.domain.MNISTDataRepository
+import org.openmined.syft.data.loader.SyftDataLoader
 import org.openmined.syft.demo.federated.domain.TrainingTask
 import org.openmined.syft.demo.federated.logging.MnistLogger
 import org.openmined.syft.demo.federated.service.EPOCH
@@ -78,7 +77,7 @@ class MnistActivityViewModel(
 
     fun launchForegroundTrainer(
         config: SyftConfiguration,
-        dataRepository: MNISTDataRepository,
+        dataLoader: SyftDataLoader,
         modelName: String,
         modelVersion: String
     ) {
@@ -86,7 +85,7 @@ class MnistActivityViewModel(
             trainingTask = TrainingTask(
                 config,
                 authToken,
-                dataRepository,
+                dataLoader,
                 modelName,
                 modelVersion
             )

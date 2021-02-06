@@ -3,7 +3,7 @@ package org.openmined.syft.domain
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.openmined.syft.datasource.JobLocalDataSource
 import org.openmined.syft.datasource.JobRemoteDataSource
-import org.openmined.syft.execution.JobId
+import org.openmined.syft.execution.JobModel
 import org.openmined.syft.execution.Plan
 import org.openmined.syft.execution.Protocol
 import org.openmined.syft.proto.SyftModel
@@ -17,7 +17,7 @@ private const val TAG = "JobRepository"
 @ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 internal class JobRepository(
-    private val jobId: JobId,
+    private val jobModel: JobModel,
     private val jobLocalDataSource: JobLocalDataSource,
     private val jobRemoteDataSource: JobRemoteDataSource
 ) {
@@ -26,11 +26,10 @@ internal class JobRepository(
 
         fun create(
             config: SyftConfiguration,
-            modelName: String,
-            version: String? = null
+            jobModel: JobModel
         ): JobRepository {
             return JobRepository(
-                JobId(modelName, version),
+                jobModel,
                 JobLocalDataSource(config),
                 JobRemoteDataSource(config.getDownloader())
             )
@@ -42,11 +41,12 @@ internal class JobRepository(
     val status: DownloadStatus
         get() = trainingParamsStatus.get()
 
-    fun getModelsPath() = jobLocalDataSource.getModelsPath(jobId.id)
+    fun getModelsPath() = jobLocalDataSource.getModelsPath(jobModel.id)
 
-    fun getPlansPath() = jobLocalDataSource.getPlansPath(jobId.id)
+    fun getPlansPath() = jobLocalDataSource.getPlansPath(jobModel.id)
 
-    fun getProtocolsPath() = jobLocalDataSource.getProtocolsPath(jobId.id)
+    fun getProtocolsPath() = jobLocalDataSource.getProtocolsPath(jobModel.id)
+
 
     fun getDiffScript() = jobLocalDataSource.getDiffScript()
 

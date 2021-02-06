@@ -108,7 +108,7 @@ class Syft internal constructor(
                     setSyftWorkerId(response.workerId)
                 }
                 //todo eventually requires_speed test will be migrated to it's own endpoint
-                job.requiresSpeedTest.set(response.requiresSpeedTest)
+                job.jobModel.requiresSpeedTest.set(response.requiresSpeedTest)
             }
             is AuthenticationResponse.AuthenticationError -> {
                 job.publishError(JobErrorThrowable.AuthenticationFailure(response.errorMessage))
@@ -124,7 +124,7 @@ class Syft internal constructor(
 
         return try {
             // TODO Fix this workerId!!
-            val networkStatus = deviceMonitor.getNetworkStatus(workerId!!, job.requiresSpeedTest.get())
+            val networkStatus = deviceMonitor.getNetworkStatus(workerId!!, job.jobModel.requiresSpeedTest.get())
             val cycleResponse = requestCycle(
                 workerId!!,
                 job,
@@ -169,8 +169,8 @@ class Syft internal constructor(
             is Either.Right -> {
                 val cycleRequest = CycleRequest(
                     id,
-                    job.modelName,
-                    job.version,
+                    job.jobModel.modelName,
+                    job.jobModel.version,
                     ping ?: -1,
                     downloadSpeed ?: 0.0f,
                     uploadSpeed ?: 0.0f
@@ -230,8 +230,8 @@ class Syft internal constructor(
             try {
                 val authRequest = AuthenticationRequest(
                     authToken,
-                    job.modelName,
-                    job.version
+                    job.jobModel.modelName,
+                    job.jobModel.version
                 )
                 syftConfig.getSignallingClient().authenticate(authRequest)
             } catch (e: Exception) {

@@ -2,8 +2,6 @@ package org.openmined.syft.datasource
 
 import android.util.Log
 import androidx.annotation.VisibleForTesting
-import io.reactivex.Single
-import org.openmined.syft.execution.JobId
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syftproto.execution.v1.PlanOuterClass
 import java.io.File

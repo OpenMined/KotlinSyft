@@ -9,15 +9,13 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.openmined.syft.Syft
+import org.openmined.syft.data.loader.DataLoader
 import org.openmined.syft.datasource.DIFF_SCRIPT_NAME
-import org.openmined.syft.datasource.JobLocalDataSource
-import org.openmined.syft.datasource.JobRemoteDataSource
 import org.openmined.syft.domain.DownloadStatus
 import org.openmined.syft.domain.InputParamType
 import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.OutputParamType
 import org.openmined.syft.domain.SyftConfiguration
-import org.openmined.syft.domain.SyftDataLoader
 import org.openmined.syft.domain.TrainingParameters
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
@@ -32,18 +30,17 @@ import java.util.concurrent.atomic.AtomicReference
 private const val TAG = "SyftJob"
 
 /**
- * @param modelName : The model being trained or used in inference
- * @param version : The version of the model with name modelName
+ * @param jobModel : Hold data about this job (modelName, version, plans, protocols)
  * @property worker : The syft worker handling this job
  * @property config : The configuration class for schedulers and clients
  */
 @ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
 class SyftJob internal constructor(
-    val modelName: String,
-    val version: String? = null,
+    val jobModel: JobModel,
     private val worker: Syft,
-    private val config: SyftConfiguration
+    private val config: SyftConfiguration,
+    private val jobRepository: JobRepository
 ) {
 
     companion object {
@@ -63,33 +60,35 @@ class SyftJob internal constructor(
             worker: Syft,
             config: SyftConfiguration
         ): SyftJob {
-            return SyftJob(
+
+            val requiresSpeedTest = AtomicBoolean(true)
+            val isDisposed = AtomicBoolean(false)
+            val plans = ConcurrentHashMap<String, Plan>()
+            val protocols = ConcurrentHashMap<String, Protocol>()
+            val cycleStatus = AtomicReference(CycleStatus.APPLY)
+
+            val jobModel = JobModel(
                 modelName,
                 version,
+                plans,
+                protocols,
+                requiresSpeedTest,
+                isDisposed,
+                cycleStatus
+            )
+
+            return SyftJob(
+                jobModel,
                 worker,
-                config
+                config,
+                JobRepository.create(config, jobModel)
             )
         }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal val jobRepository = JobRepository.create(config, modelName, version)
-
-    internal var cycleStatus = AtomicReference(CycleStatus.APPLY)
-
-    internal val requiresSpeedTest = AtomicBoolean(true)
-
-    private val isDisposed = AtomicBoolean(false)
-
-    private val plans = ConcurrentHashMap<String, Plan>()
-
-    private val protocols = ConcurrentHashMap<String, Protocol>()
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal val model = SyftModel(modelName, version)
-
+    internal val model = SyftModel(jobModel.modelName, jobModel.version)
     private var requestKey = ""
-
     private val jobScope = CoroutineScope(Dispatchers.IO)
 
     /**
@@ -107,11 +106,11 @@ class SyftJob internal constructor(
      */
     suspend fun request(): JobStatusMessage {
         return when {
-            cycleStatus.get() == CycleStatus.REJECT -> {
+            jobModel.cycleStatus.get() == CycleStatus.REJECT -> {
                 Log.d(TAG, "job awaiting timer completion to resend the Cycle Request")
                 JobStatusMessage.JobCycleAwaiting
             }
-            isDisposed.get() -> {
+            jobModel.isDisposed.get() -> {
                 Log.e(TAG, "cannot start a disposed job")
                 JobStatusMessage.Error(JobErrorThrowable.RunningDisposedJob)
             }
@@ -125,7 +124,7 @@ class SyftJob internal constructor(
     fun train(
         plans: ConcurrentHashMap<String, Plan>,
         clientConfig: ClientConfig,
-        syftDataLoader: SyftDataLoader,
+        dataLoader: DataLoader,
         trainingParameters: TrainingParameters
     ): Flow<TrainingState> = flow {
 
@@ -134,57 +133,60 @@ class SyftJob internal constructor(
             // TODO What do we do with this? Should all clients be forced to use "batch_size"?
             val batchSize = (clientConfig.planArgs["batch_size"]
                              ?: error("batch_size doesn't exist")).toInt()
+
             val batchIValue = IValue.from(
                 Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
             )
             repeat(clientConfig.properties.maxUpdates) { step ->
 
                 emit(TrainingState.Epoch(step + 1))
-                val batchData = syftDataLoader.loadDataBatch(batchSize)
+                dataLoader.reset()
                 // TODO We should check requirements before arriving to this point
 //                    emit(TrainingState.Error(IllegalStateException("No params in the model")))
                 val modelParams = model.paramArray ?: emptyArray()
                 val paramIValue = IValue.listFrom(*modelParams)
 
-                val planArgs: List<IValue> =
-                        trainingParameters.inputParams.fold(mutableListOf()) { args, inputSpec ->
-                            when (inputSpec.type) {
-                                InputParamType.Data -> { args.apply { add(batchData.first) } }
-                                InputParamType.Target -> { args.apply { add(batchData.second) } }
-                                InputParamType.ModelParameter -> { args.apply { add(paramIValue) } }
-                                InputParamType.Value -> {
-                                    val tensor = if (inputSpec.value != null) {
-                                        inputSpec.value
-                                    } else {
-                                        val clientConfigValue = clientConfig.planArgs[inputSpec.name]
-                                        clientConfigValue?.let {
-                                            IValue.from(Tensor.fromBlob(
-                                                floatArrayOf(clientConfigValue.toFloat()),
-                                                longArrayOf(1)
-                                            ))
-                                        } ?: null
-                                    }
-                                    args.apply {
-                                        tensor?.let {
-                                            add(tensor)
-                                        } ?: args
+                for (batchData in dataLoader) {
+                    val planArgs: List<IValue> =
+                            trainingParameters.inputParams.fold(mutableListOf()) { args, inputSpec ->
+                                when (inputSpec.type) {
+                                    InputParamType.Data -> { args.apply { add(batchData[0]) } }
+                                    InputParamType.Target -> { args.apply { add(batchData[1]) } }
+                                    InputParamType.ModelParameter -> { args.apply { add(paramIValue) } }
+                                    InputParamType.Value -> {
+                                        val tensor = if (inputSpec.value != null) {
+                                            inputSpec.value
+                                        } else {
+                                            val clientConfigValue = clientConfig.planArgs[inputSpec.name]
+                                            clientConfigValue?.let {
+                                                IValue.from(Tensor.fromBlob(
+                                                    floatArrayOf(clientConfigValue.toFloat()),
+                                                    longArrayOf(1)
+                                                ))
+                                            } ?: null
+                                        }
+                                        args.apply {
+                                            tensor?.let {
+                                                add(tensor)
+                                            } ?: args
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                val output = plan.execute(*planArgs.toTypedArray())?.toTuple()
+                    val output = plan.execute(*planArgs.toTypedArray())?.toTuple()
 
-                output?.let { outputResult ->
-                    trainingParameters.outputParams.mapIndexed { index, outputSpec ->
-                        when (outputSpec.type) {
-                            OutputParamType.Loss -> { emit(TrainingState.Loss(outputResult[index].toTensor().dataAsFloatArray.last())) }
-                            OutputParamType.Metric -> {
-                                emit(TrainingState.Metric(outputSpec.name, outputResult[index].toTensor().dataAsFloatArray.last()))
-                            }
-                            OutputParamType.ModelParameter -> {
-                                val updatedParams = outputResult.slice(index until index + model.stateTensorSize!!)
-                                model.updateModel(updatedParams)
+                    output?.let { outputResult ->
+                        trainingParameters.outputParams.mapIndexed { index, outputSpec ->
+                            when (outputSpec.type) {
+                                OutputParamType.Loss -> { emit(TrainingState.Loss(outputResult[index].toTensor().dataAsFloatArray.last())) }
+                                OutputParamType.Metric -> {
+                                    emit(TrainingState.Metric(outputSpec.name, outputResult[index].toTensor().dataAsFloatArray.last()))
+                                }
+                                OutputParamType.ModelParameter -> {
+                                    val updatedParams = outputResult.slice(index until index + model.stateTensorSize!!)
+                                    model.updateModel(updatedParams)
+                                }
                             }
                         }
                     }
@@ -213,14 +215,14 @@ class SyftJob internal constructor(
     internal fun cycleAccepted(responseData: CycleResponseData.CycleAccept) {
         Log.d(TAG, "setting Request Key")
         responseData.plans.forEach { (planName, planId) ->
-            plans[planName] = Plan(this, planId, planName)
+            jobModel.plans[planName] = Plan(this, planId, planName)
         }
         responseData.protocols.forEach { (protocolName, protocolId) ->
-            protocols[protocolName] = Protocol(protocolId)
+            jobModel.protocols[protocolName] = Protocol(protocolId)
         }
         requestKey = responseData.requestKey
         model.pyGridModelId = responseData.modelId
-        cycleStatus.set(CycleStatus.ACCEPTED)
+        jobModel.cycleStatus.set(CycleStatus.ACCEPTED)
     }
 
     /**
@@ -228,7 +230,7 @@ class SyftJob internal constructor(
      * @param responseData The timeout returned by PyGrid after which the worker should retry
      */
     internal fun cycleRejected(responseData: CycleResponseData.CycleReject): JobStatusMessage {
-        cycleStatus.set(CycleStatus.REJECT)
+        jobModel.cycleStatus.set(CycleStatus.REJECT)
         return JobStatusMessage.JobCycleRejected(responseData.timeout)
     }
 
@@ -242,7 +244,7 @@ class SyftJob internal constructor(
         responseData: CycleResponseData.CycleAccept
     ): JobStatusMessage {
         return when {
-            cycleStatus.get() != CycleStatus.ACCEPTED -> {
+            jobModel.cycleStatus.get() != CycleStatus.ACCEPTED -> {
                 publishError(JobErrorThrowable.CycleNotAccepted("Cycle not accepted. Download cannot start"))
                 JobStatusMessage.Error(JobErrorThrowable.CycleNotAccepted("Cycle not accepted. Download cannot start"))
             }
@@ -251,14 +253,14 @@ class SyftJob internal constructor(
                     jobRepository.retrievePlanData(
                         workerId,
                         responseData.requestKey,
-                        plans
+                        jobModel.plans
                     )
                 }
                 val protocolRetriever = jobScope.async {
                     jobRepository.retrieveProtocolData(
                         workerId,
                         responseData.requestKey,
-                        protocols
+                        jobModel.protocols
                     )
                 }
                 val modelRetriever = jobScope.async {
@@ -270,7 +272,7 @@ class SyftJob internal constructor(
 
                 Log.d(TAG, "Data downloaded")
 
-                JobStatusMessage.JobReady(model, plans, responseData.clientConfig)
+                JobStatusMessage.JobReady(model, jobModel.plans, responseData.clientConfig)
             }
             else -> {
                 JobStatusMessage.UnexpectedDownloadStatus(jobRepository.status)
@@ -365,34 +367,30 @@ class SyftJob internal constructor(
      * Notify all the listeners about the error and dispose the job
      */
     internal fun publishError(throwable: JobErrorThrowable) {
-        isDisposed.set(true)
+        jobModel.isDisposed.set(true)
     }
 
     /**
      * Throw the error to be caught by error handlers
      */
     private fun throwError(throwable: JobErrorThrowable) {
-        isDisposed.set(true)
+        jobModel.isDisposed.set(true)
         throw throwable
     }
 
     /**
      * Identifies if the job is already disposed
      */
-    private fun isDisposed() = isDisposed.get()
+    private fun isDisposed() = jobModel.isDisposed.get()
 
     /**
      * Dispose the job. Once disposed, a job cannot be resumed again.
      */
     fun dispose() {
         if (!isDisposed()) {
-            isDisposed.set(true)
+            jobModel.isDisposed.set(true)
             Log.d(TAG, "job disposed")
         } else
             Log.d(TAG, "job already disposed")
-    }
-
-    internal enum class CycleStatus {
-        APPLY, REJECT, ACCEPTED
     }
 }

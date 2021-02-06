@@ -17,6 +17,17 @@ if (workerJob != null)
     throw IndexOutOfBoundsException("maximum number of allowed jobs reached")
 
 workerJob = job
+job.subscribe(object : JobStatusSubscriber() {
+    override fun onComplete() {
+        workerJob = null
+    }
+
+    override fun onError(throwable: Throwable) {
+        Log.e(TAG, throwable.message.toString())
+        workerJob = null
+    }
+}, syftConfig.networkingSchedulers)
+
 return job
 ```
 
