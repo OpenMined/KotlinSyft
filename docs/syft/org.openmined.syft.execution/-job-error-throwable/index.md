@@ -21,5 +21,6 @@
 | [CycleNotAccepted](-cycle-not-accepted/index.md) | `class CycleNotAccepted : `[`JobErrorThrowable`](./index.md) |
 | [DownloadIncomplete](-download-incomplete/index.md) | `class DownloadIncomplete : `[`JobErrorThrowable`](./index.md) |
 | [ExternalException](-external-exception/index.md) | `class ExternalException : `[`JobErrorThrowable`](./index.md) |
+| [IllegalJobState](-illegal-job-state/index.md) | `class IllegalJobState : `[`JobErrorThrowable`](./index.md) |
 | [NetworkResponseFailure](-network-response-failure/index.md) | `class NetworkResponseFailure : `[`JobErrorThrowable`](./index.md) |
 | [NetworkUnreachable](-network-unreachable/index.md) | `class NetworkUnreachable : `[`JobErrorThrowable`](./index.md) |

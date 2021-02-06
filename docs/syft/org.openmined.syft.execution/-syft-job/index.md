@@ -2,36 +2,25 @@
 
 # SyftJob
 
-`@ExperimentalUnsignedTypes class SyftJob : Disposable`
+`@ExperimentalCoroutinesApi @ExperimentalUnsignedTypes class SyftJob`
 
 ### Parameters
 
-`modelName` - : The model being trained or used in inference
-
-`version` - : The version of the model with name modelName
-
-### Types
-
-| Name | Summary |
-|---|---|
-| [JobID](-job-i-d/index.md) | A uniquer identifier class for the job`data class JobID` |
+`jobModel` - : Hold data about this job (modelName, version, plans, protocols)
 
 ### Properties
 
 | Name | Summary |
 |---|---|
-| [jobId](job-id.md) | `val jobId: JobID` |
+| [jobModel](job-model.md) | : Hold data about this job (modelName, version, plans, protocols)`val jobModel: `[`JobModel`](../-job-model/index.md) |
 
 ### Functions
 
 | Name | Summary |
 |---|---|
-| [createDiff](create-diff.md) | Create a diff between the model parameters downloaded from the PyGrid with the current state of model parameters The diff is sent to [report](report.md) for sending it to PyGrid`fun createDiff(): `[`SyftState`](../../org.openmined.syft.proto/-syft-state/index.md) |
 | [dispose](dispose.md) | Dispose the job. Once disposed, a job cannot be resumed again.`fun dispose(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [isDisposed](is-disposed.md) | Identifies if the job is already disposed`fun isDisposed(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
-| [report](report.md) | Once training is finished submit the new model weights to PyGrid to complete the cycle`fun report(diff: `[`SyftState`](../../org.openmined.syft.proto/-syft-state/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [start](start.md) | Starts the job by asking syft worker to request for cycle. Initialises Socket connection if not initialised already.`fun start(subscriber: `[`JobStatusSubscriber`](../-job-status-subscriber/index.md)` = JobStatusSubscriber()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [subscribe](subscribe.md) | This method can be called when the user needs to attach a listener to the job but do not wish to start it`fun subscribe(subscriber: `[`JobStatusSubscriber`](../-job-status-subscriber/index.md)`, schedulers: `[`ProcessSchedulers`](../../org.openmined.syft.threading/-process-schedulers/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [request](request.md) | Starts the job by asking syft worker to request for cycle. Initialises Socket connection if not initialised already.`suspend fun request(): `[`JobStatusMessage`](../-job-status-message/index.md) |
+| [train](train.md) | `fun train(plans: `[`ConcurrentHashMap`](https://docs.oracle.com/javase/6/docs/api/java/util/concurrent/ConcurrentHashMap.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`Plan`](../-plan/index.md)`>, clientConfig: `[`ClientConfig`](../../org.openmined.syft.networking.datamodels/-client-config/index.md)`, dataLoader: `[`DataLoader`](../../org.openmined.syft.data.loader/-data-loader/index.md)`, trainingParameters: `[`TrainingParameters`](../../org.openmined.syft.domain/-training-parameters/index.md)`): Flow<`[`TrainingState`](../-training-state/index.md)`>` |
 
 ### Companion Object Functions
 

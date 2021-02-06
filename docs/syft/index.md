@@ -5,6 +5,9 @@
 | Name | Summary |
 |---|---|
 | [org.openmined.syft](org.openmined.syft/index.md) |  |
+| [org.openmined.syft.data](org.openmined.syft.data/index.md) |  |
+| [org.openmined.syft.data.loader](org.openmined.syft.data.loader/index.md) |  |
+| [org.openmined.syft.data.samplers](org.openmined.syft.data.samplers/index.md) |  |
 | [org.openmined.syft.domain](org.openmined.syft.domain/index.md) |  |
 | [org.openmined.syft.execution](org.openmined.syft.execution/index.md) |  |
 | [org.openmined.syft.networking.datamodels](org.openmined.syft.networking.datamodels/index.md) |  |
