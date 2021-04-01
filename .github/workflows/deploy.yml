@@ -1,10 +1,8 @@
 name: Publish
 
 on:
-  release:
-    types: [published]
-  push:
-    tags: [0-9]+.[0-9]+.[0-9]+*
+    release:
+      types: [published]
 
 jobs:
   build:
@@ -42,4 +40,11 @@ jobs:
         env:
           BINTRAY_USERNAME: ${{ secrets.BINTRAY_USERNAME }}
           BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
-        run: ./gradlew -Prelease.useLastTag=true final
+        if: "!github.event.release.prerelease"
+        run: ./gradlew assembleRelease -Prelease.useLastTag=true final
+      - name: Publish with Gradle
+        env:
+          BINTRAY_USERNAME: ${{ secrets.BINTRAY_USERNAME }}
+          BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
+        if: "github.event.release.prerelease"
+        run: ./gradlew assembleRelease -Prelease.useLastTag=true candidate
