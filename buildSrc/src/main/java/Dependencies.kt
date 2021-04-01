@@ -8,7 +8,7 @@ object Versions {
     const val minSdk = 24
     const val targetSdk = 29
 
-    const val gradle = "3.6.0"
+    const val gradle = "4.0.1"
     const val kotlin = "1.3.61"
     const val buildTools = "29.0.2"
 
@@ -20,6 +20,7 @@ object Versions {
     const val material="1.1.0"
     const val workManagerVersion = "2.3.4"
     const val lifecycleVersion = "2.2.0"
+    const val lifeCycleViewModelVersion = "2.2.0"
     // Tools
     const val rxJava = "2.2.12"
     const val rxAndroid = "2.1.1"
@@ -29,13 +30,13 @@ object Versions {
     const val syftProto = "0.5.0"
     const val retrofit = "2.7.1"
     const val kotlinConverter = "0.4.0"
-    const val pytorchAndroid = "1.4.0"
+    const val pytorchAndroid = "1.8.0"
     const val mpAndroidChart = "v3.1.0"
-    const val coroutines = "1.3.7"
+    const val coroutines = "1.4.0"
 
     // release management
-    const val netflixPublishing = "14.0.0"
-    const val netflixRelease = "13.0.0"
+    const val netflixPublishing = "17.3.2"
+    const val netflixRelease = "15.2.0"
     const val netflixBintray = "3.5.4"
     const val jacocoVersion = "0.8.2"
     const val dokkaVersion = "0.10.1"
@@ -50,9 +51,8 @@ object Versions {
     const val adxCore = "1.1.0"
     const val adxRunner = "1.1.1"
     const val adxExtTruth = "1.1.0"
-    const val robolectric = "4.4-SNAPSHOT"
+    const val robolectric = "4.4"
     const val mockk = "1.10.0"
-
 }
 
 object ProjectDependencies {
@@ -74,7 +74,7 @@ object CommonDependencies {
     const val rxJava = "io.reactivex.rxjava2:rxjava:${Versions.rxJava}"
     const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"
     const val constraintLayout = "androidx.constraintlayout:constraintlayout:${Versions.constraintLayout}"
-
+    const val coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutines}"
     const val espresso = "androidx.test.espresso:espresso-core:${Versions.espresso}"
     const val adxTest = "androidx.test:core:${Versions.adxCore}"
     const val adxExtJunit = "androidx.test.ext:junit:${Versions.extJunit}"
@@ -91,9 +91,9 @@ object DemoAppDependencies {
     const val kotlinJDK = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
     const val materialAndroid = "com.google.android.material:material:${Versions.material}"
     const val mpAndroidChart = "com.github.PhilJay:MPAndroidChart:${Versions.mpAndroidChart}"
-    const val coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutines}"
-    const val lifecycle = "androidx.lifecycle:lifecycle-livedata-ktx:${Versions.lifecycleVersion}"
+    const val lifecycleLiveData = "androidx.lifecycle:lifecycle-livedata-ktx:${Versions.lifecycleVersion}"
     const val lifeCycleProcess = "androidx.lifecycle:lifecycle-process:${Versions.lifecycleVersion}"
+    const val lifecycleViewModel = "androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.lifeCycleViewModelVersion}"
 
     const val workKtx = "androidx.work:work-runtime-ktx:${Versions.workManagerVersion}"
     const val workRX = "androidx.work:work-rxjava2:${Versions.workManagerVersion}"

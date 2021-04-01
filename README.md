@@ -9,9 +9,7 @@
 [ ![Download](https://api.bintray.com/packages/openmined/KotlinSyft/syft/images/download.svg) ](https://bintray.com/openmined/KotlinSyft/syft/_latestVersion)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-
 [![All Contributors](https://img.shields.io/badge/all_contributors-8-orange.svg?style=flat-square)](#contributors-)
-
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # KotlinSyft
@@ -27,7 +25,7 @@ KotlinSyft makes it easy for you to **train and inference PySyft models on Andro
   - :zzz: **Sleep and wake detection** so that the app does not occupy resource when user starts using the device
   - :money_with_wings: **Wifi and metered network detection** to ensure the model updates do not use all the available data quota
   - :no_bell: All of these smart defaults are easily are **overridable**
-- :mortar*board: Support for both reactive and callback patterns so you have your freedom of choice (\_in progress*)
+- :mortar_board: Support for both reactive and callback patterns so you have your freedom of choice (_in progress_)
 - :lock: Support for **secure multi-party computation** and **secure aggregation** protocols using **peer-to-peer WebRTC** connections (_in progress_).
 
 There are a variety of additional privacy-preserving protections that may be applied, including [differential privacy](https://towardsdatascience.com/understanding-differential-privacy-85ce191e198a), [muliti-party computation](https://www.inpher.io/technology/what-is-secure-multiparty-computation), and [secure aggregation](https://research.google/pubs/pub45808/).
@@ -45,8 +43,8 @@ KotlinSyft is available on maven and jcenter. To add the library as a dependency
 ```xml
 <dependency>
   <groupId>org.openmined.kotlinsyft</groupId>
-  <artifactId>syftlib</artifactId>
-  <version>0.1.0</version>
+  <artifactId>syft</artifactId>
+  <version>0.1.3</version>
   <type>pom</type>
 </dependency>
 ```
@@ -54,7 +52,7 @@ KotlinSyft is available on maven and jcenter. To add the library as a dependency
 2. Gradle dependency:
 
 ```groovy
-implementation 'org.openmined.kotlinsyft:syftlib:0.1.0'
+implementation 'org.openmined.kotlinsyft:syft:0.1.3'
 ```
 
 ## Quick Start
@@ -65,7 +63,7 @@ As a developer, there are few steps to building your own secure federated learni
 2. :earth_americas: Host your model and plans on [PyGrid](https://github.com/OpenMined/PyGrid) which will deal with all the federated learning components of your pipeline. You will need to set up a PyGrid server somewhere, please see their installation instructions on how to do this.
 3. :tada: Start training on the device!
 
-**:notebook: The entire workflow and process is described in greater detail in our [project roadmap](https://github.com/OpenMined/Roadmap/blob/master/web_and_mobile_team/projects/federated_learning.md).**
+**:notebook: The entire workflow and process is described in greater detail in our [project roadmap](https://github.com/OpenMined/Roadmap/blob/master/federated_learning/projects/model_centric_fl.md).**
 
 You can use KotlinSyft as a front-end or as a background service. The following is a quick start example usage:
 
@@ -176,44 +174,37 @@ The demo app fetches the plans, protocols and model weights from pygrid server h
 
 Follow these steps to setup an environment to run the demo app:
 
-- Clone the repo [PyGrid](https://github.com/OpenMined/PyGrid) and change directory to it
+- Clone the repo [PyGrid](https://github.com/OpenMined/PyGrid) and change directory to it. At the moment PyGrid doesn't have official releases so please use this [commit](0e93aa645a63a02f45ae72b4ff3106c6402dbadf)  
 
 ```bash
 git clone https://github.com/OpenMined/PyGrid
 cd PyGrid
+git checkout 0e93aa645a63a02f45ae72b4ff3106c6402dbadf
 ```
 
-- Install [docker](https://github.com/OpenMined/PyGrid/#getting-started)
-- Install docker-compose.
-- Execute `docker-compose` in the command line to start pygrid server.
+- Follow [PyGrid: getting started](https://github.com/OpenMined/PyGrid/#getting-started) to run a local instance of PyGrid Node
+
+- Install [PySyft](https://github.com/OpenMined/PySyft) at `commit 9d4f8e3ebecc4a00428607403832c5628753f1fc` in the virtual environment.
 
 ```bash
-docker-compose up
-```
-
-- Install [PySyft](https://github.com/OpenMined/PySyft) `v0.2.7` in the virtual environment.
-
-```bash
-virtualenv -p python3 venv
-source venv/bin/activate
-pip install syft==0.2.7
-pip install jupyter==1.0.0
-pip install  notebook==5.7.8
 git clone https://github.com/OpenMined/PySyft
 cd PySyft
-git checkout tags/v0.2.7 -b v0.2.7
+git checkout 9d4f8e3ebecc4a00428607403832c5628753f1fc
+virtualenv -p python3 venv
+source venv/bin/activate
+make venv
 ```
 
-- Host Jupyter Notebook
+- From PySyft folder, start Jupyter Notebook
 
 ```bash
 jupyter notebook
 ```
 
-- Open a browser and navigate to [localhost:8888](http://localhost:8888/). You should be able to see the pysyft notebook console.
+- Open a browser and navigate to [localhost:8888](http://localhost:8888/). You should be able to see the PySyft files.
 - In the Jupyter Notebook, navigate to `examples/tutorials/model-centric-fl`
-- Run the notebook `Create Plan`. It should host the model on PyGrid.
-- Optionally, run the notebook `Execute Plan`. This will train the model on the python worker of PySyft.
+- Run the notebook `Part 01 - Create Plan.ipynb`. It should host the model on PyGrid.
+- Optionally, run the notebook `Part 02 - Execute Plan.ipynb`. This will train the model on the python worker of PySyft.
 - The android app connects to your PC's localhost via router (easier approach)
 - Get the IP address of your computer by running `ip address show | grep "inet " | grep -v 127.0.0.1` if using Linux/Mac. For windows there are different steps. Alternatively, if you want to run the demo app in the emulator, use `10.0.2.2` as the IP address.
 - Use this IP address and the port (default:5000) in your login screen to supply the PyGrid server url, e.g., 10.0.2.2:5000
@@ -237,8 +228,8 @@ These people were integral part of the efforts to bring KotlinSyft to fruition a
 <!-- markdownlint-disable -->
 <table>
   <tr>
-    <td align="center"><a href="http://vkkhare.github.io"><img src="https://avatars1.githubusercontent.com/u/18126069?v=4" width="100px;" alt=""/><br /><sub><b>varun khare</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/commits?author=vkkhare" title="Code">💻</a> <a href="https://github.com/OpenMined/KotlinSyft/commits?author=vkkhare" title="Tests">⚠️</a> <a href="https://github.com/OpenMined/KotlinSyft/commits?author=vkkhare" title="Documentation">📖</a> <a href="#design-vkkhare" title="Design">🎨</a></td>
-    <td align="center"><a href="https://github.com/mccorby"><img src="https://avatars2.githubusercontent.com/u/4661075?v=4" width="100px;" alt=""/><br /><sub><b>Jose A. Corbacho</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/commits?author=mccorby" title="Code">💻</a> <a href="https://github.com/OpenMined/KotlinSyft/commits?author=mccorby" title="Tests">⚠️</a> <a href="#design-mccorby" title="Design">🎨</a> <a href="https://github.com/OpenMined/KotlinSyft/commits?author=mccorby" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://vkkhare.github.io"><img src="https://avatars1.githubusercontent.com/u/18126069?v=4" width="100px;" alt=""/><br /><sub><b>varun khare</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/commits?author=vkkhare" title="Code">💻</a> <a href="https://github.com/OpenMined/KotlinSyft/commits?author=vkkhare" title="Tests">⚠️</a> <a href="https://github.com/OpenMined/KotlinSyft/commits?author=vkkhare" title="Documentation">📖</a> <a href="#design-vkkhare" title="Design">🎨</a> <a href="#infra-vkkhare" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
+    <td align="center"><a href="https://github.com/mccorby"><img src="https://avatars2.githubusercontent.com/u/4661075?v=4" width="100px;" alt=""/><br /><sub><b>Jose A. Corbacho</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/commits?author=mccorby" title="Code">💻</a> <a href="https://github.com/OpenMined/KotlinSyft/commits?author=mccorby" title="Tests">⚠️</a> <a href="#design-mccorby" title="Design">🎨</a> <a href="https://github.com/OpenMined/KotlinSyft/commits?author=mccorby" title="Documentation">📖</a> <a href="#infra-mccorby" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
     <td align="center"><a href="http://ravikantsingh.com"><img src="https://avatars3.githubusercontent.com/u/40258150?v=4" width="100px;" alt=""/><br /><sub><b>Ravikant Singh</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/commits?author=IamRavikantSingh" title="Code">💻</a> <a href="https://github.com/OpenMined/KotlinSyft/commits?author=IamRavikantSingh" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/codeboy5"><img src="https://avatars0.githubusercontent.com/u/40931412?v=4" width="100px;" alt=""/><br /><sub><b>Saksham Rastogi</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/commits?author=codeboy5" title="Documentation">📖</a></td>
     <td align="center"><a href="https://www.patrickcason.com"><img src="https://avatars1.githubusercontent.com/u/1297930?v=4" width="100px;" alt=""/><br /><sub><b>Patrick Cason</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/commits?author=cereallarceny" title="Documentation">📖</a> <a href="#business-cereallarceny" title="Business development">💼</a></td>
@@ -246,13 +237,12 @@ These people were integral part of the efforts to bring KotlinSyft to fruition a
     <td align="center"><a href="https://github.com/erksch"><img src="https://avatars2.githubusercontent.com/u/19290349?v=4" width="100px;" alt=""/><br /><sub><b>Erik Ziegler</b></sub></a><br /><a href="https://github.com/OpenMined/KotlinSyft/issues?q=author%3Aerksch" title="Bug reports">🐛</a></td>
   </tr>
   <tr>
-    <td align="center"><a href="https://pengyuan-zhou.github.io/"><img src="https://avatars3.githubusercontent.com/u/20013315?v=4" width="100px;" alt=""/><br /><sub><b>Pengyuan Zhou</b></sub></a><br /><a href="#tutorial-pengyuan-zhou" title="Tutorials">✅</a></td>
+    <td align="center"><a href="https://pengyuan-zhou.github.io/"><img src="https://avatars3.githubusercontent.com/u/20013315?v=4" width="100px;" alt=""/><br /><sub><b>Pengyuan Zhou</b></sub></a><br /><a href="#tutorial-pengyuan-zhou" title="Tutorials">✅</a> <a href="#infra-pengyuan-zhou" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
   </tr>
 </table>
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
-
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 ## License

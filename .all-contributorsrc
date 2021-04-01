@@ -14,7 +14,8 @@
         "code",
         "test",
         "doc",
-        "design"
+        "design",
+        "infra"
       ]
     },
     {
@@ -26,7 +27,8 @@
         "code",
         "test",
         "design",
-        "doc"
+        "doc",
+        "infra"
       ]
     },
     {
@@ -83,7 +85,8 @@
       "avatar_url": "https://avatars3.githubusercontent.com/u/20013315?v=4",
       "profile": "https://pengyuan-zhou.github.io/",
       "contributions": [
-        "tutorial"
+        "tutorial",
+        "infra"
       ]
     }
   ],

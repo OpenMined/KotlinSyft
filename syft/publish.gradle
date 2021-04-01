@@ -1,0 +1,18 @@
+apply plugin: "nebula.nebula-bintray-publishing"
+def bintrayUser = System.getenv('BINTRAY_USERNAME')
+def bintrayKey = System.getenv('BINTRAY_KEY')
+
+bintray {
+    user = bintrayUser
+    key = bintrayKey
+    pkg {
+        userOrg = "openmined"
+        repo = "KotlinSyft"
+        name = "syft"
+        websiteUrl = "https://github.com/OpenMined/KotlinSyft"
+        issueTrackerUrl = "https://github.com/OpenMined/KotlinSyft/issues"
+        vcsUrl = "https://github.com/OpenMined/KotlinSyft.git"
+        licenses = ["Apache-2.0"]
+        labels = ["openmined", "kotlin", "machine learning", "privacy", "pytorch"]
+    }
+}
