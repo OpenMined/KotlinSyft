@@ -174,7 +174,7 @@ class SyftJob internal constructor(
                                 }
                             }
 
-                    val output = plan.execute(*planArgs.toTypedArray())?.toTuple()
+                    val output = plan.execute(*planArgs.toTypedArray())?.toTensorList()
 
                     output?.let { outputResult ->
                         trainingParameters.outputParams.mapIndexed { index, outputSpec ->
@@ -184,7 +184,7 @@ class SyftJob internal constructor(
                                     emit(TrainingState.Metric(outputSpec.name, outputResult[index].toTensor().dataAsFloatArray.last()))
                                 }
                                 OutputParamType.ModelParameter -> {
-                                    val updatedParams = outputResult.slice(index until index + model.stateTensorSize!!)
+                                    val updatedParams = outputResult.slice(index until index + model.stateTensorSize!!).map { IValue.from(it) }
                                     model.updateModel(updatedParams)
                                 }
                             }
