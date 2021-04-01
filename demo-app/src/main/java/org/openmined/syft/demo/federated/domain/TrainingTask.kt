@@ -35,7 +35,6 @@ class TrainingTask(
 
     suspend fun runTask(logger: MnistLogger) {
         val mnistJob = syftWorker.newJob(modelName, modelVersion)
-
         val statusPublisher = PublishProcessor.create<Result>()
 
         logger.postLog("Processing $modelName $modelVersion")
