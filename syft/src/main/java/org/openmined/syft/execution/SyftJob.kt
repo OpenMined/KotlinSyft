@@ -179,9 +179,9 @@ class SyftJob internal constructor(
                     output?.let { outputResult ->
                         trainingParameters.outputParams.mapIndexed { index, outputSpec ->
                             when (outputSpec.type) {
-                                OutputParamType.Loss -> { emit(TrainingState.Loss(outputResult[index].toTensor().dataAsFloatArray.last())) }
+                                OutputParamType.Loss -> { emit(TrainingState.Loss(outputResult[index].dataAsFloatArray.last())) }
                                 OutputParamType.Metric -> {
-                                    emit(TrainingState.Metric(outputSpec.name, outputResult[index].toTensor().dataAsFloatArray.last()))
+                                    emit(TrainingState.Metric(outputSpec.name, outputResult[index].dataAsFloatArray.last()))
                                 }
                                 OutputParamType.ModelParameter -> {
                                     val updatedParams = outputResult.slice(index until index + model.stateTensorSize!!).map { IValue.from(it) }
