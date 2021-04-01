@@ -43,11 +43,11 @@ jobs:
           BINTRAY_USERNAME: ${{ secrets.BINTRAY_USERNAME }}
           BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
         if: "!github.event.release.prerelease"
-        run: ./gradlew -Prelease.useLastTag=true final
+        run: ./gradlew assembleRelease -Prelease.useLastTag=true final
       - name: Publish with Gradle
         env:
           BINTRAY_USERNAME: ${{ secrets.BINTRAY_USERNAME }}
           BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
         if: "github.event.release.prerelease"
-        run: ./gradlew -Prelease.useLastTag=true candidate
+        run: ./gradlew assembleRelease -Prelease.useLastTag=true candidate
 
