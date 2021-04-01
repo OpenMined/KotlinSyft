@@ -77,7 +77,7 @@ class MnistActivity : AppCompatActivity() {
 
     private fun launchForegroundCycle() {
         val config = SyftConfiguration.builder(this, viewModel.baseUrl)
-                .setMessagingClient(SyftConfiguration.NetworkingClients.HTTP)
+//                .setMessagingClient(SyftConfiguration.NetworkingClients.HTTP)
                 .setCacheTimeout(0L)
                 .disableBatteryCheck()
                 .build()
