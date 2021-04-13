@@ -17,6 +17,9 @@ import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.OutputParamType
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.domain.TrainingParameters
+import org.openmined.syft.execution.checkpoint.CheckPoint
+import org.openmined.syft.execution.checkpoint.CheckPointConfig
+import org.openmined.syft.execution.checkpoint.CheckPointSerializer
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.proto.SyftModel
@@ -90,6 +93,10 @@ class SyftJob internal constructor(
     internal val model = SyftModel(jobModel.modelName, jobModel.version)
     private var requestKey = ""
     private val jobScope = CoroutineScope(Dispatchers.IO)
+    private var checkPoint: CheckPoint? = null
+    private var checkPointSerializer: CheckPointSerializer? = null
+    internal lateinit var clientConfig: ClientConfig
+    internal var currentStep = 0
 
     /**
      * Starts the job by asking syft worker to request for cycle.
@@ -125,25 +132,48 @@ class SyftJob internal constructor(
         plans: ConcurrentHashMap<String, Plan>,
         clientConfig: ClientConfig,
         dataLoader: DataLoader,
-        trainingParameters: TrainingParameters
+        trainingParameters: TrainingParameters,
+        checkPointSerializer: CheckPointSerializer? = null
     ): Flow<TrainingState> = flow {
 
+        this@SyftJob.checkPointSerializer = checkPointSerializer
+        this@SyftJob.clientConfig = clientConfig
+
+        // TODO What do we do with this? Should all clients be forced to use "batch_size"?
+        val batchSize = (clientConfig.planArgs["batch_size"]
+                         ?: error("batch_size doesn't exist")).toInt()
+
+        val batchIValue = IValue.from(
+            Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
+        )
+
+        val steps = clientConfig.properties.maxUpdates
+
+        // TODO We should check requirements before arriving to this point
+//                    emit(TrainingState.Error(IllegalStateException("No params in the model")))
+        val modelParams = model.paramArray ?: emptyArray()
+
+        trainingLoop(plans, clientConfig, dataLoader, trainingParameters, modelParams, batchSize, steps)
+    }
+
+    @ExperimentalStdlibApi
+    private fun trainingLoop(
+        plans: ConcurrentHashMap<String, Plan>,
+        clientConfig: ClientConfig,
+        dataLoader: DataLoader,
+        trainingParameters: TrainingParameters,
+        modelParams: Array<Tensor>,
+        batchSize: Int,
+        steps: Int
+    ): Flow<TrainingState>  = flow {
         plans["training_plan"]?.let { plan ->
 
-            // TODO What do we do with this? Should all clients be forced to use "batch_size"?
-            val batchSize = (clientConfig.planArgs["batch_size"]
-                             ?: error("batch_size doesn't exist")).toInt()
+            repeat(steps) { step ->
 
-            val batchIValue = IValue.from(
-                Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
-            )
-            repeat(clientConfig.properties.maxUpdates) { step ->
-
-                emit(TrainingState.Epoch(step + 1))
+                currentStep = step + 1
+                emit(TrainingState.Epoch(currentStep))
                 dataLoader.reset()
-                // TODO We should check requirements before arriving to this point
-//                    emit(TrainingState.Error(IllegalStateException("No params in the model")))
-                val modelParams = model.paramArray ?: emptyArray()
+
                 val paramIValue = IValue.listFrom(*modelParams)
 
                 for (batchData in dataLoader) {
@@ -204,6 +234,41 @@ class SyftJob internal constructor(
             else -> {
                 emit(TrainingState.Error(IllegalStateException("Report finished with an error")))
             }
+        }
+    }
+
+    fun stop(): Flow<TrainingState> = flow {
+        emit(TrainingState.Stop)
+        checkPointSerializer?.let {
+            checkPoint = CheckPoint.fromJob(this@SyftJob)
+            it.serialize(checkPoint!!)
+        }
+    }
+
+    @ExperimentalStdlibApi
+    fun resume(
+        plans: ConcurrentHashMap<String, Plan>,
+        dataLoader: DataLoader,
+        trainingParameters: TrainingParameters
+    ): Flow<TrainingState> = flow {
+        checkPoint?.let {
+            emit(TrainingState.Resume)
+            val batchSize = (it.clientConfig!!.planArgs["batch_size"]
+                             ?: error("batch_size doesn't exist")).toInt()
+            val batchIValue = IValue.from(
+                Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
+            )
+            val steps = it.clientConfig.properties.maxUpdates
+
+            trainingLoop(
+                plans,
+                it.clientConfig,
+                dataLoader,
+                trainingParameters,
+                it.modelParams!!,
+                batchSize,
+                steps
+            )
         }
     }
 

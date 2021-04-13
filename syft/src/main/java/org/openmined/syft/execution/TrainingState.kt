@@ -12,5 +12,9 @@ sealed class TrainingState {
 
     data class Metric(val name: String?, val result: Float) : TrainingState()
 
+    object Stop : TrainingState()
+
+    object Resume : TrainingState()
+
     object Complete : TrainingState()
 }

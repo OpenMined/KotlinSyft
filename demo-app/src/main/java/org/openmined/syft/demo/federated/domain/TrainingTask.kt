@@ -32,9 +32,10 @@ class TrainingTask(
     private val modelVersion: String
 ) {
     private val syftWorker = Syft.getInstance(configuration, authToken)
+    private lateinit var mnistJob: SyftJob
 
     suspend fun runTask(logger: MnistLogger) {
-        val mnistJob = syftWorker.newJob(modelName, modelVersion)
+        mnistJob = syftWorker.newJob(modelName, modelVersion)
         val statusPublisher = PublishProcessor.create<Result>()
 
         logger.postLog("Processing $modelName $modelVersion")
@@ -75,6 +76,26 @@ class TrainingTask(
                 statusPublisher.offer(Result.failure())
             }
         }
+    }
+
+    suspend fun stopTask(logger: MnistLogger) {
+        logger.postLog("Stopping training!")
+        mnistJob.stop()
+        logger.postLog("Training stopped!")
+    }
+
+    suspend fun resumeTask(logger: MnistLogger) {
+        val startTime = System.currentTimeMillis()
+        logger.postLog("Resuming training!")
+        logger.postState(ContentState.Training)
+
+        mnistJob.resume(
+            mnistJob.jobModel.plans,
+            dataLoader,
+            generateTrainingParameters()
+        )
+
+        logger.postLog("Training Finished after resumed in ${System.currentTimeMillis() - startTime} ms")
     }
 
     private suspend fun executeTraining(
@@ -122,6 +143,12 @@ class TrainingTask(
             }
             is TrainingState.Complete -> {
                 logger.postLog("Training completed!")
+            }
+            is TrainingState.Stop -> {
+
+            }
+            is TrainingState.Resume -> {
+
             }
         }
     }

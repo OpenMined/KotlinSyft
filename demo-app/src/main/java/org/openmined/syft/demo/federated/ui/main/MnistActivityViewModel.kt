@@ -93,6 +93,18 @@ class MnistActivityViewModel(
         }
     }
 
+    fun stopTraining() {
+        viewModelScope.launch(Dispatchers.IO) {
+            trainingTask!!.stopTask(this@MnistActivityViewModel)
+        }
+    }
+
+    fun resumeTraining() {
+        viewModelScope.launch(Dispatchers.IO) {
+            trainingTask!!.resumeTask(this@MnistActivityViewModel)
+        }
+    }
+
     fun disposeTraining() {
         compositeDisposable.clear()
         trainingTask?.disposeTraining()
@@ -101,7 +113,6 @@ class MnistActivityViewModel(
     fun getRunningWorkInfo() = workerRepository.getRunningWorkStatus()?.let {
         workerRepository.getWorkInfo(it)
     }
-
 
     fun submitJob(): LiveData<WorkInfo> {
         val requestId = workerRepository.getRunningWorkStatus()
