@@ -10,12 +10,12 @@ import org.pytorch.Tensor
 @ExperimentalUnsignedTypes
 @ExperimentalCoroutinesApi
 data class CheckPoint(
-    val steps: Int,
-    val currentStep: Int,
-    val batchSize: Int,
-    val clientConfig: ClientConfig? = null,
-    val jobModel: JobModel? = null,
-    val modelParams: Array<Tensor>? = null
+    var steps: Int,
+    var currentStep: Int,
+    var batchSize: Int,
+    var clientConfig: ClientConfig? = null,
+    var jobModel: JobModel? = null,
+    var modelParams: Array<Tensor>? = null
 ) {
 
     companion object {
@@ -33,11 +33,3 @@ data class CheckPoint(
         }
     }
 }
-
-@ExperimentalUnsignedTypes
-@ExperimentalCoroutinesApi
-class CheckPointConfig(
-    private val serializer: Serializer<*, *>,
-    private val writeToDisk: Boolean = false,
-    private val path: String? = null
-)

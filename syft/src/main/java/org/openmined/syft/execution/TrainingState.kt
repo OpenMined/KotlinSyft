@@ -16,5 +16,9 @@ sealed class TrainingState {
 
     object Resume : TrainingState()
 
+    object Save : TrainingState()
+
+    object Load : TrainingState()
+
     object Complete : TrainingState()
 }

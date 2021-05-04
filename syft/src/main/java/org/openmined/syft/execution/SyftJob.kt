@@ -18,7 +18,6 @@ import org.openmined.syft.domain.OutputParamType
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.domain.TrainingParameters
 import org.openmined.syft.execution.checkpoint.CheckPoint
-import org.openmined.syft.execution.checkpoint.CheckPointConfig
 import org.openmined.syft.execution.checkpoint.CheckPointSerializer
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
@@ -94,7 +93,7 @@ class SyftJob internal constructor(
     private var requestKey = ""
     private val jobScope = CoroutineScope(Dispatchers.IO)
     private var checkPoint: CheckPoint? = null
-    private var checkPointSerializer: CheckPointSerializer? = null
+    private var checkPointSerializer: CheckPointSerializer<*>? = null
     internal lateinit var clientConfig: ClientConfig
     internal var currentStep = 0
 
@@ -133,7 +132,7 @@ class SyftJob internal constructor(
         clientConfig: ClientConfig,
         dataLoader: DataLoader,
         trainingParameters: TrainingParameters,
-        checkPointSerializer: CheckPointSerializer? = null
+        checkPointSerializer: CheckPointSerializer<*>? = null
     ): Flow<TrainingState> = flow {
 
         this@SyftJob.checkPointSerializer = checkPointSerializer
@@ -245,12 +244,31 @@ class SyftJob internal constructor(
         }
     }
 
+    fun save(
+        path: String = "${config.filesDir}/checkpoint-${System.currentTimeMillis()}",
+        overwrite: Boolean = false
+    ) : Flow<TrainingState> = flow {
+        emit(TrainingState.Save)
+        checkPointSerializer?.let {
+            checkPoint = CheckPoint.fromJob(this@SyftJob)
+            it.save(checkPoint!!, path, overwrite)
+        }
+    }
+
     @ExperimentalStdlibApi
     fun resume(
         plans: ConcurrentHashMap<String, Plan>,
         dataLoader: DataLoader,
-        trainingParameters: TrainingParameters
+        trainingParameters: TrainingParameters,
+        checkPointFilePath: String? = null
     ): Flow<TrainingState> = flow {
+        if (checkPointFilePath != null) {
+            emit(TrainingState.Load)
+            checkPointSerializer?.let {
+                checkPoint = it.load(checkPointFilePath)
+            }
+        }
+
         checkPoint?.let {
             emit(TrainingState.Resume)
             val batchSize = (it.clientConfig!!.planArgs["batch_size"]
@@ -258,11 +276,11 @@ class SyftJob internal constructor(
             val batchIValue = IValue.from(
                 Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
             )
-            val steps = it.clientConfig.properties.maxUpdates
+            val steps = it.clientConfig!!.properties.maxUpdates
 
             trainingLoop(
                 plans,
-                it.clientConfig,
+                it.clientConfig!!,
                 dataLoader,
                 trainingParameters,
                 it.modelParams!!,

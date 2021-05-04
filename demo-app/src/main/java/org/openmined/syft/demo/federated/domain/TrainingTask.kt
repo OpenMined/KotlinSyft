@@ -150,6 +150,12 @@ class TrainingTask(
             is TrainingState.Resume -> {
 
             }
+            is TrainingState.Save -> {
+
+            }
+            is TrainingState.Load -> {
+
+            }
         }
     }
 
