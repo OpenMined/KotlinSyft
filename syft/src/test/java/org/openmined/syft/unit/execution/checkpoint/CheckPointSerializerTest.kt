@@ -38,14 +38,16 @@ class CheckPointSerializerTest {
 
     @Test
     fun `serialize and deserialize checkpoint to and from json`() {
+        // TODO: replace org.json.JSONObject to kotlin json
         val serializedCheckPoint = serializer.serialize(checkPoint)
-
+        println(serializedCheckPoint)
         assert(serializedCheckPoint.getInt("steps") == 10)
         assert(serializedCheckPoint.getInt("current_step") == 1)
         assert(serializedCheckPoint.getInt("batch_size") == 1)
 
         val cp = serializer.deserialize(serializedCheckPoint)
         assert(cp == checkPoint)
+
     }
 
     @Test

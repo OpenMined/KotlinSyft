@@ -20,6 +20,7 @@ import org.openmined.syft.domain.TrainingParameters
 import org.openmined.syft.execution.JobStatusMessage
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.execution.TrainingState
+import org.openmined.syft.execution.checkpoint.JsonCheckPointSerializer
 
 @ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
@@ -80,7 +81,14 @@ class TrainingTask(
 
     suspend fun stopTask(logger: MnistLogger) {
         logger.postLog("Stopping training!")
-        mnistJob.stop()
+        mnistJob.stop().collect {
+            withContext(Dispatchers.Main) {
+                processTrainingState(it, logger)
+            }
+        }
+
+//        mnistJob.save().collect { saveState -> processTrainingState(saveState, logger) }
+
         logger.postLog("Training stopped!")
     }
 
@@ -93,7 +101,11 @@ class TrainingTask(
             mnistJob.jobModel.plans,
             dataLoader,
             generateTrainingParameters()
-        )
+        ).collect {
+            withContext(Dispatchers.Main) {
+                processTrainingState(it, logger)
+            }
+        }
 
         logger.postLog("Training Finished after resumed in ${System.currentTimeMillis() - startTime} ms")
     }
@@ -110,7 +122,8 @@ class TrainingTask(
         mnistJob.train(requestResult.plans,
             requestResult.clientConfig!!,
             dataLoader,
-            generateTrainingParameters()
+            generateTrainingParameters(),
+            JsonCheckPointSerializer()
         ).collect {
             // collect happens in IO Dispatcher. Change context to process the training state.
             withContext(Dispatchers.Main) {
@@ -145,16 +158,16 @@ class TrainingTask(
                 logger.postLog("Training completed!")
             }
             is TrainingState.Stop -> {
-
+                logger.postLog("Training stopped!")
             }
             is TrainingState.Resume -> {
-
+                logger.postLog("Training resumed!")
             }
             is TrainingState.Save -> {
-
+                logger.postLog("Model checkpoint created at ${trainingState.path}")
             }
             is TrainingState.Load -> {
-
+                logger.postLog("model checkpoint loaded!")
             }
         }
     }

@@ -2,9 +2,9 @@ package org.openmined.syft.execution.checkpoint
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import org.json.JSONObject
 import org.openmined.syft.networking.datamodels.ClientConfig
-import org.openmined.syft.networking.datamodels.ClientConfigSerializer
 import org.openmined.syft.networking.datamodels.ClientProperties
 import java.io.File
 import java.io.FileInputStream
@@ -86,6 +86,7 @@ class JsonCheckPointSerializer: CheckPointSerializer<JSONObject> {
         path: String,
         overwrite: Boolean
     ) : String {
+        // TODO: rewrite this to save the file as json file instead of object
         val file = File(path)
         return if (file.exists() and !overwrite)
             file.absolutePath

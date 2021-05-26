@@ -8,6 +8,8 @@ import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.execution.checkpoint.CheckPoint
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.ClientProperties
+import org.openmined.syft.proto.SyftModel
+import org.pytorch.Tensor
 
 @ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
@@ -18,11 +20,13 @@ class ModelCheckPointTest {
         mutableMapOf("batch_size" to "1")
     )
 
+    val model = SyftModel("test", "1")
+
     val job = mock<SyftJob> {
         on { clientConfig }.thenReturn(clientConfig)
         on { currentStep }.thenReturn(1)
         on { jobModel }.thenReturn(mockk())
-        on { model }.thenReturn(mockk())
+        on { model }.thenReturn(model)
     }
 
     @Test
@@ -30,6 +34,7 @@ class ModelCheckPointTest {
         val checkPoint = CheckPoint.fromJob(job)
         assert(checkPoint.currentStep == 1)
         assert(checkPoint.clientConfig == clientConfig)
+        // TODO: check the other members
     }
 
 }

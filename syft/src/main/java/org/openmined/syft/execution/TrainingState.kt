@@ -16,7 +16,7 @@ sealed class TrainingState {
 
     object Resume : TrainingState()
 
-    object Save : TrainingState()
+    data class Save(val path: String) : TrainingState()
 
     object Load : TrainingState()
 

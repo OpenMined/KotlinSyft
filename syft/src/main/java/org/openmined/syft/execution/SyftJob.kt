@@ -6,7 +6,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import org.openmined.syft.Syft
 import org.openmined.syft.data.loader.DataLoader
@@ -96,6 +100,7 @@ class SyftJob internal constructor(
     private var checkPointSerializer: CheckPointSerializer<*>? = null
     internal lateinit var clientConfig: ClientConfig
     internal var currentStep = 0
+    private var currentTrainingState: TrainingState? = null
 
     /**
      * Starts the job by asking syft worker to request for cycle.
@@ -151,8 +156,20 @@ class SyftJob internal constructor(
         // TODO We should check requirements before arriving to this point
 //                    emit(TrainingState.Error(IllegalStateException("No params in the model")))
         val modelParams = model.paramArray ?: emptyArray()
-
-        trainingLoop(plans, clientConfig, dataLoader, trainingParameters, modelParams, batchSize, steps)
+        trainingLoop(
+            plans,
+            clientConfig,
+            dataLoader,
+            trainingParameters,
+            modelParams,
+            batchSize,
+            steps
+        ).cancellable().collect {
+            if (shouldCancelTrainingLoop()) {
+                currentCoroutineContext().cancel()
+            }
+            emit(it)
+        }
     }
 
     @ExperimentalStdlibApi
@@ -168,7 +185,6 @@ class SyftJob internal constructor(
         plans["training_plan"]?.let { plan ->
 
             repeat(steps) { step ->
-
                 currentStep = step + 1
                 emit(TrainingState.Epoch(currentStep))
                 dataLoader.reset()
@@ -237,6 +253,7 @@ class SyftJob internal constructor(
     }
 
     fun stop(): Flow<TrainingState> = flow {
+        currentTrainingState = TrainingState.Stop
         emit(TrainingState.Stop)
         checkPointSerializer?.let {
             checkPoint = CheckPoint.fromJob(this@SyftJob)
@@ -248,10 +265,10 @@ class SyftJob internal constructor(
         path: String = "${config.filesDir}/checkpoint-${System.currentTimeMillis()}",
         overwrite: Boolean = false
     ) : Flow<TrainingState> = flow {
-        emit(TrainingState.Save)
         checkPointSerializer?.let {
             checkPoint = CheckPoint.fromJob(this@SyftJob)
-            it.save(checkPoint!!, path, overwrite)
+            val result = it.save(checkPoint!!, path, overwrite)
+            emit(TrainingState.Save(result))
         }
     }
 
@@ -263,6 +280,7 @@ class SyftJob internal constructor(
         checkPointFilePath: String? = null
     ): Flow<TrainingState> = flow {
         if (checkPointFilePath != null) {
+            currentTrainingState = TrainingState.Load
             emit(TrainingState.Load)
             checkPointSerializer?.let {
                 checkPoint = it.load(checkPointFilePath)
@@ -270,14 +288,14 @@ class SyftJob internal constructor(
         }
 
         checkPoint?.let {
+            currentTrainingState = TrainingState.Resume
             emit(TrainingState.Resume)
             val batchSize = (it.clientConfig!!.planArgs["batch_size"]
                              ?: error("batch_size doesn't exist")).toInt()
             val batchIValue = IValue.from(
                 Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
             )
-            val steps = it.clientConfig!!.properties.maxUpdates
-
+            val steps = it.steps - it.currentStep
             trainingLoop(
                 plans,
                 it.clientConfig!!,
@@ -286,8 +304,17 @@ class SyftJob internal constructor(
                 it.modelParams!!,
                 batchSize,
                 steps
-            )
+            ).cancellable().collect { trainingState ->
+                if (shouldCancelTrainingLoop()) {
+                    currentCoroutineContext().cancel()
+                }
+                emit(trainingState)
+            }
         }
+    }
+
+    private fun shouldCancelTrainingLoop(): Boolean {
+        return currentTrainingState == TrainingState.Stop
     }
 
     /**
