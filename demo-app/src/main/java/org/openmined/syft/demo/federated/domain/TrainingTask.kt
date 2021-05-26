@@ -20,6 +20,7 @@ import org.openmined.syft.domain.TrainingParameters
 import org.openmined.syft.execution.JobStatusMessage
 import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.execution.TrainingState
+import org.openmined.syft.execution.checkpoint.JsonCheckPointSerializer
 
 @ExperimentalCoroutinesApi
 @ExperimentalUnsignedTypes
@@ -32,9 +33,10 @@ class TrainingTask(
     private val modelVersion: String
 ) {
     private val syftWorker = Syft.getInstance(configuration, authToken)
+    private lateinit var mnistJob: SyftJob
 
     suspend fun runTask(logger: MnistLogger) {
-        val mnistJob = syftWorker.newJob(modelName, modelVersion)
+        mnistJob = syftWorker.newJob(modelName, modelVersion)
         val statusPublisher = PublishProcessor.create<Result>()
 
         logger.postLog("Processing $modelName $modelVersion")
@@ -77,6 +79,37 @@ class TrainingTask(
         }
     }
 
+    suspend fun stopTask(logger: MnistLogger) {
+        logger.postLog("Stopping training!")
+        mnistJob.stop().collect {
+            withContext(Dispatchers.Main) {
+                processTrainingState(it, logger)
+            }
+        }
+
+//        mnistJob.save().collect { saveState -> processTrainingState(saveState, logger) }
+
+        logger.postLog("Training stopped!")
+    }
+
+    suspend fun resumeTask(logger: MnistLogger) {
+        val startTime = System.currentTimeMillis()
+        logger.postLog("Resuming training!")
+        logger.postState(ContentState.Training)
+
+        mnistJob.resume(
+            mnistJob.jobModel.plans,
+            dataLoader,
+            generateTrainingParameters()
+        ).collect {
+            withContext(Dispatchers.Main) {
+                processTrainingState(it, logger)
+            }
+        }
+
+        logger.postLog("Training Finished after resumed in ${System.currentTimeMillis() - startTime} ms")
+    }
+
     private suspend fun executeTraining(
         logger: MnistLogger,
         mnistJob: SyftJob,
@@ -89,7 +122,8 @@ class TrainingTask(
         mnistJob.train(requestResult.plans,
             requestResult.clientConfig!!,
             dataLoader,
-            generateTrainingParameters()
+            generateTrainingParameters(),
+            JsonCheckPointSerializer()
         ).collect {
             // collect happens in IO Dispatcher. Change context to process the training state.
             withContext(Dispatchers.Main) {
@@ -122,6 +156,18 @@ class TrainingTask(
             }
             is TrainingState.Complete -> {
                 logger.postLog("Training completed!")
+            }
+            is TrainingState.Stop -> {
+                logger.postLog("Training stopped!")
+            }
+            is TrainingState.Resume -> {
+                logger.postLog("Training resumed!")
+            }
+            is TrainingState.Save -> {
+                logger.postLog("Model checkpoint created at ${trainingState.path}")
+            }
+            is TrainingState.Load -> {
+                logger.postLog("model checkpoint loaded!")
             }
         }
     }

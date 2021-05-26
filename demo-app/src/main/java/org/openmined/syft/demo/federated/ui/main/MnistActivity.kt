@@ -37,6 +37,7 @@ class MnistActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMnistBinding
     private lateinit var viewModel: MnistActivityViewModel
+    private var trainingButtonToggle = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,6 +55,17 @@ class MnistActivity : AppCompatActivity() {
 
         binding.buttonFirst.setOnClickListener { launchForegroundCycle() }
         binding.buttonSecond.setOnClickListener { launchBackgroundCycle() }
+        binding.buttonTraining.setOnClickListener {
+            if (trainingButtonToggle) {
+                viewModel.stopTraining()
+                binding.buttonTraining.text = getString(R.string.resume_training)
+                trainingButtonToggle = !trainingButtonToggle
+            } else {
+                viewModel.resumeTraining()
+                binding.buttonTraining.text = getString(R.string.stop_training)
+                trainingButtonToggle = !trainingButtonToggle
+            }
+        }
 
         viewModel.processState.observe(
             this,
@@ -77,7 +89,7 @@ class MnistActivity : AppCompatActivity() {
 
     private fun launchForegroundCycle() {
         val config = SyftConfiguration.builder(this, viewModel.baseUrl)
-//                .setMessagingClient(SyftConfiguration.NetworkingClients.HTTP)
+                .setMessagingClient(SyftConfiguration.NetworkingClients.HTTP)
                 .setCacheTimeout(0L)
                 .disableBatteryCheck()
                 .build()
