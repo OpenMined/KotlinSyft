@@ -209,9 +209,9 @@ jupyter notebook
 - Get the IP address of your computer by running `ip address show | grep "inet " | grep -v 127.0.0.1` if using Linux/Mac. For windows there are different steps. Alternatively, if you want to run the demo app in the emulator, use `10.0.2.2` as the IP address.
 - Use this IP address and the port (default:5000) in your login screen to supply the PyGrid server url, e.g., 10.0.2.2:5000
 
-### Built on KotlinSyft
+## Built on KotlinSyft
 
-<img src="project_resources/watch.png " width="200" height="200" />
+<img align="left" src="project_resources/watch.png" alt="Wearable UI"  width="70" height="70" />
 
 [Federated-Wearables](https://github.com/FL-Wearable/Trainer) is a demo app for cross-device federated learning over wearables. The smartwatch app offloads the collected data to the paired phone app via Bluetooth for training in FL, and gets the updated model to run interface in real time.
 
