@@ -211,7 +211,7 @@ jupyter notebook
 
 ## Built on KotlinSyft
 
-<img align="left" src="project_resources/watcUI.gif" alt="Wearable UI"  width="70" height="70" />
+<img align="left" src="project_resources/watchUI.gif" alt="Wearable UI"  width="70" height="70" />
 
 [Federated-Wearables](https://github.com/FL-Wearable/Trainer) is a demo app for cross-device federated learning over wearables. The smartwatch app offloads the collected data to the paired phone app via Bluetooth for training in FL, and gets the updated model to run interface in real time.
 
