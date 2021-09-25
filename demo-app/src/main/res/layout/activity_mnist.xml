@@ -80,7 +80,7 @@
             <LinearLayout
                 android:id="@+id/scrollArea"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
+                android:layout_height="210dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:padding="10dp"
@@ -113,7 +113,7 @@
                         android:id="@+id/button_first"
                         style="@android:style/Widget.DeviceDefault.Button"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="40dp"
                         android:background="@drawable/button_solid"
                         android:padding="10dp"
                         android:text="@string/start_foreground"
@@ -125,7 +125,7 @@
                         android:id="@+id/button_second"
                         style="@android:style/Widget.DeviceDefault.Button"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="40dp"
                         android:layout_marginTop="10dp"
                         android:background="@drawable/button_solid"
                         android:padding="10dp"
@@ -135,10 +135,23 @@
                         android:textStyle="bold" />
 
                     <Button
+                        android:id="@+id/button_training"
+                        style="@android:style/Widget.DeviceDefault.Button"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/button_solid"
+                        android:padding="10dp"
+                        android:text="@string/stop_training"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <Button
                         android:id="@+id/button_cancel"
                         style="@android:style/Widget.DeviceDefault.Button"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="40dp"
                         android:layout_marginTop="10dp"
                         android:background="@drawable/button_solid"
                         android:backgroundTint="@color/red"

@@ -6,7 +6,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import org.openmined.syft.Syft
 import org.openmined.syft.data.loader.DataLoader
@@ -17,6 +21,8 @@ import org.openmined.syft.domain.JobRepository
 import org.openmined.syft.domain.OutputParamType
 import org.openmined.syft.domain.SyftConfiguration
 import org.openmined.syft.domain.TrainingParameters
+import org.openmined.syft.execution.checkpoint.CheckPoint
+import org.openmined.syft.execution.checkpoint.CheckPointSerializer
 import org.openmined.syft.networking.datamodels.ClientConfig
 import org.openmined.syft.networking.datamodels.syft.CycleResponseData
 import org.openmined.syft.proto.SyftModel
@@ -90,6 +96,11 @@ class SyftJob internal constructor(
     internal val model = SyftModel(jobModel.modelName, jobModel.version)
     private var requestKey = ""
     private val jobScope = CoroutineScope(Dispatchers.IO)
+    private var checkPoint: CheckPoint? = null
+    private var checkPointSerializer: CheckPointSerializer<*>? = null
+    internal lateinit var clientConfig: ClientConfig
+    internal var currentStep = 0
+    private var currentTrainingState: TrainingState? = null
 
     /**
      * Starts the job by asking syft worker to request for cycle.
@@ -125,25 +136,59 @@ class SyftJob internal constructor(
         plans: ConcurrentHashMap<String, Plan>,
         clientConfig: ClientConfig,
         dataLoader: DataLoader,
-        trainingParameters: TrainingParameters
+        trainingParameters: TrainingParameters,
+        checkPointSerializer: CheckPointSerializer<*>? = null
     ): Flow<TrainingState> = flow {
 
+        this@SyftJob.checkPointSerializer = checkPointSerializer
+        this@SyftJob.clientConfig = clientConfig
+
+        // TODO What do we do with this? Should all clients be forced to use "batch_size"?
+        val batchSize = (clientConfig.planArgs["batch_size"]
+                         ?: error("batch_size doesn't exist")).toInt()
+
+        val batchIValue = IValue.from(
+            Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
+        )
+
+        val steps = clientConfig.properties.maxUpdates
+
+        // TODO We should check requirements before arriving to this point
+//                    emit(TrainingState.Error(IllegalStateException("No params in the model")))
+        val modelParams = model.paramArray ?: emptyArray()
+        trainingLoop(
+            plans,
+            clientConfig,
+            dataLoader,
+            trainingParameters,
+            modelParams,
+            batchSize,
+            steps
+        ).cancellable().collect {
+            if (shouldCancelTrainingLoop()) {
+                currentCoroutineContext().cancel()
+            }
+            emit(it)
+        }
+    }
+
+    @ExperimentalStdlibApi
+    private fun trainingLoop(
+        plans: ConcurrentHashMap<String, Plan>,
+        clientConfig: ClientConfig,
+        dataLoader: DataLoader,
+        trainingParameters: TrainingParameters,
+        modelParams: Array<Tensor>,
+        batchSize: Int,
+        steps: Int
+    ): Flow<TrainingState>  = flow {
         plans["training_plan"]?.let { plan ->
 
-            // TODO What do we do with this? Should all clients be forced to use "batch_size"?
-            val batchSize = (clientConfig.planArgs["batch_size"]
-                             ?: error("batch_size doesn't exist")).toInt()
-
-            val batchIValue = IValue.from(
-                Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
-            )
-            repeat(clientConfig.properties.maxUpdates) { step ->
-
-                emit(TrainingState.Epoch(step + 1))
+            repeat(steps) { step ->
+                currentStep = step + 1
+                emit(TrainingState.Epoch(currentStep))
                 dataLoader.reset()
-                // TODO We should check requirements before arriving to this point
-//                    emit(TrainingState.Error(IllegalStateException("No params in the model")))
-                val modelParams = model.paramArray ?: emptyArray()
+
                 val paramIValue = IValue.listFrom(*modelParams)
 
                 for (batchData in dataLoader) {
@@ -205,6 +250,71 @@ class SyftJob internal constructor(
                 emit(TrainingState.Error(IllegalStateException("Report finished with an error")))
             }
         }
+    }
+
+    fun stop(): Flow<TrainingState> = flow {
+        currentTrainingState = TrainingState.Stop
+        emit(TrainingState.Stop)
+        checkPointSerializer?.let {
+            checkPoint = CheckPoint.fromJob(this@SyftJob)
+            it.serialize(checkPoint!!)
+        }
+    }
+
+    fun save(
+        path: String = "${config.filesDir}/checkpoint-${System.currentTimeMillis()}",
+        overwrite: Boolean = false
+    ) : Flow<TrainingState> = flow {
+        checkPointSerializer?.let {
+            checkPoint = CheckPoint.fromJob(this@SyftJob)
+            val result = it.save(checkPoint!!, path, overwrite)
+            emit(TrainingState.Save(result))
+        }
+    }
+
+    @ExperimentalStdlibApi
+    fun resume(
+        plans: ConcurrentHashMap<String, Plan>,
+        dataLoader: DataLoader,
+        trainingParameters: TrainingParameters,
+        checkPointFilePath: String? = null
+    ): Flow<TrainingState> = flow {
+        if (checkPointFilePath != null) {
+            currentTrainingState = TrainingState.Load
+            emit(TrainingState.Load)
+            checkPointSerializer?.let {
+                checkPoint = it.load(checkPointFilePath)
+            }
+        }
+
+        checkPoint?.let {
+            currentTrainingState = TrainingState.Resume
+            emit(TrainingState.Resume)
+            val batchSize = (it.clientConfig!!.planArgs["batch_size"]
+                             ?: error("batch_size doesn't exist")).toInt()
+            val batchIValue = IValue.from(
+                Tensor.fromBlob(longArrayOf(batchSize.toLong()), longArrayOf(1))
+            )
+            val steps = it.steps - it.currentStep
+            trainingLoop(
+                plans,
+                it.clientConfig!!,
+                dataLoader,
+                trainingParameters,
+                it.modelParams!!,
+                batchSize,
+                steps
+            ).cancellable().collect { trainingState ->
+                if (shouldCancelTrainingLoop()) {
+                    currentCoroutineContext().cancel()
+                }
+                emit(trainingState)
+            }
+        }
+    }
+
+    private fun shouldCancelTrainingLoop(): Boolean {
+        return currentTrainingState == TrainingState.Stop
     }
 
     /**
